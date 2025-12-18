@@ -15,6 +15,13 @@ import LoadAverageChart from "@/components/charts/load-average-chart"
 import MemChart from "@/components/charts/mem-chart"
 import SwapChart from "@/components/charts/swap-chart"
 import TemperatureChart from "@/components/charts/temperature-chart"
+import HAProxyChart from "@/components/charts/haproxy-chart"
+import HAProxyResponsesChart from "@/components/charts/haproxy-responses-chart"
+import HAProxyTable from "@/components/charts/haproxy-table"
+import HAProxyInfoPanel from "@/components/charts/haproxy-info"
+import HAProxyPools from "@/components/charts/haproxy-pools"
+import HAProxyActivity from "@/components/charts/haproxy-activity"
+import HAProxyServers from "@/components/charts/haproxy-servers"
 import { getPbTimestamp, pb } from "@/lib/api"
 import { ChartType, Os, SystemStatus, Unit } from "@/lib/enums"
 import { batteryStateTranslations } from "@/lib/i18n"
@@ -408,6 +415,7 @@ export default memo(function SystemDetail({ id }: { id: string }) {
 	const hasGpuData = lastGpuVals.length > 0
 	const hasGpuPowerData = lastGpuVals.some((gpu) => gpu.p !== undefined || gpu.pp !== undefined)
 	const hasGpuEnginesData = lastGpuVals.some((gpu) => gpu.e !== undefined)
+	const hasHAProxyData = (systemStats.at(-1)?.stats?.hap?.length ?? 0) > 0
 
 	return (
 		<>
@@ -848,6 +856,119 @@ export default memo(function SystemDetail({ id }: { id: string }) {
 							)
 						})}
 					</div>
+				)}
+
+				{/* HAProxy charts and table */}
+				{hasHAProxyData && (
+					<>
+						{/* HAProxy Info Panel */}
+						{systemStats.at(-1)?.stats?.hapi && (
+							<Card className="p-4">
+								<CardHeader className="pb-4 pt-0 px-0">
+									<CardTitle className="text-xl sm:text-2xl">{t`HAProxy Process Info`}</CardTitle>
+									<CardDescription>{t`HAProxy process statistics and runtime information`}</CardDescription>
+								</CardHeader>
+								<HAProxyInfoPanel info={systemStats.at(-1)?.stats?.hapi!} />
+							</Card>
+						)}
+
+						{/* HAProxy Charts */}
+						<div className="grid xl:grid-cols-2 gap-4">
+							<ChartCard
+								empty={dataEmpty}
+								grid={grid}
+								title={t`HAProxy Sessions`}
+								description={t`Current sessions across frontends and backends`}
+							>
+								<HAProxyChart chartData={chartData} chartType="sessions" />
+							</ChartCard>
+							<ChartCard
+								empty={dataEmpty}
+								grid={grid}
+								title={t`HAProxy Traffic`}
+								description={t`Total bytes transferred (in + out)`}
+							>
+								<HAProxyChart chartData={chartData} chartType="traffic" />
+							</ChartCard>
+							<ChartCard
+								empty={dataEmpty}
+								grid={grid}
+								title={t`HAProxy Request Rate`}
+								description={t`HTTP requests per second`}
+							>
+								<HAProxyChart chartData={chartData} chartType="requests" />
+							</ChartCard>
+							<ChartCard
+								empty={dataEmpty}
+								grid={grid}
+								title={t`HAProxy Response Time`}
+								description={t`Average backend response time (ms)`}
+							>
+								<HAProxyChart chartData={chartData} chartType="response_time" />
+							</ChartCard>
+							<ChartCard
+								empty={dataEmpty}
+								grid={grid}
+								title={t`HAProxy Error Rate`}
+								description={t`HTTP 4xx and 5xx errors per second`}
+							>
+								<HAProxyChart chartData={chartData} chartType="errors" />
+							</ChartCard>
+							<ChartCard
+								empty={dataEmpty}
+								grid={grid}
+								title={t`HAProxy HTTP Responses`}
+								description={t`HTTP response codes per second (1xx-5xx)`}
+							>
+								<HAProxyResponsesChart chartData={chartData} />
+							</ChartCard>
+						</div>
+
+						{/* HAProxy Status Table */}
+						<Card className="p-4">
+							<CardHeader className="pb-4 pt-0 px-0">
+								<CardTitle className="text-xl sm:text-2xl">{t`HAProxy Status`}</CardTitle>
+								<CardDescription>{t`Current status of all HAProxy frontends, backends, and servers`}</CardDescription>
+							</CardHeader>
+							<HAProxyTable stats={systemStats.at(-1)?.stats?.hap ?? []} />
+						</Card>
+
+						{/* HAProxy Memory Pools */}
+						{(systemStats.at(-1)?.stats?.hpp?.length ?? 0) > 0 && (
+							<Card className="p-4">
+								<CardHeader className="pb-4 pt-0 px-0">
+									<CardTitle className="text-xl sm:text-2xl">{t`HAProxy Memory Pools`}</CardTitle>
+									<CardDescription>{t`Memory pool allocation and usage statistics`}</CardDescription>
+								</CardHeader>
+								<HAProxyPools
+									pools={systemStats.at(-1)?.stats?.hpp ?? []}
+									summary={systemStats.at(-1)?.stats?.hpps}
+								/>
+							</Card>
+						)}
+
+						{/* HAProxy Thread Activity */}
+						{(systemStats.at(-1)?.stats?.hpa?.length ?? 0) > 0 && (
+							<Card className="p-4">
+								<CardHeader className="pb-4 pt-0 px-0">
+									<CardTitle className="text-xl sm:text-2xl">{t`HAProxy Thread Activity`}</CardTitle>
+									<CardDescription>{t`Per-thread CPU usage and activity statistics`}</CardDescription>
+								</CardHeader>
+								<HAProxyActivity activity={systemStats.at(-1)?.stats?.hpa ?? []} />
+							</Card>
+						)}
+
+						{/* HAProxy Server States */}
+						{(systemStats.at(-1)?.stats?.hpsv?.length ?? 0) > 0 && (
+							<Card className="p-4">
+								<CardHeader className="pb-4 pt-0 px-0">
+									<CardTitle className="text-xl sm:text-2xl">{t`HAProxy Server States`}</CardTitle>
+									<CardDescription>{t`Detailed server state and configuration`}</CardDescription>
+								</CardHeader>
+								<HAProxyServers servers={systemStats.at(-1)?.stats?.hpsv ?? []} />
+							</Card>
+						)}
+					</>
 				)}
 
 				{compareSemVer(chartData.agentVersion, parseSemVer("0.15.0")) >= 0 && <LazySmartTable systemId={system.id} />}

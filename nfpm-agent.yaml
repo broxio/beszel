@@ -1,0 +1,43 @@
+name: beszel-agent
+arch: "${GOARCH}"
+platform: linux
+version: "${VERSION}"
+release: "${RELEASE}"
+maintainer: Your Name <your@email.com>
+description: |
+  Agent for Beszel with HAProxy monitoring support
+  Beszel is a lightweight server monitoring platform that includes Docker
+  statistics, historical data, and alert functions.
+
+  This build includes extended HAProxy monitoring capabilities.
+vendor: beszel
+homepage: https://beszel.dev
+license: MIT
+section: net
+
+contents:
+  - src: ./dist/beszel-agent
+    dst: /usr/bin/beszel-agent
+    file_info:
+      mode: 0755
+
+  - src: ./supplemental/debian/beszel-agent.service
+    dst: /lib/systemd/system/beszel-agent.service
+
+  - src: ./supplemental/debian/copyright
+    dst: /usr/share/doc/beszel-agent/copyright
+
+  - src: ./supplemental/debian/lintian-overrides
+    dst: /usr/share/lintian/overrides/beszel-agent
+
+scripts:
+  postinstall: ./supplemental/debian/postinstall.sh
+  preremove: ./supplemental/debian/prerm.sh
+  postremove: ./supplemental/debian/postrm.sh
+
+deb:
+  predepends:
+    - adduser
+    - debconf
+  scripts:
+    templates: ./supplemental/debian/templates

@@ -1,0 +1,40 @@
+name: beszel
+arch: "${GOARCH}"
+platform: linux
+version: "${VERSION}"
+release: "${RELEASE}"
+maintainer: Your Name <your@email.com>
+description: |
+  Beszel Hub - Lightweight server monitoring platform
+  Beszel is a lightweight server monitoring platform that includes Docker
+  statistics, historical data, and alert functions.
+
+  This is the hub/server component that collects data from agents.
+vendor: beszel
+homepage: https://beszel.dev
+license: MIT
+section: net
+
+contents:
+  - src: ./dist/beszel
+    dst: /usr/bin/beszel
+    file_info:
+      mode: 0755
+
+  - src: ./supplemental/debian/beszel.service
+    dst: /lib/systemd/system/beszel.service
+
+  - src: ./supplemental/debian/copyright
+    dst: /usr/share/doc/beszel/copyright
+
+  - src: ./supplemental/debian/beszel-lintian-overrides
+    dst: /usr/share/lintian/overrides/beszel
+
+scripts:
+  postinstall: ./supplemental/debian/beszel-postinstall.sh
+  preremove: ./supplemental/debian/beszel-prerm.sh
+  postremove: ./supplemental/debian/beszel-postrm.sh
+
+deb:
+  predepends:
+    - adduser

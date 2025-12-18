@@ -174,8 +174,17 @@ msgid "Average"
 msgstr "Average"
 
 #: src/components/routes/system.tsx
+msgid "Average backend response time (ms)"
+msgstr "Average backend response time (ms)"
+
+#: src/components/routes/system.tsx
 msgid "Average CPU utilization of containers"
 msgstr "Average CPU utilization of containers"
+
+#. placeholder {0}: alertData.unit
+#: src/components/alerts/alerts-sheet.tsx
+msgid "Average drops below <0>{value}{0}</0>"
+msgstr "Average drops below <0>{value}{0}</0>"
 
 #. placeholder {0}: alertData.unit
 #: src/components/alerts/alerts-sheet.tsx
@@ -209,7 +218,13 @@ msgstr "Backups"
 msgid "Bandwidth"
 msgstr "Bandwidth"
 
+#. Battery label in systems table header
+#: src/components/systems-table/systems-table-columns.tsx
+msgid "Bat"
+msgstr "Bat"
+
 #: src/components/routes/system.tsx
+#: src/lib/alerts.ts
 msgid "Battery"
 msgstr "Battery"
 
@@ -224,6 +239,13 @@ msgstr "Became inactive"
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Before"
 msgstr "Before"
+
+#. placeholder {0}: alert.value
+#. placeholder {1}: info.unit
+#. placeholder {2}: alert.min
+#: src/components/active-alerts.tsx
+msgid "Below {0}{1} in last {2, plural, one {# minute} other {# minutes}}"
+msgstr "Below {0}{1} in last {2, plural, one {# minute} other {# minutes}}"
 
 #: src/components/login/auth-form.tsx
 msgid "Beszel supports OpenID Connect and many OAuth2 authentication providers."
@@ -475,10 +497,18 @@ msgstr "Cumulative Download"
 msgid "Cumulative Upload"
 msgstr "Cumulative Upload"
 
+#: src/components/routes/system.tsx
+msgid "Current sessions across frontends and backends"
+msgstr "Current sessions across frontends and backends"
+
 #. Context: Battery state
 #: src/components/routes/system.tsx
 msgid "Current state"
 msgstr "Current state"
+
+#: src/components/routes/system.tsx
+msgid "Current status of all HAProxy frontends, backends, and servers"
+msgstr "Current status of all HAProxy frontends, backends, and servers"
 
 #. Power Cycles
 #: src/components/routes/system/smart-table.tsx
@@ -512,6 +542,10 @@ msgstr "Description"
 #: src/components/containers-table/containers-table.tsx
 msgid "Detail"
 msgstr "Detail"
+
+#: src/components/routes/system.tsx
+msgid "Detailed server state and configuration"
+msgstr "Detailed server state and configuration"
 
 #: src/components/routes/system/smart-table.tsx
 msgid "Device"
@@ -762,6 +796,58 @@ msgstr "GPU Usage"
 msgid "Grid"
 msgstr "Grid"
 
+#: src/components/routes/system.tsx
+msgid "HAProxy Error Rate"
+msgstr "HAProxy Error Rate"
+
+#: src/components/routes/system.tsx
+#~ msgid "HAProxy Errors"
+#~ msgstr "HAProxy Errors"
+
+#: src/components/routes/system.tsx
+msgid "HAProxy HTTP Responses"
+msgstr "HAProxy HTTP Responses"
+
+#: src/components/routes/system.tsx
+msgid "HAProxy Memory Pools"
+msgstr "HAProxy Memory Pools"
+
+#: src/components/routes/system.tsx
+msgid "HAProxy Process Info"
+msgstr "HAProxy Process Info"
+
+#: src/components/routes/system.tsx
+msgid "HAProxy process statistics and runtime information"
+msgstr "HAProxy process statistics and runtime information"
+
+#: src/components/routes/system.tsx
+msgid "HAProxy Request Rate"
+msgstr "HAProxy Request Rate"
+
+#: src/components/routes/system.tsx
+msgid "HAProxy Response Time"
+msgstr "HAProxy Response Time"
+
+#: src/components/routes/system.tsx
+msgid "HAProxy Server States"
+msgstr "HAProxy Server States"
+
+#: src/components/routes/system.tsx
+msgid "HAProxy Sessions"
+msgstr "HAProxy Sessions"
+
+#: src/components/routes/system.tsx
+msgid "HAProxy Status"
+msgstr "HAProxy Status"
+
+#: src/components/routes/system.tsx
+msgid "HAProxy Thread Activity"
+msgstr "HAProxy Thread Activity"
+
+#: src/components/routes/system.tsx
+msgid "HAProxy Traffic"
+msgstr "HAProxy Traffic"
+
 #: src/components/containers-table/containers-table-columns.tsx
 msgid "Health"
 msgstr "Health"
@@ -775,6 +861,22 @@ msgstr "Homebrew command"
 #: src/components/add-system.tsx
 msgid "Host / IP"
 msgstr "Host / IP"
+
+#: src/components/routes/system.tsx
+#~ msgid "HTTP 4xx and 5xx error responses"
+#~ msgstr "HTTP 4xx and 5xx error responses"
+
+#: src/components/routes/system.tsx
+msgid "HTTP 4xx and 5xx errors per second"
+msgstr "HTTP 4xx and 5xx errors per second"
+
+#: src/components/routes/system.tsx
+msgid "HTTP requests per second"
+msgstr "HTTP requests per second"
+
+#: src/components/routes/system.tsx
+msgid "HTTP response codes per second (1xx-5xx)"
+msgstr "HTTP response codes per second (1xx-5xx)"
 
 #. Context: Battery state
 #: src/lib/i18n.ts
@@ -909,6 +1011,10 @@ msgstr "Memory limit"
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Memory Peak"
 msgstr "Memory Peak"
+
+#: src/components/routes/system.tsx
+msgid "Memory pool allocation and usage statistics"
+msgstr "Memory pool allocation and usage statistics"
 
 #: src/components/routes/system.tsx
 #: src/lib/alerts.ts
@@ -1077,6 +1183,10 @@ msgstr "Paused ({pausedSystemsLength})"
 #: src/components/routes/system/cpu-sheet.tsx
 msgid "Per-core average utilization"
 msgstr "Per-core average utilization"
+
+#: src/components/routes/system.tsx
+msgid "Per-thread CPU usage and activity statistics"
+msgstr "Per-thread CPU usage and activity statistics"
 
 #: src/components/routes/system/cpu-sheet.tsx
 msgid "Percentage of time spent in each state"
@@ -1467,6 +1577,10 @@ msgstr "Tokens and fingerprints are used to authenticate WebSocket connections t
 msgid "Total"
 msgstr "Total"
 
+#: src/components/routes/system.tsx
+msgid "Total bytes transferred (in + out)"
+msgstr "Total bytes transferred (in + out)"
+
 #: src/components/routes/system/network-sheet.tsx
 msgid "Total data received for each interface"
 msgstr "Total data received for each interface"
@@ -1503,6 +1617,10 @@ msgstr "Triggers when 5 minute load average exceeds a threshold"
 #: src/lib/alerts.ts
 msgid "Triggers when any sensor exceeds a threshold"
 msgstr "Triggers when any sensor exceeds a threshold"
+
+#: src/lib/alerts.ts
+msgid "Triggers when battery charge drops below a threshold"
+msgstr "Triggers when battery charge drops below a threshold"
 
 #: src/lib/alerts.ts
 msgid "Triggers when combined up/down exceeds a threshold"
