@@ -22,6 +22,19 @@ build_agent() {
 build_hub() {
     echo ""
     echo "Building beszel hub..."
+
+    # Build frontend first (required for Go embed)
+    echo "Building frontend..."
+    cd internal/site
+    if command -v bun &> /dev/null; then
+        bun install
+        bun run build
+    else
+        npm install
+        npm run build
+    fi
+    cd ../..
+
     CGO_ENABLED=0 GOOS=linux GOARCH=${GOARCH} go build -ldflags="-s -w" -o dist/beszel ./internal/cmd/hub/hub.go
     echo "Binary: dist/beszel ($(ls -lh dist/beszel | awk '{print $5}'))"
 
