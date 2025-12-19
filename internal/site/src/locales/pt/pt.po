@@ -24,6 +24,11 @@ msgstr ""
 msgid "{0} of {1} row(s) selected."
 msgstr "{0} de {1} linha(s) selecionada(s)."
 
+#. placeholder {0}: systems.length
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "{0} systems"
+msgstr ""
+
 #: src/lib/utils.ts
 msgid "{count, plural, one {{countString} day} other {{countString} days}}"
 msgstr "{count, plural, one {{countString} dia} other {{countString} dias}}"
@@ -93,6 +98,14 @@ msgstr "Ativo"
 msgid "Active Alerts"
 msgstr "Alertas Ativos"
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "active servers"
+msgstr ""
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Active Servers"
+msgstr ""
+
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Active state"
 msgstr "Estado ativo"
@@ -136,6 +149,12 @@ msgstr "Depois"
 msgid "Agent"
 msgstr "Agente"
 
+#. placeholder {0}: haproxySystems.length
+#. placeholder {1}: groups.size
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Aggregated statistics from {0} HAProxy systems in {1} groups"
+msgstr ""
+
 #: src/components/command-palette.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/settings/layout.tsx
@@ -169,6 +188,10 @@ msgstr "Tem certeza de que deseja excluir {name}?"
 #: src/components/routes/settings/alerts-history-data-table.tsx
 msgid "Are you sure?"
 msgstr "Tem certeza?"
+
+#: src/components/routes/haproxy-aggregate.tsx
+#~ msgid "Authentication Error"
+#~ msgstr ""
 
 #: src/components/copy-to-clipboard.tsx
 msgid "Automatic copy requires a secure context."
@@ -212,6 +235,18 @@ msgstr "Utilização média de {0}"
 #: src/components/routes/system.tsx
 msgid "Average utilization of GPU engines"
 msgstr "Utilização média dos motores GPU"
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Avg Response"
+msgstr ""
+
+#: src/components/routes/haproxy-aggregate.tsx
+#~ msgid "Avg/System"
+#~ msgstr ""
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Backup Servers"
+msgstr ""
 
 #: src/components/command-palette.tsx
 #: src/components/navbar.tsx
@@ -367,9 +402,17 @@ msgstr "Clique em um dispositivo para ver mais informações."
 msgid "Click on a system to view more information."
 msgstr "Clique em um sistema para ver mais informações."
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Click refresh to load data"
+msgstr ""
+
 #: src/components/ui/input-copy.tsx
 msgid "Click to copy"
 msgstr "Clique para copiar"
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Collapse"
+msgstr ""
 
 #: src/components/login/forgot-pass-form.tsx
 #: src/components/login/forgot-pass-form.tsx
@@ -392,6 +435,10 @@ msgstr "Conflitos"
 #: src/components/active-alerts.tsx
 msgid "Connection is down"
 msgstr "A conexão está inativa"
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Connections"
+msgstr ""
 
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/systems-table/systems-table-columns.tsx
@@ -497,6 +544,10 @@ msgstr "Crítico (%)"
 #: src/components/routes/system/network-sheet.tsx
 msgid "Cumulative Download"
 msgstr "Download cumulativo"
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Cumulative Totals"
+msgstr ""
 
 #: src/components/routes/system/network-sheet.tsx
 msgid "Cumulative Upload"
@@ -692,6 +743,10 @@ msgstr "Sistemas existentes não definidos em <0>config.yml</0> serão excluído
 msgid "Exited active"
 msgstr "Saiu ativo"
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Expand"
+msgstr ""
+
 #: src/components/routes/settings/alerts-history-data-table.tsx
 msgid "Export"
 msgstr "Exportar"
@@ -770,6 +825,10 @@ msgctxt "Button to copy install command"
 msgid "FreeBSD command"
 msgstr "Comando FreeBSD"
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Frontends/Backends"
+msgstr ""
+
 #. Context: Battery state
 #: src/lib/i18n.ts
 msgid "Full"
@@ -800,6 +859,15 @@ msgstr "Uso de GPU"
 #: src/components/systems-table/systems-table.tsx
 msgid "Grid"
 msgstr "Grade"
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Groups"
+msgstr ""
+
+#: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "HAProxy Aggregate"
+msgstr ""
 
 #: src/components/routes/system.tsx
 msgid "HAProxy Error Rate"
@@ -845,6 +913,10 @@ msgstr ""
 msgid "HAProxy Status"
 msgstr ""
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "HAProxy systems should be named like \"ha-web-1\", \"ha-api-2\", etc."
+msgstr ""
+
 #: src/components/routes/system.tsx
 msgid "HAProxy Thread Activity"
 msgstr ""
@@ -883,6 +955,10 @@ msgstr ""
 msgid "HTTP response codes per second (1xx-5xx)"
 msgstr ""
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "HTTP Responses (Total)"
+msgstr ""
+
 #. Context: Battery state
 #: src/lib/i18n.ts
 msgid "Idle"
@@ -900,6 +976,10 @@ msgstr "Imagem"
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Inactive"
 msgstr "Inativo"
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Individual Systems"
+msgstr ""
 
 #: src/components/login/auth-form.tsx
 msgid "Invalid email address."
@@ -1069,6 +1149,10 @@ msgstr "Unidade de rede"
 msgid "No"
 msgstr "Não"
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "No HAProxy Systems Found"
+msgstr ""
+
 #: src/components/command-palette.tsx
 #: src/components/systemd-table/systemd-table.tsx
 msgid "No results found."
@@ -1091,6 +1175,10 @@ msgstr "Nenhum atributo S.M.A.R.T. disponível para este dispositivo."
 #: src/components/systems-table/systems-table.tsx
 msgid "No systems found."
 msgstr "Nenhum sistema encontrado."
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "No systems matching the \"ha-*\" pattern were found."
+msgstr ""
 
 #: src/components/command-palette.tsx
 #: src/components/routes/settings/layout.tsx
@@ -1277,6 +1365,10 @@ msgstr "Recebido"
 msgid "Refresh"
 msgstr "Atualizar"
 
+#: src/components/routes/haproxy-aggregate.tsx
+#~ msgid "Refresh Page"
+#~ msgstr ""
+
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Relationships"
 msgstr "Relacionamentos"
@@ -1288,6 +1380,11 @@ msgstr "Solicitar senha de uso único"
 #: src/components/login/otp-forms.tsx
 msgid "Request OTP"
 msgstr "Solicitar OTP"
+
+#: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Request Rate"
+msgstr ""
 
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Required by"
@@ -1397,6 +1494,12 @@ msgstr "Detalhes do serviço"
 msgid "Services"
 msgstr "Serviços"
 
+#: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Sessions"
+msgstr ""
+
 #: src/components/routes/settings/general.tsx
 msgid "Set percentage thresholds for meter colors."
 msgstr "Defina os limiares de porcentagem para as cores do medidor."
@@ -1479,6 +1582,7 @@ msgid "Systemd Services"
 msgstr "Serviços Systemd"
 
 #: src/components/navbar.tsx
+#: src/components/routes/haproxy-aggregate.tsx
 msgid "Systems"
 msgstr "Sistemas"
 
@@ -1586,6 +1690,10 @@ msgstr "Total"
 msgid "Total bytes transferred (in + out)"
 msgstr ""
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Total Connections"
+msgstr ""
+
 #: src/components/routes/system/network-sheet.tsx
 msgid "Total data received for each interface"
 msgstr "Dados totais recebidos para cada interface"
@@ -1594,9 +1702,27 @@ msgstr "Dados totais recebidos para cada interface"
 msgid "Total data sent for each interface"
 msgstr "Dados totais enviados para cada interface"
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Total Requests"
+msgstr ""
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Total Sessions"
+msgstr ""
+
 #. placeholder {0}: data.length
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Total: {0}"
+msgstr ""
+
+#: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Traffic In"
+msgstr ""
+
+#: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Traffic Out"
 msgstr ""
 
 #: src/components/systemd-table/systemd-table.tsx
@@ -1657,6 +1783,10 @@ msgstr "Dispara quando o uso de qualquer disco excede um limite"
 msgid "Type"
 msgstr "Tipo"
 
+#: src/components/routes/haproxy-aggregate.tsx
+#~ msgid "Unable to fetch HAProxy statistics. Please refresh the page."
+#~ msgstr ""
+
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Unit file"
 msgstr "Arquivo de unidade"
@@ -1696,6 +1826,7 @@ msgid "Update"
 msgstr ""
 
 #: src/components/containers-table/containers-table-columns.tsx
+#: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/system/smart-table.tsx
 #: src/components/systemd-table/systemd-table-columns.tsx
 msgid "Updated"
@@ -1755,6 +1886,10 @@ msgstr "Veja os seus 200 alertas mais recentes."
 #: src/components/systems-table/systems-table.tsx
 msgid "Visible Fields"
 msgstr "Campos Visíveis"
+
+#: src/components/routes/haproxy-aggregate.tsx
+#~ msgid "Waiting for data..."
+#~ msgstr ""
 
 #: src/components/routes/system.tsx
 msgid "Waiting for enough records to display"

@@ -24,6 +24,11 @@ msgstr ""
 msgid "{0} of {1} row(s) selected."
 msgstr "{1}行のうち{0}行が選択されました。"
 
+#. placeholder {0}: systems.length
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "{0} systems"
+msgstr ""
+
 #: src/lib/utils.ts
 msgid "{count, plural, one {{countString} day} other {{countString} days}}"
 msgstr "{count, plural, one {{countString} 日} other {{countString} 日}}"
@@ -93,6 +98,14 @@ msgstr "アクティブ"
 msgid "Active Alerts"
 msgstr "アクティブなアラート"
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "active servers"
+msgstr ""
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Active Servers"
+msgstr ""
+
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Active state"
 msgstr "アクティブ状態"
@@ -136,6 +149,12 @@ msgstr "後"
 msgid "Agent"
 msgstr "エージェント"
 
+#. placeholder {0}: haproxySystems.length
+#. placeholder {1}: groups.size
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Aggregated statistics from {0} HAProxy systems in {1} groups"
+msgstr ""
+
 #: src/components/command-palette.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/settings/layout.tsx
@@ -169,6 +188,10 @@ msgstr "{name}を削除してもよろしいですか？"
 #: src/components/routes/settings/alerts-history-data-table.tsx
 msgid "Are you sure?"
 msgstr "よろしいですか？"
+
+#: src/components/routes/haproxy-aggregate.tsx
+#~ msgid "Authentication Error"
+#~ msgstr ""
 
 #: src/components/copy-to-clipboard.tsx
 msgid "Automatic copy requires a secure context."
@@ -212,6 +235,18 @@ msgstr "{0}の平均使用率"
 #: src/components/routes/system.tsx
 msgid "Average utilization of GPU engines"
 msgstr "GPUエンジンの平均使用率"
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Avg Response"
+msgstr ""
+
+#: src/components/routes/haproxy-aggregate.tsx
+#~ msgid "Avg/System"
+#~ msgstr ""
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Backup Servers"
+msgstr ""
 
 #: src/components/command-palette.tsx
 #: src/components/navbar.tsx
@@ -367,9 +402,17 @@ msgstr "詳細情報を表示するにはデバイスをクリックしてくだ
 msgid "Click on a system to view more information."
 msgstr "システムをクリックして詳細を表示します。"
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Click refresh to load data"
+msgstr ""
+
 #: src/components/ui/input-copy.tsx
 msgid "Click to copy"
 msgstr "クリックしてコピー"
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Collapse"
+msgstr ""
 
 #: src/components/login/forgot-pass-form.tsx
 #: src/components/login/forgot-pass-form.tsx
@@ -392,6 +435,10 @@ msgstr "競合"
 #: src/components/active-alerts.tsx
 msgid "Connection is down"
 msgstr "接続が切断されました"
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Connections"
+msgstr ""
 
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/systems-table/systems-table-columns.tsx
@@ -497,6 +544,10 @@ msgstr "致命的 (%)"
 #: src/components/routes/system/network-sheet.tsx
 msgid "Cumulative Download"
 msgstr "累積ダウンロード"
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Cumulative Totals"
+msgstr ""
 
 #: src/components/routes/system/network-sheet.tsx
 msgid "Cumulative Upload"
@@ -692,6 +743,10 @@ msgstr "<0>config.yml</0>に定義されていない既存のシステムは削�
 msgid "Exited active"
 msgstr "アクティブ状態で終了"
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Expand"
+msgstr ""
+
 #: src/components/routes/settings/alerts-history-data-table.tsx
 msgid "Export"
 msgstr "エクスポート"
@@ -770,6 +825,10 @@ msgctxt "Button to copy install command"
 msgid "FreeBSD command"
 msgstr "FreeBSD コマンド"
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Frontends/Backends"
+msgstr ""
+
 #. Context: Battery state
 #: src/lib/i18n.ts
 msgid "Full"
@@ -800,6 +859,15 @@ msgstr "GPU使用率"
 #: src/components/systems-table/systems-table.tsx
 msgid "Grid"
 msgstr "グリッド"
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Groups"
+msgstr ""
+
+#: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "HAProxy Aggregate"
+msgstr ""
 
 #: src/components/routes/system.tsx
 msgid "HAProxy Error Rate"
@@ -845,6 +913,10 @@ msgstr ""
 msgid "HAProxy Status"
 msgstr ""
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "HAProxy systems should be named like \"ha-web-1\", \"ha-api-2\", etc."
+msgstr ""
+
 #: src/components/routes/system.tsx
 msgid "HAProxy Thread Activity"
 msgstr ""
@@ -883,6 +955,10 @@ msgstr ""
 msgid "HTTP response codes per second (1xx-5xx)"
 msgstr ""
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "HTTP Responses (Total)"
+msgstr ""
+
 #. Context: Battery state
 #: src/lib/i18n.ts
 msgid "Idle"
@@ -900,6 +976,10 @@ msgstr "イメージ"
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Inactive"
 msgstr "非アクティブ"
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Individual Systems"
+msgstr ""
 
 #: src/components/login/auth-form.tsx
 msgid "Invalid email address."
@@ -1069,6 +1149,10 @@ msgstr "ネットワーク単位"
 msgid "No"
 msgstr "いいえ"
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "No HAProxy Systems Found"
+msgstr ""
+
 #: src/components/command-palette.tsx
 #: src/components/systemd-table/systemd-table.tsx
 msgid "No results found."
@@ -1091,6 +1175,10 @@ msgstr "このデバイスのS.M.A.R.T.属性は利用できません。"
 #: src/components/systems-table/systems-table.tsx
 msgid "No systems found."
 msgstr "システムが見つかりませんでした。"
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "No systems matching the \"ha-*\" pattern were found."
+msgstr ""
 
 #: src/components/command-palette.tsx
 #: src/components/routes/settings/layout.tsx
@@ -1277,6 +1365,10 @@ msgstr "受信"
 msgid "Refresh"
 msgstr "更新"
 
+#: src/components/routes/haproxy-aggregate.tsx
+#~ msgid "Refresh Page"
+#~ msgstr ""
+
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Relationships"
 msgstr "関係"
@@ -1288,6 +1380,11 @@ msgstr "ワンタイムパスワードをリクエスト"
 #: src/components/login/otp-forms.tsx
 msgid "Request OTP"
 msgstr "OTP をリクエスト"
+
+#: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Request Rate"
+msgstr ""
 
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Required by"
@@ -1397,6 +1494,12 @@ msgstr "サービス詳細"
 msgid "Services"
 msgstr "サービス"
 
+#: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Sessions"
+msgstr ""
+
 #: src/components/routes/settings/general.tsx
 msgid "Set percentage thresholds for meter colors."
 msgstr "メーターの色を変更するしきい値（パーセンテージ）を設定します。"
@@ -1479,6 +1582,7 @@ msgid "Systemd Services"
 msgstr "Systemdサービス"
 
 #: src/components/navbar.tsx
+#: src/components/routes/haproxy-aggregate.tsx
 msgid "Systems"
 msgstr "システム"
 
@@ -1586,6 +1690,10 @@ msgstr "総数"
 msgid "Total bytes transferred (in + out)"
 msgstr ""
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Total Connections"
+msgstr ""
+
 #: src/components/routes/system/network-sheet.tsx
 msgid "Total data received for each interface"
 msgstr "各インターフェースの総受信データ量"
@@ -1594,10 +1702,28 @@ msgstr "各インターフェースの総受信データ量"
 msgid "Total data sent for each interface"
 msgstr "各インターフェースの総送信データ量"
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Total Requests"
+msgstr ""
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Total Sessions"
+msgstr ""
+
 #. placeholder {0}: data.length
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Total: {0}"
 msgstr "合計: {0}"
+
+#: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Traffic In"
+msgstr ""
+
+#: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Traffic Out"
+msgstr ""
 
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Triggered by"
@@ -1657,6 +1783,10 @@ msgstr "ディスクの使用量がしきい値を超えたときにトリガー
 msgid "Type"
 msgstr "タイプ"
 
+#: src/components/routes/haproxy-aggregate.tsx
+#~ msgid "Unable to fetch HAProxy statistics. Please refresh the page."
+#~ msgstr ""
+
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Unit file"
 msgstr "ユニットファイル"
@@ -1696,6 +1826,7 @@ msgid "Update"
 msgstr "更新"
 
 #: src/components/containers-table/containers-table-columns.tsx
+#: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/system/smart-table.tsx
 #: src/components/systemd-table/systemd-table-columns.tsx
 msgid "Updated"
@@ -1755,6 +1886,10 @@ msgstr "直近200件のアラートを表示します。"
 #: src/components/systems-table/systems-table.tsx
 msgid "Visible Fields"
 msgstr "表示列"
+
+#: src/components/routes/haproxy-aggregate.tsx
+#~ msgid "Waiting for data..."
+#~ msgstr ""
 
 #: src/components/routes/system.tsx
 msgid "Waiting for enough records to display"

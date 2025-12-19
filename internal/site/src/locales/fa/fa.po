@@ -24,6 +24,11 @@ msgstr ""
 msgid "{0} of {1} row(s) selected."
 msgstr "{0} از {1} ردیف انتخاب شده است."
 
+#. placeholder {0}: systems.length
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "{0} systems"
+msgstr ""
+
 #: src/lib/utils.ts
 msgid "{count, plural, one {{countString} day} other {{countString} days}}"
 msgstr "{count, plural, one {{countString} روز} other {{countString} روز}}"
@@ -93,6 +98,14 @@ msgstr "فعال"
 msgid "Active Alerts"
 msgstr " هشدارهای فعال"
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "active servers"
+msgstr ""
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Active Servers"
+msgstr ""
+
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Active state"
 msgstr "وضعیت فعال"
@@ -136,6 +149,12 @@ msgstr "بعد از"
 msgid "Agent"
 msgstr "عامل"
 
+#. placeholder {0}: haproxySystems.length
+#. placeholder {1}: groups.size
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Aggregated statistics from {0} HAProxy systems in {1} groups"
+msgstr ""
+
 #: src/components/command-palette.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/settings/layout.tsx
@@ -169,6 +188,10 @@ msgstr "آیا مطمئن هستید که می‌خواهید {name} را حذف
 #: src/components/routes/settings/alerts-history-data-table.tsx
 msgid "Are you sure?"
 msgstr "آیا مطمئن هستید؟"
+
+#: src/components/routes/haproxy-aggregate.tsx
+#~ msgid "Authentication Error"
+#~ msgstr ""
 
 #: src/components/copy-to-clipboard.tsx
 msgid "Automatic copy requires a secure context."
@@ -212,6 +235,18 @@ msgstr "میانگین استفاده از {0}"
 #: src/components/routes/system.tsx
 msgid "Average utilization of GPU engines"
 msgstr "میانگین استفاده از موتورهای GPU"
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Avg Response"
+msgstr ""
+
+#: src/components/routes/haproxy-aggregate.tsx
+#~ msgid "Avg/System"
+#~ msgstr ""
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Backup Servers"
+msgstr ""
 
 #: src/components/command-palette.tsx
 #: src/components/navbar.tsx
@@ -367,9 +402,17 @@ msgstr "برای مشاهده اطلاعات بیشتر روی دستگاه کل
 msgid "Click on a system to view more information."
 msgstr "برای مشاهده اطلاعات بیشتر روی یک سیستم کلیک کنید."
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Click refresh to load data"
+msgstr ""
+
 #: src/components/ui/input-copy.tsx
 msgid "Click to copy"
 msgstr "برای کپی کردن کلیک کنید"
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Collapse"
+msgstr ""
 
 #: src/components/login/forgot-pass-form.tsx
 #: src/components/login/forgot-pass-form.tsx
@@ -392,6 +435,10 @@ msgstr "تعارض‌ها"
 #: src/components/active-alerts.tsx
 msgid "Connection is down"
 msgstr "اتصال قطع است"
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Connections"
+msgstr ""
 
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/systems-table/systems-table-columns.tsx
@@ -497,6 +544,10 @@ msgstr "بحرانی (%)"
 #: src/components/routes/system/network-sheet.tsx
 msgid "Cumulative Download"
 msgstr "دانلود تجمعی"
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Cumulative Totals"
+msgstr ""
 
 #: src/components/routes/system/network-sheet.tsx
 msgid "Cumulative Upload"
@@ -692,6 +743,10 @@ msgstr "سیستم‌های موجود که در <0>config.yml</0> تعریف ن
 msgid "Exited active"
 msgstr "خروج فعال"
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Expand"
+msgstr ""
+
 #: src/components/routes/settings/alerts-history-data-table.tsx
 msgid "Export"
 msgstr "خروجی گرفتن"
@@ -770,6 +825,10 @@ msgctxt "Button to copy install command"
 msgid "FreeBSD command"
 msgstr "دستور FreeBSD"
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Frontends/Backends"
+msgstr ""
+
 #. Context: Battery state
 #: src/lib/i18n.ts
 msgid "Full"
@@ -800,6 +859,15 @@ msgstr "میزان استفاده از GPU"
 #: src/components/systems-table/systems-table.tsx
 msgid "Grid"
 msgstr "جدول"
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Groups"
+msgstr ""
+
+#: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "HAProxy Aggregate"
+msgstr ""
 
 #: src/components/routes/system.tsx
 msgid "HAProxy Error Rate"
@@ -845,6 +913,10 @@ msgstr ""
 msgid "HAProxy Status"
 msgstr ""
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "HAProxy systems should be named like \"ha-web-1\", \"ha-api-2\", etc."
+msgstr ""
+
 #: src/components/routes/system.tsx
 msgid "HAProxy Thread Activity"
 msgstr ""
@@ -883,6 +955,10 @@ msgstr ""
 msgid "HTTP response codes per second (1xx-5xx)"
 msgstr ""
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "HTTP Responses (Total)"
+msgstr ""
+
 #. Context: Battery state
 #: src/lib/i18n.ts
 msgid "Idle"
@@ -900,6 +976,10 @@ msgstr "تصویر"
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Inactive"
 msgstr "غیرفعال"
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Individual Systems"
+msgstr ""
 
 #: src/components/login/auth-form.tsx
 msgid "Invalid email address."
@@ -1069,6 +1149,10 @@ msgstr "واحد شبکه"
 msgid "No"
 msgstr "خیر"
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "No HAProxy Systems Found"
+msgstr ""
+
 #: src/components/command-palette.tsx
 #: src/components/systemd-table/systemd-table.tsx
 msgid "No results found."
@@ -1091,6 +1175,10 @@ msgstr "هیچ ویژگی S.M.A.R.T برای این دستگاه موجود نی
 #: src/components/systems-table/systems-table.tsx
 msgid "No systems found."
 msgstr "هیچ سیستمی یافت نشد."
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "No systems matching the \"ha-*\" pattern were found."
+msgstr ""
 
 #: src/components/command-palette.tsx
 #: src/components/routes/settings/layout.tsx
@@ -1277,6 +1365,10 @@ msgstr "دریافت شد"
 msgid "Refresh"
 msgstr "تازه‌سازی"
 
+#: src/components/routes/haproxy-aggregate.tsx
+#~ msgid "Refresh Page"
+#~ msgstr ""
+
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Relationships"
 msgstr "روابط"
@@ -1288,6 +1380,11 @@ msgstr "درخواست رمز عبور یک‌بار مصرف"
 #: src/components/login/otp-forms.tsx
 msgid "Request OTP"
 msgstr "درخواست OTP"
+
+#: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Request Rate"
+msgstr ""
 
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Required by"
@@ -1397,6 +1494,12 @@ msgstr "جزئیات سرویس"
 msgid "Services"
 msgstr "سرویس‌ها"
 
+#: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Sessions"
+msgstr ""
+
 #: src/components/routes/settings/general.tsx
 msgid "Set percentage thresholds for meter colors."
 msgstr "آستانه های درصدی را برای رنگ های متر تنظیم کنید."
@@ -1479,6 +1582,7 @@ msgid "Systemd Services"
 msgstr "خدمات Systemd"
 
 #: src/components/navbar.tsx
+#: src/components/routes/haproxy-aggregate.tsx
 msgid "Systems"
 msgstr "سیستم‌ها"
 
@@ -1586,6 +1690,10 @@ msgstr "کل"
 msgid "Total bytes transferred (in + out)"
 msgstr ""
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Total Connections"
+msgstr ""
+
 #: src/components/routes/system/network-sheet.tsx
 msgid "Total data received for each interface"
 msgstr "داده‌های کل دریافت شده برای هر رابط"
@@ -1594,10 +1702,28 @@ msgstr "داده‌های کل دریافت شده برای هر رابط"
 msgid "Total data sent for each interface"
 msgstr "داده‌های کل ارسال شده برای هر رابط"
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Total Requests"
+msgstr ""
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Total Sessions"
+msgstr ""
+
 #. placeholder {0}: data.length
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Total: {0}"
 msgstr "کل: {0}"
+
+#: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Traffic In"
+msgstr ""
+
+#: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Traffic Out"
+msgstr ""
 
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Triggered by"
@@ -1657,6 +1783,10 @@ msgstr "هنگامی که استفاده از هر دیسکی از یک آستا
 msgid "Type"
 msgstr "نوع"
 
+#: src/components/routes/haproxy-aggregate.tsx
+#~ msgid "Unable to fetch HAProxy statistics. Please refresh the page."
+#~ msgstr ""
+
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Unit file"
 msgstr ""
@@ -1696,6 +1826,7 @@ msgid "Update"
 msgstr "به‌روزرسانی"
 
 #: src/components/containers-table/containers-table-columns.tsx
+#: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/system/smart-table.tsx
 #: src/components/systemd-table/systemd-table-columns.tsx
 msgid "Updated"
@@ -1755,6 +1886,10 @@ msgstr "۲۰۰ هشدار اخیر خود را مشاهده کنید."
 #: src/components/systems-table/systems-table.tsx
 msgid "Visible Fields"
 msgstr "فیلدهای قابل مشاهده"
+
+#: src/components/routes/haproxy-aggregate.tsx
+#~ msgid "Waiting for data..."
+#~ msgstr ""
 
 #: src/components/routes/system.tsx
 msgid "Waiting for enough records to display"

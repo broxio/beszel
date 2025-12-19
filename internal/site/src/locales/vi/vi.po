@@ -24,6 +24,11 @@ msgstr ""
 msgid "{0} of {1} row(s) selected."
 msgstr "Đã chọn {0} trên {1} hàng."
 
+#. placeholder {0}: systems.length
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "{0} systems"
+msgstr ""
+
 #: src/lib/utils.ts
 msgid "{count, plural, one {{countString} day} other {{countString} days}}"
 msgstr "{count, plural, one {{countString} ngày} other {{countString} ngày}}"
@@ -93,6 +98,14 @@ msgstr "Hoạt động"
 msgid "Active Alerts"
 msgstr "Cảnh báo hoạt động"
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "active servers"
+msgstr ""
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Active Servers"
+msgstr ""
+
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Active state"
 msgstr "Trạng thái hoạt động"
@@ -136,6 +149,12 @@ msgstr "Sau"
 msgid "Agent"
 msgstr "Tác nhân"
 
+#. placeholder {0}: haproxySystems.length
+#. placeholder {1}: groups.size
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Aggregated statistics from {0} HAProxy systems in {1} groups"
+msgstr ""
+
 #: src/components/command-palette.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/settings/layout.tsx
@@ -169,6 +188,10 @@ msgstr "Bạn có chắc chắn muốn xóa {name} không?"
 #: src/components/routes/settings/alerts-history-data-table.tsx
 msgid "Are you sure?"
 msgstr "Bạn có chắc không?"
+
+#: src/components/routes/haproxy-aggregate.tsx
+#~ msgid "Authentication Error"
+#~ msgstr ""
 
 #: src/components/copy-to-clipboard.tsx
 msgid "Automatic copy requires a secure context."
@@ -212,6 +235,18 @@ msgstr "Mức sử dụng trung bình của {0}"
 #: src/components/routes/system.tsx
 msgid "Average utilization of GPU engines"
 msgstr "Mức sử dụng trung bình của động cơ GPU"
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Avg Response"
+msgstr ""
+
+#: src/components/routes/haproxy-aggregate.tsx
+#~ msgid "Avg/System"
+#~ msgstr ""
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Backup Servers"
+msgstr ""
 
 #: src/components/command-palette.tsx
 #: src/components/navbar.tsx
@@ -367,9 +402,17 @@ msgstr "Nhấp vào thiết bị để xem thêm thông tin."
 msgid "Click on a system to view more information."
 msgstr "Nhấp vào hệ thống để xem thêm thông tin."
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Click refresh to load data"
+msgstr ""
+
 #: src/components/ui/input-copy.tsx
 msgid "Click to copy"
 msgstr "Nhấp để sao chép"
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Collapse"
+msgstr ""
 
 #: src/components/login/forgot-pass-form.tsx
 #: src/components/login/forgot-pass-form.tsx
@@ -392,6 +435,10 @@ msgstr "Xung đột"
 #: src/components/active-alerts.tsx
 msgid "Connection is down"
 msgstr "Mất kết nối"
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Connections"
+msgstr ""
 
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/systems-table/systems-table-columns.tsx
@@ -497,6 +544,10 @@ msgstr "Độ nghiêm trọng (%)"
 #: src/components/routes/system/network-sheet.tsx
 msgid "Cumulative Download"
 msgstr "Tải xuống tích lũy"
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Cumulative Totals"
+msgstr ""
 
 #: src/components/routes/system/network-sheet.tsx
 msgid "Cumulative Upload"
@@ -692,6 +743,10 @@ msgstr "Các hệ thống hiện có không được định nghĩa trong <0>con
 msgid "Exited active"
 msgstr "Đã thoát khi hoạt động"
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Expand"
+msgstr ""
+
 #: src/components/routes/settings/alerts-history-data-table.tsx
 msgid "Export"
 msgstr "Xuất"
@@ -770,6 +825,10 @@ msgctxt "Button to copy install command"
 msgid "FreeBSD command"
 msgstr "Lệnh FreeBSD"
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Frontends/Backends"
+msgstr ""
+
 #. Context: Battery state
 #: src/lib/i18n.ts
 msgid "Full"
@@ -800,6 +859,15 @@ msgstr "Sử dụng GPU"
 #: src/components/systems-table/systems-table.tsx
 msgid "Grid"
 msgstr "Lưới"
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Groups"
+msgstr ""
+
+#: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "HAProxy Aggregate"
+msgstr ""
 
 #: src/components/routes/system.tsx
 msgid "HAProxy Error Rate"
@@ -845,6 +913,10 @@ msgstr ""
 msgid "HAProxy Status"
 msgstr ""
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "HAProxy systems should be named like \"ha-web-1\", \"ha-api-2\", etc."
+msgstr ""
+
 #: src/components/routes/system.tsx
 msgid "HAProxy Thread Activity"
 msgstr ""
@@ -883,6 +955,10 @@ msgstr ""
 msgid "HTTP response codes per second (1xx-5xx)"
 msgstr ""
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "HTTP Responses (Total)"
+msgstr ""
+
 #. Context: Battery state
 #: src/lib/i18n.ts
 msgid "Idle"
@@ -900,6 +976,10 @@ msgstr "Hình ảnh"
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Inactive"
 msgstr "Không hoạt động"
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Individual Systems"
+msgstr ""
 
 #: src/components/login/auth-form.tsx
 msgid "Invalid email address."
@@ -1069,6 +1149,10 @@ msgstr "Đơn vị mạng"
 msgid "No"
 msgstr "Không"
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "No HAProxy Systems Found"
+msgstr ""
+
 #: src/components/command-palette.tsx
 #: src/components/systemd-table/systemd-table.tsx
 msgid "No results found."
@@ -1091,6 +1175,10 @@ msgstr "Không có thuộc tính S.M.A.R.T. nào khả dụng cho thiết bị n
 #: src/components/systems-table/systems-table.tsx
 msgid "No systems found."
 msgstr "Không tìm thấy hệ thống."
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "No systems matching the \"ha-*\" pattern were found."
+msgstr ""
 
 #: src/components/command-palette.tsx
 #: src/components/routes/settings/layout.tsx
@@ -1277,6 +1365,10 @@ msgstr "Đã nhận"
 msgid "Refresh"
 msgstr "Làm mới"
 
+#: src/components/routes/haproxy-aggregate.tsx
+#~ msgid "Refresh Page"
+#~ msgstr ""
+
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Relationships"
 msgstr "Mối quan hệ"
@@ -1288,6 +1380,11 @@ msgstr "Yêu cầu mật khẩu một lần"
 #: src/components/login/otp-forms.tsx
 msgid "Request OTP"
 msgstr "Yêu cầu OTP"
+
+#: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Request Rate"
+msgstr ""
 
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Required by"
@@ -1397,6 +1494,12 @@ msgstr "Chi tiết dịch vụ"
 msgid "Services"
 msgstr "Dịch vụ"
 
+#: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Sessions"
+msgstr ""
+
 #: src/components/routes/settings/general.tsx
 msgid "Set percentage thresholds for meter colors."
 msgstr "Đặt ngưỡng cho màu sắc đồng hồ."
@@ -1479,6 +1582,7 @@ msgid "Systemd Services"
 msgstr "Dịch vụ Systemd"
 
 #: src/components/navbar.tsx
+#: src/components/routes/haproxy-aggregate.tsx
 msgid "Systems"
 msgstr "Các hệ thống"
 
@@ -1586,6 +1690,10 @@ msgstr "Tổng"
 msgid "Total bytes transferred (in + out)"
 msgstr ""
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Total Connections"
+msgstr ""
+
 #: src/components/routes/system/network-sheet.tsx
 msgid "Total data received for each interface"
 msgstr "Tổng dữ liệu nhận được cho mỗi giao diện"
@@ -1594,10 +1702,28 @@ msgstr "Tổng dữ liệu nhận được cho mỗi giao diện"
 msgid "Total data sent for each interface"
 msgstr "Tổng dữ liệu gửi đi cho mỗi giao diện"
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Total Requests"
+msgstr ""
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Total Sessions"
+msgstr ""
+
 #. placeholder {0}: data.length
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Total: {0}"
 msgstr "Tổng: {0}"
+
+#: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Traffic In"
+msgstr ""
+
+#: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Traffic Out"
+msgstr ""
 
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Triggered by"
@@ -1657,6 +1783,10 @@ msgstr "Kích hoạt khi sử dụng bất kỳ đĩa nào vượt quá ngưỡn
 msgid "Type"
 msgstr "Loại"
 
+#: src/components/routes/haproxy-aggregate.tsx
+#~ msgid "Unable to fetch HAProxy statistics. Please refresh the page."
+#~ msgstr ""
+
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Unit file"
 msgstr "Tệp đơn vị"
@@ -1696,6 +1826,7 @@ msgid "Update"
 msgstr "Cập nhật"
 
 #: src/components/containers-table/containers-table-columns.tsx
+#: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/system/smart-table.tsx
 #: src/components/systemd-table/systemd-table-columns.tsx
 msgid "Updated"
@@ -1755,6 +1886,10 @@ msgstr "Xem 200 cảnh báo gần đây nhất của bạn."
 #: src/components/systems-table/systems-table.tsx
 msgid "Visible Fields"
 msgstr "Các cột hiển thị"
+
+#: src/components/routes/haproxy-aggregate.tsx
+#~ msgid "Waiting for data..."
+#~ msgstr ""
 
 #: src/components/routes/system.tsx
 msgid "Waiting for enough records to display"

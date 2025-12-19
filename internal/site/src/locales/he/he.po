@@ -24,6 +24,11 @@ msgstr ""
 msgid "{0} of {1} row(s) selected."
 msgstr "{0} מתוך {1} שורה(ות) נבחרו."
 
+#. placeholder {0}: systems.length
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "{0} systems"
+msgstr ""
+
 #: src/lib/utils.ts
 msgid "{count, plural, one {{countString} day} other {{countString} days}}"
 msgstr "{count, plural, one {{countString} יום} two {{countString} ימים} other {{countString} ימים}}"
@@ -93,6 +98,14 @@ msgstr "פעיל"
 msgid "Active Alerts"
 msgstr "התראות פעילות"
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "active servers"
+msgstr ""
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Active Servers"
+msgstr ""
+
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Active state"
 msgstr "מצב פעיל"
@@ -136,6 +149,12 @@ msgstr "אחרי"
 msgid "Agent"
 msgstr "סוכן"
 
+#. placeholder {0}: haproxySystems.length
+#. placeholder {1}: groups.size
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Aggregated statistics from {0} HAProxy systems in {1} groups"
+msgstr ""
+
 #: src/components/command-palette.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/settings/layout.tsx
@@ -169,6 +188,10 @@ msgstr "האם אתה בטוח שברצונך למחוק את {name}?"
 #: src/components/routes/settings/alerts-history-data-table.tsx
 msgid "Are you sure?"
 msgstr "האם אתה בטוח?"
+
+#: src/components/routes/haproxy-aggregate.tsx
+#~ msgid "Authentication Error"
+#~ msgstr ""
 
 #: src/components/copy-to-clipboard.tsx
 msgid "Automatic copy requires a secure context."
@@ -212,6 +235,18 @@ msgstr "ניצול ממוצע של {0}"
 #: src/components/routes/system.tsx
 msgid "Average utilization of GPU engines"
 msgstr "ניצול ממוצע של מנועי GPU"
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Avg Response"
+msgstr ""
+
+#: src/components/routes/haproxy-aggregate.tsx
+#~ msgid "Avg/System"
+#~ msgstr ""
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Backup Servers"
+msgstr ""
 
 #: src/components/command-palette.tsx
 #: src/components/navbar.tsx
@@ -367,9 +402,17 @@ msgstr "לחץ על התקן כדי לצפות במידע נוסף."
 msgid "Click on a system to view more information."
 msgstr "לחץ על מערכת כדי לצפות במידע נוסף."
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Click refresh to load data"
+msgstr ""
+
 #: src/components/ui/input-copy.tsx
 msgid "Click to copy"
 msgstr "לחץ כדי להעתיק"
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Collapse"
+msgstr ""
 
 #: src/components/login/forgot-pass-form.tsx
 #: src/components/login/forgot-pass-form.tsx
@@ -392,6 +435,10 @@ msgstr "התנגשויות"
 #: src/components/active-alerts.tsx
 msgid "Connection is down"
 msgstr "החיבור נפל"
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Connections"
+msgstr ""
 
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/systems-table/systems-table-columns.tsx
@@ -497,6 +544,10 @@ msgstr "קריטי (%)"
 #: src/components/routes/system/network-sheet.tsx
 msgid "Cumulative Download"
 msgstr "הורדה מצטברת"
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Cumulative Totals"
+msgstr ""
 
 #: src/components/routes/system/network-sheet.tsx
 msgid "Cumulative Upload"
@@ -692,6 +743,10 @@ msgstr "מערכות קיימות שלא מוגדרות ב-<0>config.yml</0> י�
 msgid "Exited active"
 msgstr "יצא פעיל"
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Expand"
+msgstr ""
+
 #: src/components/routes/settings/alerts-history-data-table.tsx
 msgid "Export"
 msgstr "ייצא"
@@ -770,6 +825,10 @@ msgctxt "Button to copy install command"
 msgid "FreeBSD command"
 msgstr "פקודת FreeBSD"
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Frontends/Backends"
+msgstr ""
+
 #. Context: Battery state
 #: src/lib/i18n.ts
 msgid "Full"
@@ -800,6 +859,15 @@ msgstr "שימוש GPU"
 #: src/components/systems-table/systems-table.tsx
 msgid "Grid"
 msgstr "רשת"
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Groups"
+msgstr ""
+
+#: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "HAProxy Aggregate"
+msgstr ""
 
 #: src/components/routes/system.tsx
 msgid "HAProxy Error Rate"
@@ -845,6 +913,10 @@ msgstr ""
 msgid "HAProxy Status"
 msgstr ""
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "HAProxy systems should be named like \"ha-web-1\", \"ha-api-2\", etc."
+msgstr ""
+
 #: src/components/routes/system.tsx
 msgid "HAProxy Thread Activity"
 msgstr ""
@@ -883,6 +955,10 @@ msgstr ""
 msgid "HTTP response codes per second (1xx-5xx)"
 msgstr ""
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "HTTP Responses (Total)"
+msgstr ""
+
 #. Context: Battery state
 #: src/lib/i18n.ts
 msgid "Idle"
@@ -900,6 +976,10 @@ msgstr "תמונה"
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Inactive"
 msgstr "לא פעיל"
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Individual Systems"
+msgstr ""
 
 #: src/components/login/auth-form.tsx
 msgid "Invalid email address."
@@ -1069,6 +1149,10 @@ msgstr "יחידת רשת"
 msgid "No"
 msgstr "לא"
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "No HAProxy Systems Found"
+msgstr ""
+
 #: src/components/command-palette.tsx
 #: src/components/systemd-table/systemd-table.tsx
 msgid "No results found."
@@ -1091,6 +1175,10 @@ msgstr "אין מאפייני S.M.A.R.T. זמינים עבור התקן זה."
 #: src/components/systems-table/systems-table.tsx
 msgid "No systems found."
 msgstr "לא נמצאו מערכות."
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "No systems matching the \"ha-*\" pattern were found."
+msgstr ""
 
 #: src/components/command-palette.tsx
 #: src/components/routes/settings/layout.tsx
@@ -1277,6 +1365,10 @@ msgstr "התקבל"
 msgid "Refresh"
 msgstr "רענן"
 
+#: src/components/routes/haproxy-aggregate.tsx
+#~ msgid "Refresh Page"
+#~ msgstr ""
+
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Relationships"
 msgstr "קשרים"
@@ -1288,6 +1380,11 @@ msgstr "בקש סיסמה חד-פעמית"
 #: src/components/login/otp-forms.tsx
 msgid "Request OTP"
 msgstr "בקש OTP"
+
+#: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Request Rate"
+msgstr ""
 
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Required by"
@@ -1397,6 +1494,12 @@ msgstr "פרטי שירות"
 msgid "Services"
 msgstr "שירותים"
 
+#: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Sessions"
+msgstr ""
+
 #: src/components/routes/settings/general.tsx
 msgid "Set percentage thresholds for meter colors."
 msgstr "הגדר סף אחוזים עבור צבעי מד."
@@ -1479,6 +1582,7 @@ msgid "Systemd Services"
 msgstr "שירותי Systemd"
 
 #: src/components/navbar.tsx
+#: src/components/routes/haproxy-aggregate.tsx
 msgid "Systems"
 msgstr "מערכות"
 
@@ -1586,6 +1690,10 @@ msgstr "כולל"
 msgid "Total bytes transferred (in + out)"
 msgstr ""
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Total Connections"
+msgstr ""
+
 #: src/components/routes/system/network-sheet.tsx
 msgid "Total data received for each interface"
 msgstr "סך נתונים שהתקבלו עבור כל ממשק"
@@ -1594,10 +1702,28 @@ msgstr "סך נתונים שהתקבלו עבור כל ממשק"
 msgid "Total data sent for each interface"
 msgstr "סך נתונים שנשלחו עבור כל ממשק"
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Total Requests"
+msgstr ""
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Total Sessions"
+msgstr ""
+
 #. placeholder {0}: data.length
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Total: {0}"
 msgstr "סה\"כ: {0}"
+
+#: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Traffic In"
+msgstr ""
+
+#: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Traffic Out"
+msgstr ""
 
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Triggered by"
@@ -1657,6 +1783,10 @@ msgstr "מופעל כאשר שימוש בכל דיסק עולה על סף"
 msgid "Type"
 msgstr "סוג"
 
+#: src/components/routes/haproxy-aggregate.tsx
+#~ msgid "Unable to fetch HAProxy statistics. Please refresh the page."
+#~ msgstr ""
+
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Unit file"
 msgstr "קובץ יחידה"
@@ -1696,6 +1826,7 @@ msgid "Update"
 msgstr "עדכן"
 
 #: src/components/containers-table/containers-table-columns.tsx
+#: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/system/smart-table.tsx
 #: src/components/systemd-table/systemd-table-columns.tsx
 msgid "Updated"
@@ -1755,6 +1886,10 @@ msgstr "צפה ב-200 ההתראות האחרונות שלך."
 #: src/components/systems-table/systems-table.tsx
 msgid "Visible Fields"
 msgstr "שדות גלויים"
+
+#: src/components/routes/haproxy-aggregate.tsx
+#~ msgid "Waiting for data..."
+#~ msgstr ""
 
 #: src/components/routes/system.tsx
 msgid "Waiting for enough records to display"
