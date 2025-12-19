@@ -41,6 +41,11 @@ msgstr "{count, plural, one {{countString} uur} other {{countString} uren}}"
 msgid "{count, plural, one {{countString} minute} few {{countString} minutes} many {{countString} minutes} other {{countString} minutes}}"
 msgstr "{count, plural, one {{countString} minuut} other {{countString} minuten}}"
 
+#. placeholder {0}: groups.size
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "{totalOnline} online, {totalOffline} offline across {0} groups"
+msgstr ""
+
 #: src/lib/utils.ts
 msgid "1 hour"
 msgstr "1 uur"
@@ -149,11 +154,9 @@ msgstr "Na"
 msgid "Agent"
 msgstr ""
 
-#. placeholder {0}: haproxySystems.length
-#. placeholder {1}: groups.size
 #: src/components/routes/haproxy-aggregate.tsx
-msgid "Aggregated statistics from {0} HAProxy systems in {1} groups"
-msgstr ""
+#~ msgid "Aggregated statistics from {0} HAProxy systems in {1} groups"
+#~ msgstr ""
 
 #: src/components/command-palette.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
@@ -385,6 +388,7 @@ msgid "Check your notification service"
 msgstr "Controleer je meldingsservice"
 
 #: src/components/containers-table/containers-table.tsx
+#: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/system/smart-table.tsx
 #: src/components/systems-table/systems-table.tsx
 msgid "Clear"
@@ -794,6 +798,10 @@ msgstr "Bijwerken waarschuwing mislukt"
 msgid "Failed: {0}"
 msgstr "Mislukt: {0}"
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Filter groups:"
+msgstr ""
+
 #: src/components/containers-table/containers-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/system.tsx
@@ -883,6 +891,10 @@ msgstr ""
 
 #: src/components/routes/system.tsx
 msgid "HAProxy Memory Pools"
+msgstr ""
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "HAProxy offline"
 msgstr ""
 
 #: src/components/routes/system.tsx
@@ -1150,6 +1162,10 @@ msgid "No"
 msgstr "Nee"
 
 #: src/components/routes/haproxy-aggregate.tsx
+msgid "No data"
+msgstr ""
+
+#: src/components/routes/haproxy-aggregate.tsx
 msgid "No HAProxy Systems Found"
 msgstr ""
 
@@ -1190,6 +1206,10 @@ msgstr "Meldingen"
 msgid "OAuth 2 / OIDC support"
 msgstr "OAuth 2 / OIDC ondersteuning"
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "offline"
+msgstr ""
+
 #: src/components/routes/settings/config-yaml.tsx
 msgid "On each restart, systems in the database will be updated to match the systems defined in the file."
 msgstr "Bij elke herstart zullen systemen in de database worden bijgewerkt om overeen te komen met de systemen die in het bestand zijn gedefinieerd."
@@ -1202,6 +1222,10 @@ msgstr "Eenmalig"
 #: src/components/login/auth-form.tsx
 msgid "One-time password"
 msgstr "Eenmalig wachtwoord"
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "online"
+msgstr ""
 
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
@@ -1477,6 +1501,10 @@ msgstr "Zie <0>notificatie-instellingen</0> om te configureren hoe je meldingen 
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Select {foo}"
 msgstr "Selecteer {foo}"
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Select All"
+msgstr ""
 
 #: src/components/routes/system.tsx
 msgid "Sent"

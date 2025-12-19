@@ -36,6 +36,11 @@ msgstr "{count, plural, one {{countString} сат} few {{countString} сата} 
 msgid "{count, plural, one {{countString} minute} few {{countString} minutes} many {{countString} minutes} other {{countString} minutes}}"
 msgstr "{count, plural, one {{countString} минут} few {{countString} минута} many {{countString} минута} other {{countString} минута}}"
 
+#. placeholder {0}: groups.size
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "{totalOnline} online, {totalOffline} offline across {0} groups"
+msgstr ""
+
 #: src/lib/utils.ts
 msgid "1 hour"
 msgstr "1 сат"
@@ -144,11 +149,9 @@ msgstr "После"
 msgid "Agent"
 msgstr "Агент"
 
-#. placeholder {0}: haproxySystems.length
-#. placeholder {1}: groups.size
 #: src/components/routes/haproxy-aggregate.tsx
-msgid "Aggregated statistics from {0} HAProxy systems in {1} groups"
-msgstr ""
+#~ msgid "Aggregated statistics from {0} HAProxy systems in {1} groups"
+#~ msgstr ""
 
 #: src/components/command-palette.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
@@ -380,6 +383,7 @@ msgid "Check your notification service"
 msgstr "Проверите ваш сервис за обавештавања"
 
 #: src/components/containers-table/containers-table.tsx
+#: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/system/smart-table.tsx
 #: src/components/systems-table/systems-table.tsx
 msgid "Clear"
@@ -789,6 +793,10 @@ msgstr "Неуспело ажурирање упозорења"
 msgid "Failed: {0}"
 msgstr "Неуспело: {0}"
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Filter groups:"
+msgstr ""
+
 #: src/components/containers-table/containers-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/system.tsx
@@ -878,6 +886,10 @@ msgstr ""
 
 #: src/components/routes/system.tsx
 msgid "HAProxy Memory Pools"
+msgstr ""
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "HAProxy offline"
 msgstr ""
 
 #: src/components/routes/system.tsx
@@ -1145,6 +1157,10 @@ msgid "No"
 msgstr ""
 
 #: src/components/routes/haproxy-aggregate.tsx
+msgid "No data"
+msgstr ""
+
+#: src/components/routes/haproxy-aggregate.tsx
 msgid "No HAProxy Systems Found"
 msgstr ""
 
@@ -1185,6 +1201,10 @@ msgstr "Обавештења"
 msgid "OAuth 2 / OIDC support"
 msgstr "OAuth 2 / OIDC подршка"
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "offline"
+msgstr ""
+
 #: src/components/routes/settings/config-yaml.tsx
 msgid "On each restart, systems in the database will be updated to match the systems defined in the file."
 msgstr "При сваком поновном покретању, системи у бази података ће се ажурирати да одговарају системима дефинисаним у датотеци."
@@ -1197,6 +1217,10 @@ msgstr "Једнократно"
 #: src/components/login/auth-form.tsx
 msgid "One-time password"
 msgstr "Једнократна лозинка"
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "online"
+msgstr ""
 
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
@@ -1472,6 +1496,10 @@ msgstr "Погледајте <0>подешавања обавештења</0> д
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Select {foo}"
 msgstr "Изаберите {foo}"
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Select All"
+msgstr ""
 
 #: src/components/routes/system.tsx
 msgid "Sent"

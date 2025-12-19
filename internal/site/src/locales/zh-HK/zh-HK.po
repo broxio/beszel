@@ -41,6 +41,11 @@ msgstr "{count, plural, one {{countString} 小時} other {{countString} 小時}}
 msgid "{count, plural, one {{countString} minute} few {{countString} minutes} many {{countString} minutes} other {{countString} minutes}}"
 msgstr "{count, plural, one {{countString} 分鐘} few {{countString} 分鐘} many {{countString} 分鐘} other {{countString} 分鐘}}"
 
+#. placeholder {0}: groups.size
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "{totalOnline} online, {totalOffline} offline across {0} groups"
+msgstr ""
+
 #: src/lib/utils.ts
 msgid "1 hour"
 msgstr "1小時"
@@ -149,11 +154,9 @@ msgstr "之後"
 msgid "Agent"
 msgstr "客户端"
 
-#. placeholder {0}: haproxySystems.length
-#. placeholder {1}: groups.size
 #: src/components/routes/haproxy-aggregate.tsx
-msgid "Aggregated statistics from {0} HAProxy systems in {1} groups"
-msgstr ""
+#~ msgid "Aggregated statistics from {0} HAProxy systems in {1} groups"
+#~ msgstr ""
 
 #: src/components/command-palette.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
@@ -385,6 +388,7 @@ msgid "Check your notification service"
 msgstr "檢查您的通知服務"
 
 #: src/components/containers-table/containers-table.tsx
+#: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/system/smart-table.tsx
 #: src/components/systems-table/systems-table.tsx
 msgid "Clear"
@@ -794,6 +798,10 @@ msgstr "更新警報失敗"
 msgid "Failed: {0}"
 msgstr "失敗: {0}"
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Filter groups:"
+msgstr ""
+
 #: src/components/containers-table/containers-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/system.tsx
@@ -883,6 +891,10 @@ msgstr ""
 
 #: src/components/routes/system.tsx
 msgid "HAProxy Memory Pools"
+msgstr ""
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "HAProxy offline"
 msgstr ""
 
 #: src/components/routes/system.tsx
@@ -1150,6 +1162,10 @@ msgid "No"
 msgstr "否"
 
 #: src/components/routes/haproxy-aggregate.tsx
+msgid "No data"
+msgstr ""
+
+#: src/components/routes/haproxy-aggregate.tsx
 msgid "No HAProxy Systems Found"
 msgstr ""
 
@@ -1190,6 +1206,10 @@ msgstr "通知"
 msgid "OAuth 2 / OIDC support"
 msgstr "支援 OAuth 2 / OIDC"
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "offline"
+msgstr ""
+
 #: src/components/routes/settings/config-yaml.tsx
 msgid "On each restart, systems in the database will be updated to match the systems defined in the file."
 msgstr "每次重新啟動時，將會以檔案中的系統定義更新資料庫。"
@@ -1202,6 +1222,10 @@ msgstr "一次性"
 #: src/components/login/auth-form.tsx
 msgid "One-time password"
 msgstr "一次性密碼"
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "online"
+msgstr ""
 
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
@@ -1476,6 +1500,10 @@ msgstr "查看<0>通知設置</0>以配置您接收警報的方式。"
 
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Select {foo}"
+msgstr ""
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Select All"
 msgstr ""
 
 #: src/components/routes/system.tsx

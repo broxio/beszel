@@ -16,7 +16,8 @@ import type { SystemRecord, SystemStats, SystemStatsRecord } from "@/types"
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { FooterRepoLink } from "@/components/footer-repo-link"
 import { Button } from "@/components/ui/button"
-import { ChevronDownIcon, ChevronUpIcon, RefreshCwIcon, ServerIcon } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { ChevronDownIcon, ChevronUpIcon, RefreshCwIcon, ServerIcon, FilterIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 // Colors for HTTP response codes
@@ -35,6 +36,7 @@ export default memo(function HAProxyAggregatePage() {
 	const [statsMap, setStatsMap] = useState<Map<string, SystemStats>>(new Map())
 	const [loading, setLoading] = useState(false)
 	const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
+	const [selectedGroups, setSelectedGroups] = useState<Set<string>>(new Set())
 
 	// Get systems only once on mount to avoid re-renders from store updates
 	const [haproxySystems, setHaproxySystems] = useState<SystemRecord[]>([])
@@ -122,30 +124,77 @@ export default memo(function HAProxyAggregatePage() {
 	// Group by pattern
 	const groups = useMemo(() => groupSystemsByPattern(haproxySystems), [haproxySystems])
 
-	// Calculate aggregates per group
-	const groupAggregates = useMemo(() => {
-		const result = new Map<string, GroupAggregates>()
+	// Calculate aggregates per group (only systems with HAProxy data)
+	const { groupAggregates, groupStats } = useMemo(() => {
+		const aggregates = new Map<string, GroupAggregates>()
+		const stats = new Map<string, { online: number; offline: number; total: number }>()
 
 		for (const [groupName, groupSystems] of groups) {
 			const groupStatsMap = new Map<string, SystemStats>()
+			let onlineCount = 0
+			let offlineCount = 0
+
 			for (const sys of groupSystems) {
-				const stats = statsMap.get(sys.id)
-				if (stats) {
-					groupStatsMap.set(sys.id, stats)
+				const sysStats = statsMap.get(sys.id)
+				// Only include if system has HAProxy data (hap array with items)
+				if (sysStats?.hap && sysStats.hap.length > 0) {
+					groupStatsMap.set(sys.id, sysStats)
+					onlineCount++
+				} else {
+					offlineCount++
 				}
 			}
+
+			stats.set(groupName, {
+				online: onlineCount,
+				offline: offlineCount,
+				total: groupSystems.length,
+			})
 
 			if (groupStatsMap.size > 0) {
 				const { statsPerSystem, infosPerSystem } = extractHAProxyData(groupStatsMap)
 				if (statsPerSystem.size > 0) {
-					const aggregates = calculateGroupAggregates(statsPerSystem, infosPerSystem)
-					result.set(groupName, aggregates)
+					const agg = calculateGroupAggregates(statsPerSystem, infosPerSystem)
+					aggregates.set(groupName, agg)
 				}
 			}
 		}
 
-		return result
+		return { groupAggregates: aggregates, groupStats: stats }
 	}, [groups, statsMap])
+
+	// Filter groups based on selection (empty = show all)
+	const filteredGroups = useMemo(() => {
+		if (selectedGroups.size === 0) return groups
+		const filtered = new Map<string, SystemRecord[]>()
+		for (const [name, systems] of groups) {
+			if (selectedGroups.has(name)) {
+				filtered.set(name, systems)
+			}
+		}
+		return filtered
+	}, [groups, selectedGroups])
+
+	// Toggle group selection
+	const toggleGroup = (groupName: string) => {
+		setSelectedGroups((prev) => {
+			const next = new Set(prev)
+			if (next.has(groupName)) {
+				next.delete(groupName)
+			} else {
+				next.add(groupName)
+			}
+			return next
+		})
+	}
+
+	// Select all / clear all
+	const selectAllGroups = () => {
+		setSelectedGroups(new Set(groups.keys()))
+	}
+	const clearGroupSelection = () => {
+		setSelectedGroups(new Set())
+	}
 
 	// Set page title
 	useEffect(() => {
@@ -182,6 +231,10 @@ export default memo(function HAProxyAggregatePage() {
 		)
 	}
 
+	// Calculate total online/offline
+	const totalOnline = Array.from(groupStats.values()).reduce((sum, s) => sum + s.online, 0)
+	const totalOffline = Array.from(groupStats.values()).reduce((sum, s) => sum + s.offline, 0)
+
 	return (
 		<div className="grid gap-4 mb-14">
 			{/* Header */}
@@ -190,7 +243,8 @@ export default memo(function HAProxyAggregatePage() {
 					<div>
 						<h1 className="text-[1.6rem] font-semibold">{t`HAProxy Aggregate`}</h1>
 						<p className="text-sm text-muted-foreground mt-1">
-							{t`Aggregated statistics from ${haproxySystems.length} HAProxy systems in ${groups.size} groups`}
+							{t`${totalOnline} online, ${totalOffline} offline across ${groups.size} groups`}
+							{selectedGroups.size > 0 && ` (${selectedGroups.size} selected)`}
 						</p>
 					</div>
 					<div className="flex items-center gap-4">
@@ -204,13 +258,62 @@ export default memo(function HAProxyAggregatePage() {
 						</Button>
 					</div>
 				</div>
+
+				{/* Group Filter */}
+				{groups.size > 1 && (
+					<div className="px-4 sm:px-6 pb-4 border-t pt-4">
+						<div className="flex items-center gap-2 mb-2">
+							<FilterIcon className="h-4 w-4 text-muted-foreground" />
+							<span className="text-sm text-muted-foreground">{t`Filter groups:`}</span>
+							{selectedGroups.size > 0 && (
+								<Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={clearGroupSelection}>
+									{t`Clear`}
+								</Button>
+							)}
+							{selectedGroups.size === 0 && groups.size > 3 && (
+								<Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={selectAllGroups}>
+									{t`Select All`}
+								</Button>
+							)}
+						</div>
+						<div className="flex flex-wrap gap-2">
+							{Array.from(groups.keys())
+								.sort()
+								.map((groupName) => {
+									const isSelected = selectedGroups.has(groupName)
+									const stats = groupStats.get(groupName)
+									const hasOffline = stats && stats.offline > 0
+									return (
+										<Badge
+											key={groupName}
+											variant={selectedGroups.size === 0 || isSelected ? "default" : "outline"}
+											className={cn(
+												"cursor-pointer transition-colors",
+												selectedGroups.size === 0 || isSelected
+													? "bg-primary hover:bg-primary/80"
+													: "hover:bg-muted"
+											)}
+											onClick={() => toggleGroup(groupName)}
+										>
+											{groupName}
+											{stats && (
+												<span className="ml-1 opacity-70">
+													({stats.online}{hasOffline && `/${stats.total}`})
+												</span>
+											)}
+										</Badge>
+									)
+								})}
+						</div>
+					</div>
+				)}
 			</Card>
 
 			{/* Summary Cards */}
-			<SummaryCards groups={groups} aggregates={groupAggregates} />
+			<SummaryCards groups={filteredGroups} aggregates={groupAggregates} />
 
 			{/* Group Cards */}
-			{Array.from(groups.entries())
+			{Array.from(filteredGroups.entries())
 				.sort(([a], [b]) => a.localeCompare(b))
 				.map(([groupName, groupSystems]) => (
 					<GroupCard
@@ -219,6 +322,7 @@ export default memo(function HAProxyAggregatePage() {
 						systems={groupSystems}
 						aggregates={groupAggregates.get(groupName)}
 						statsMap={statsMap}
+						groupStats={groupStats.get(groupName)}
 					/>
 				))}
 
@@ -289,11 +393,13 @@ const GroupCard = memo(function GroupCard({
 	systems,
 	aggregates,
 	statsMap,
+	groupStats,
 }: {
 	groupName: string
 	systems: SystemRecord[]
 	aggregates?: GroupAggregates
 	statsMap: Map<string, SystemStats>
+	groupStats?: { online: number; offline: number; total: number }
 }) {
 	const { t } = useLingui()
 	const [expanded, setExpanded] = useState(false)
@@ -307,7 +413,16 @@ const GroupCard = memo(function GroupCard({
 					<div>
 						<CardTitle className="text-xl">{groupName}</CardTitle>
 						<CardDescription>
-							{t`${systems.length} systems`}
+							{groupStats ? (
+								<>
+									<span className="text-green-600">{groupStats.online} {t`online`}</span>
+									{groupStats.offline > 0 && (
+										<span className="text-red-500 ml-2">{groupStats.offline} {t`offline`}</span>
+									)}
+								</>
+							) : (
+								t`${systems.length} systems`
+							)}
 							{hasData && ` | ${aggregates.totals.activeServers} ${t`active servers`}`}
 						</CardDescription>
 					</div>
@@ -377,29 +492,42 @@ const GroupCard = memo(function GroupCard({
 								{systems.map((system) => {
 									const stats = statsMap.get(system.id)
 									const hapStats = stats?.hap
-									const totalSessions =
-										hapStats?.reduce(
-											(sum, p) => sum + (p.t === "FRONTEND" || p.t === "BACKEND" ? p.sc : 0),
-											0
-										) ?? 0
+									const hasHAProxyData = hapStats && hapStats.length > 0
+									const totalSessions = hasHAProxyData
+										? hapStats.reduce(
+												(sum, p) => sum + (p.t === "FRONTEND" || p.t === "BACKEND" ? p.sc : 0),
+												0
+											)
+										: 0
 
 									return (
-										<div key={system.id} className="flex items-center justify-between p-2 rounded bg-muted/50">
+										<div
+											key={system.id}
+											className={cn(
+												"flex items-center justify-between p-2 rounded",
+												hasHAProxyData ? "bg-muted/50" : "bg-red-500/10"
+											)}
+										>
 											<div className="flex items-center gap-2">
 												<span
 													className={cn("h-2 w-2 rounded-full", {
-														"bg-green-500": system.status === "up",
-														"bg-red-500": system.status === "down",
+														"bg-green-500": hasHAProxyData && system.status === "up",
+														"bg-red-500": !hasHAProxyData || system.status === "down",
 														"bg-yellow-500": system.status === "pending",
 														"bg-gray-400": system.status === "paused",
 													})}
 												/>
 												<span className="font-medium">{system.name}</span>
+												{!hasHAProxyData && (
+													<span className="text-xs text-red-500">({t`HAProxy offline`})</span>
+												)}
 											</div>
 											<div className="flex items-center gap-4 text-sm text-muted-foreground">
-												<span>
-													{t`Sessions`}: {totalSessions}
-												</span>
+												{hasHAProxyData ? (
+													<span>{t`Sessions`}: {totalSessions}</span>
+												) : (
+													<span className="text-red-500">{t`No data`}</span>
+												)}
 												<span className="capitalize">{system.status}</span>
 											</div>
 										</div>

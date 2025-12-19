@@ -36,6 +36,11 @@ msgstr "{count, plural, one {{countString} hour} other {{countString} hours}}"
 msgid "{count, plural, one {{countString} minute} few {{countString} minutes} many {{countString} minutes} other {{countString} minutes}}"
 msgstr "{count, plural, one {{countString} minute} few {{countString} minutes} many {{countString} minutes} other {{countString} minutes}}"
 
+#. placeholder {0}: groups.size
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "{totalOnline} online, {totalOffline} offline across {0} groups"
+msgstr "{totalOnline} online, {totalOffline} offline across {0} groups"
+
 #: src/lib/utils.ts
 msgid "1 hour"
 msgstr "1 hour"
@@ -144,11 +149,9 @@ msgstr "After"
 msgid "Agent"
 msgstr "Agent"
 
-#. placeholder {0}: haproxySystems.length
-#. placeholder {1}: groups.size
 #: src/components/routes/haproxy-aggregate.tsx
-msgid "Aggregated statistics from {0} HAProxy systems in {1} groups"
-msgstr "Aggregated statistics from {0} HAProxy systems in {1} groups"
+#~ msgid "Aggregated statistics from {0} HAProxy systems in {1} groups"
+#~ msgstr "Aggregated statistics from {0} HAProxy systems in {1} groups"
 
 #: src/components/command-palette.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
@@ -380,6 +383,7 @@ msgid "Check your notification service"
 msgstr "Check your notification service"
 
 #: src/components/containers-table/containers-table.tsx
+#: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/system/smart-table.tsx
 #: src/components/systems-table/systems-table.tsx
 msgid "Clear"
@@ -789,6 +793,10 @@ msgstr "Failed to update alert"
 msgid "Failed: {0}"
 msgstr "Failed: {0}"
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Filter groups:"
+msgstr "Filter groups:"
+
 #: src/components/containers-table/containers-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/system.tsx
@@ -879,6 +887,10 @@ msgstr "HAProxy HTTP Responses"
 #: src/components/routes/system.tsx
 msgid "HAProxy Memory Pools"
 msgstr "HAProxy Memory Pools"
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "HAProxy offline"
+msgstr "HAProxy offline"
 
 #: src/components/routes/system.tsx
 msgid "HAProxy Process Info"
@@ -1145,6 +1157,10 @@ msgid "No"
 msgstr "No"
 
 #: src/components/routes/haproxy-aggregate.tsx
+msgid "No data"
+msgstr "No data"
+
+#: src/components/routes/haproxy-aggregate.tsx
 msgid "No HAProxy Systems Found"
 msgstr "No HAProxy Systems Found"
 
@@ -1185,6 +1201,10 @@ msgstr "Notifications"
 msgid "OAuth 2 / OIDC support"
 msgstr "OAuth 2 / OIDC support"
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "offline"
+msgstr "offline"
+
 #: src/components/routes/settings/config-yaml.tsx
 msgid "On each restart, systems in the database will be updated to match the systems defined in the file."
 msgstr "On each restart, systems in the database will be updated to match the systems defined in the file."
@@ -1197,6 +1217,10 @@ msgstr "One-time"
 #: src/components/login/auth-form.tsx
 msgid "One-time password"
 msgstr "One-time password"
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "online"
+msgstr "online"
 
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
@@ -1472,6 +1496,10 @@ msgstr "See <0>notification settings</0> to configure how you receive alerts."
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Select {foo}"
 msgstr "Select {foo}"
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Select All"
+msgstr "Select All"
 
 #: src/components/routes/system.tsx
 msgid "Sent"
