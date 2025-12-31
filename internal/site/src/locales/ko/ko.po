@@ -1004,6 +1004,10 @@ msgctxt "Docker image"
 msgid "Image"
 msgstr "이미지"
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "In"
+msgstr ""
+
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Inactive"
 msgstr "비활성"
@@ -1261,6 +1265,10 @@ msgstr "또는 아래 항목으로 진행하기"
 #: src/components/routes/system/cpu-sheet.tsx
 msgid "Other"
 msgstr "기타"
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Out"
+msgstr ""
 
 #: src/components/alerts/alerts-sheet.tsx
 msgid "Overwrite existing alerts"
@@ -1767,11 +1775,13 @@ msgid "Total: {0}"
 msgstr "총: {0}"
 
 #: src/components/routes/haproxy-aggregate.tsx
+msgid "Traffic"
+msgstr ""
+
 #: src/components/routes/haproxy-aggregate.tsx
 msgid "Traffic In"
 msgstr ""
 
-#: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/haproxy-aggregate.tsx
 msgid "Traffic Out"
 msgstr ""

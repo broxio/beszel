@@ -33,6 +33,17 @@ const RESPONSE_COLORS = {
 }
 
 const POLL_INTERVAL = 10000 // 10 seconds
+const HISTORY_LENGTH = 30 // Keep last 30 data points (5 minutes at 10s intervals)
+
+// Traffic history data point
+interface TrafficDataPoint {
+	bytesIn: number
+	bytesOut: number
+	timestamp: number
+}
+
+// Traffic history per group
+type TrafficHistory = Map<string, TrafficDataPoint[]>
 
 // Pre-group display configuration
 const PRE_GROUP_CONFIG: Record<PreGroupType, { label: string; color: string }> = {
@@ -57,6 +68,10 @@ export default memo(function HAProxyAggregatePage() {
 	const mountedRef = useRef(true)
 	const fetchingRef = useRef(false)
 	const systemsRef = useRef<SystemRecord[]>([])
+
+	// Traffic history for sparklines (ref to avoid re-renders during accumulation)
+	const trafficHistoryRef = useRef<TrafficHistory>(new Map())
+	const [trafficHistory, setTrafficHistory] = useState<TrafficHistory>(new Map())
 
 	// Initialize systems on mount
 	useEffect(() => {
@@ -177,6 +192,36 @@ export default memo(function HAProxyAggregatePage() {
 
 		return { groupAggregates: aggregates, groupStats: stats }
 	}, [groups, statsMap])
+
+	// Update traffic history when aggregates change
+	useEffect(() => {
+		if (groupAggregates.size === 0) return
+
+		const now = Date.now()
+		const historyMap = trafficHistoryRef.current
+
+		for (const [groupName, agg] of groupAggregates) {
+			let history = historyMap.get(groupName)
+			if (!history) {
+				history = []
+				historyMap.set(groupName, history)
+			}
+
+			history.push({
+				bytesIn: agg.totals.bytesInRate,
+				bytesOut: agg.totals.bytesOutRate,
+				timestamp: now,
+			})
+
+			// Keep only last N data points
+			if (history.length > HISTORY_LENGTH) {
+				history.shift()
+			}
+		}
+
+		// Update state to trigger re-render with new history
+		setTrafficHistory(new Map(historyMap))
+	}, [groupAggregates])
 
 	// Filter groups based on selection (empty = show all)
 	// Pre-groups take precedence: if any pre-group is selected, filter by pre-group first
@@ -419,7 +464,7 @@ export default memo(function HAProxyAggregatePage() {
 			</Card>
 
 			{/* Summary Cards */}
-			<SummaryCards groups={filteredGroups} aggregates={groupAggregates} />
+			<SummaryCards groups={filteredGroups} aggregates={groupAggregates} trafficHistory={trafficHistory} />
 
 			{/* Group Cards */}
 			{Array.from(filteredGroups.entries())
@@ -432,6 +477,7 @@ export default memo(function HAProxyAggregatePage() {
 						aggregates={groupAggregates.get(groupName)}
 						statsMap={statsMap}
 						groupStats={groupStats.get(groupName)}
+						trafficHistory={trafficHistory.get(groupName)}
 					/>
 				))}
 
@@ -444,18 +490,24 @@ export default memo(function HAProxyAggregatePage() {
 const SummaryCards = memo(function SummaryCards({
 	groups,
 	aggregates,
+	trafficHistory,
 }: {
 	groups: Map<string, SystemRecord[]>
 	aggregates: Map<string, GroupAggregates>
+	trafficHistory: TrafficHistory
 }) {
 	const { t } = useLingui()
 
-	const grandTotals = useMemo(() => {
+	// Calculate grand totals and combined traffic history
+	const { grandTotals, combinedHistory } = useMemo(() => {
 		let totalSessions = 0
 		let totalBytesIn = 0
 		let totalBytesOut = 0
 		let totalRequestRate = 0
 		let totalSystemCount = 0
+
+		// Combine traffic history from all filtered groups
+		const historyByTimestamp = new Map<number, { bytesIn: number; bytesOut: number }>()
 
 		// Only sum aggregates for groups that are in the filtered groups map
 		for (const groupName of groups.keys()) {
@@ -467,17 +519,45 @@ const SummaryCards = memo(function SummaryCards({
 				totalRequestRate += agg.totals.requestRate
 				totalSystemCount += agg.totals.systemCount
 			}
+
+			// Combine traffic history for this group
+			const groupHistory = trafficHistory.get(groupName)
+			if (groupHistory) {
+				for (const point of groupHistory) {
+					const existing = historyByTimestamp.get(point.timestamp)
+					if (existing) {
+						existing.bytesIn += point.bytesIn
+						existing.bytesOut += point.bytesOut
+					} else {
+						historyByTimestamp.set(point.timestamp, {
+							bytesIn: point.bytesIn,
+							bytesOut: point.bytesOut,
+						})
+					}
+				}
+			}
 		}
 
+		// Sort by timestamp and extract arrays
+		const sortedHistory = Array.from(historyByTimestamp.entries())
+			.sort(([a], [b]) => a - b)
+			.map(([, data]) => data)
+
 		return {
-			sessions: totalSessions,
-			bytesIn: totalBytesIn,
-			bytesOut: totalBytesOut,
-			requestRate: totalRequestRate,
-			systemCount: totalSystemCount,
-			groupCount: groups.size,
+			grandTotals: {
+				sessions: totalSessions,
+				bytesIn: totalBytesIn,
+				bytesOut: totalBytesOut,
+				requestRate: totalRequestRate,
+				systemCount: totalSystemCount,
+				groupCount: groups.size,
+			},
+			combinedHistory: sortedHistory,
 		}
-	}, [aggregates, groups])
+	}, [aggregates, groups, trafficHistory])
+
+	const bytesInHistory = combinedHistory.map((d) => d.bytesIn)
+	const bytesOutHistory = combinedHistory.map((d) => d.bytesOut)
 
 	return (
 		<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
@@ -485,8 +565,18 @@ const SummaryCards = memo(function SummaryCards({
 			<SummaryCard title={t`Systems`} value={grandTotals.systemCount.toString()} />
 			<SummaryCard title={t`Sessions`} value={formatNumber(grandTotals.sessions)} />
 			<SummaryCard title={t`Request Rate`} value={`${formatNumber(grandTotals.requestRate)}/s`} />
-			<SummaryCard title={t`Traffic In`} value={formatBytesPerSec(grandTotals.bytesIn)} />
-			<SummaryCard title={t`Traffic Out`} value={formatBytesPerSec(grandTotals.bytesOut)} />
+			<SummaryCardWithSparkline
+				title={t`Traffic In`}
+				value={formatBytesPerSec(grandTotals.bytesIn)}
+				history={bytesInHistory}
+				color="#22c55e"
+			/>
+			<SummaryCardWithSparkline
+				title={t`Traffic Out`}
+				value={formatBytesPerSec(grandTotals.bytesOut)}
+				history={bytesOutHistory}
+				color="#3b82f6"
+			/>
 		</div>
 	)
 })
@@ -500,6 +590,28 @@ function SummaryCard({ title, value }: { title: string; value: string }) {
 	)
 }
 
+function SummaryCardWithSparkline({
+	title,
+	value,
+	history,
+	color,
+}: {
+	title: string
+	value: string
+	history: number[]
+	color: string
+}) {
+	return (
+		<Card className="p-4">
+			<p className="text-sm text-muted-foreground">{title}</p>
+			<div className="flex items-center gap-2 mt-1">
+				<p className="text-2xl font-semibold">{value}</p>
+				<Sparkline data={history} color={color} width={60} height={20} />
+			</div>
+		</Card>
+	)
+}
+
 // Group card
 const GroupCard = memo(function GroupCard({
 	groupName,
@@ -507,12 +619,14 @@ const GroupCard = memo(function GroupCard({
 	aggregates,
 	statsMap,
 	groupStats,
+	trafficHistory,
 }: {
 	groupName: string
 	systems: SystemRecord[]
 	aggregates?: GroupAggregates
 	statsMap: Map<string, SystemStats>
 	groupStats?: { online: number; offline: number; total: number }
+	trafficHistory?: TrafficDataPoint[]
 }) {
 	const { t } = useLingui()
 	const [expanded, setExpanded] = useState(false)
@@ -549,15 +663,32 @@ const GroupCard = memo(function GroupCard({
 			{hasData ? (
 				<div className="px-6 pb-4">
 					{/* Primary Stats Row */}
-					<div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 text-sm">
+					<div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 text-sm">
 						<StatItem label={t`Sessions`} value={formatNumber(aggregates.totals.currentSessions)} />
 						<StatItem label={t`Connections`} value={formatNumber(aggregates.totals.currentConnections)} />
 						<StatItem label={t`Request Rate`} value={`${formatNumber(aggregates.totals.requestRate)}/s`} />
 						<StatItem label={t`Avg Response`} value={`${aggregates.averages.responseTime.toFixed(1)}ms`} />
-						<StatItem label={t`Traffic In`} value={formatBytesPerSec(aggregates.totals.bytesInRate)} />
-						<StatItem label={t`Traffic Out`} value={formatBytesPerSec(aggregates.totals.bytesOutRate)} />
 						<StatItem label={t`Active Servers`} value={formatNumber(aggregates.totals.activeServers)} />
 						<StatItem label={t`Backup Servers`} value={formatNumber(aggregates.totals.backupServers)} />
+					</div>
+
+					{/* Traffic with Sparklines */}
+					<div className="mt-4 pt-4 border-t">
+						<p className="text-sm text-muted-foreground mb-2">{t`Traffic`}</p>
+						<div className="flex flex-wrap gap-6">
+							<TrafficStatItem
+								label={t`In`}
+								value={formatBytesPerSec(aggregates.totals.bytesInRate)}
+								history={trafficHistory?.map((d) => d.bytesIn) || []}
+								color="#22c55e"
+							/>
+							<TrafficStatItem
+								label={t`Out`}
+								value={formatBytesPerSec(aggregates.totals.bytesOutRate)}
+								history={trafficHistory?.map((d) => d.bytesOut) || []}
+								color="#3b82f6"
+							/>
+						</div>
 					</div>
 
 					{/* Totals Row */}
@@ -700,5 +831,72 @@ function ResponseBarChart({ data }: ResponseBarChartProps) {
 				</Bar>
 			</BarChart>
 		</ResponsiveContainer>
+	)
+}
+
+// Sparkline component for traffic trends
+interface SparklineProps {
+	data: number[]
+	color?: string
+	height?: number
+	width?: number
+}
+
+function Sparkline({ data, color = "#3b82f6", height = 24, width = 80 }: SparklineProps) {
+	if (data.length < 2) {
+		return (
+			<div
+				className="flex items-center justify-center text-muted-foreground text-xs"
+				style={{ width, height }}
+			>
+				--
+			</div>
+		)
+	}
+
+	const min = Math.min(...data)
+	const max = Math.max(...data)
+	const range = max - min || 1
+
+	// Generate SVG path
+	const points = data.map((value, index) => {
+		const x = (index / (data.length - 1)) * width
+		const y = height - ((value - min) / range) * (height - 4) - 2
+		return `${x},${y}`
+	})
+
+	const pathD = `M ${points.join(" L ")}`
+
+	return (
+		<svg width={width} height={height} className="inline-block">
+			<path
+				d={pathD}
+				fill="none"
+				stroke={color}
+				strokeWidth={1.5}
+				strokeLinecap="round"
+				strokeLinejoin="round"
+			/>
+		</svg>
+	)
+}
+
+// Traffic stat item with sparkline
+interface TrafficStatItemProps {
+	label: string
+	value: string
+	history: number[]
+	color: string
+}
+
+function TrafficStatItem({ label, value, history, color }: TrafficStatItemProps) {
+	return (
+		<div className="flex items-center gap-2">
+			<div className="min-w-[80px]">
+				<p className="text-muted-foreground text-xs">{label}</p>
+				<p className="font-semibold">{value}</p>
+			</div>
+			<Sparkline data={history} color={color} />
+		</div>
 	)
 }

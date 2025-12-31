@@ -1004,6 +1004,10 @@ msgctxt "Docker image"
 msgid "Image"
 msgstr "鏡像"
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "In"
+msgstr ""
+
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Inactive"
 msgstr "未啟用"
@@ -1261,6 +1265,10 @@ msgstr "或繼續使用"
 #: src/components/routes/system/cpu-sheet.tsx
 msgid "Other"
 msgstr "其他"
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Out"
+msgstr ""
 
 #: src/components/alerts/alerts-sheet.tsx
 msgid "Overwrite existing alerts"
@@ -1767,11 +1775,13 @@ msgid "Total: {0}"
 msgstr "總計: {0}"
 
 #: src/components/routes/haproxy-aggregate.tsx
+msgid "Traffic"
+msgstr ""
+
 #: src/components/routes/haproxy-aggregate.tsx
 msgid "Traffic In"
 msgstr ""
 
-#: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/haproxy-aggregate.tsx
 msgid "Traffic Out"
 msgstr ""
