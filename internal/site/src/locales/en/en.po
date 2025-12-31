@@ -1774,12 +1774,18 @@ msgid "Traffic"
 msgstr "Traffic"
 
 #: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/haproxy-aggregate.tsx
 msgid "Traffic In"
 msgstr "Traffic In"
 
 #: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/haproxy-aggregate.tsx
 msgid "Traffic Out"
 msgstr "Traffic Out"
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Traffic Overview"
+msgstr "Traffic Overview"
 
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Triggered by"

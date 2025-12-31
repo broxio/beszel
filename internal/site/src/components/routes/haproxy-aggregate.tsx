@@ -466,6 +466,9 @@ export default memo(function HAProxyAggregatePage() {
 			{/* Summary Cards */}
 			<SummaryCards groups={filteredGroups} aggregates={groupAggregates} trafficHistory={trafficHistory} />
 
+			{/* Traffic Overview */}
+			<TrafficOverviewCard groups={filteredGroups} aggregates={groupAggregates} trafficHistory={trafficHistory} />
+
 			{/* Group Cards */}
 			{Array.from(filteredGroups.entries())
 				.sort(([a], [b]) => a.localeCompare(b))
@@ -609,6 +612,131 @@ function SummaryCardWithSparkline({
 				<Sparkline data={history} color={color} width={60} height={20} />
 			</div>
 		</Card>
+	)
+}
+
+// Traffic Overview Card with larger sparklines
+const TrafficOverviewCard = memo(function TrafficOverviewCard({
+	groups,
+	aggregates,
+	trafficHistory,
+}: {
+	groups: Map<string, SystemRecord[]>
+	aggregates: Map<string, GroupAggregates>
+	trafficHistory: TrafficHistory
+}) {
+	const { t } = useLingui()
+
+	// Calculate combined traffic data from all filtered groups
+	const { totalBytesIn, totalBytesOut, bytesInHistory, bytesOutHistory } = useMemo(() => {
+		let bytesIn = 0
+		let bytesOut = 0
+		const historyByTimestamp = new Map<number, { bytesIn: number; bytesOut: number }>()
+
+		for (const groupName of groups.keys()) {
+			const agg = aggregates.get(groupName)
+			if (agg) {
+				bytesIn += agg.totals.bytesInRate
+				bytesOut += agg.totals.bytesOutRate
+			}
+
+			const groupHistory = trafficHistory.get(groupName)
+			if (groupHistory) {
+				for (const point of groupHistory) {
+					const existing = historyByTimestamp.get(point.timestamp)
+					if (existing) {
+						existing.bytesIn += point.bytesIn
+						existing.bytesOut += point.bytesOut
+					} else {
+						historyByTimestamp.set(point.timestamp, {
+							bytesIn: point.bytesIn,
+							bytesOut: point.bytesOut,
+						})
+					}
+				}
+			}
+		}
+
+		const sortedHistory = Array.from(historyByTimestamp.entries())
+			.sort(([a], [b]) => a - b)
+			.map(([, data]) => data)
+
+		return {
+			totalBytesIn: bytesIn,
+			totalBytesOut: bytesOut,
+			bytesInHistory: sortedHistory.map((d) => d.bytesIn),
+			bytesOutHistory: sortedHistory.map((d) => d.bytesOut),
+		}
+	}, [groups, aggregates, trafficHistory])
+
+	return (
+		<Card className="p-4 sm:p-6">
+			<p className="text-sm font-medium text-muted-foreground mb-4">{t`Traffic Overview`}</p>
+			<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+				{/* Traffic In */}
+				<div className="space-y-2">
+					<div className="flex items-center justify-between">
+						<span className="text-sm text-muted-foreground">{t`Traffic In`}</span>
+						<span className="text-lg font-semibold text-green-600">{formatBytesPerSec(totalBytesIn)}</span>
+					</div>
+					<div className="h-16 w-full">
+						<LargeSparkline data={bytesInHistory} color="#22c55e" />
+					</div>
+				</div>
+				{/* Traffic Out */}
+				<div className="space-y-2">
+					<div className="flex items-center justify-between">
+						<span className="text-sm text-muted-foreground">{t`Traffic Out`}</span>
+						<span className="text-lg font-semibold text-blue-600">{formatBytesPerSec(totalBytesOut)}</span>
+					</div>
+					<div className="h-16 w-full">
+						<LargeSparkline data={bytesOutHistory} color="#3b82f6" />
+					</div>
+				</div>
+			</div>
+		</Card>
+	)
+})
+
+// Large sparkline component that fills container
+function LargeSparkline({ data, color }: { data: number[]; color: string }) {
+	if (data.length < 2) {
+		return (
+			<div className="h-full w-full flex items-center justify-center text-muted-foreground text-sm border border-dashed rounded">
+				{data.length === 0 ? "Collecting data..." : "Waiting for more data..."}
+			</div>
+		)
+	}
+
+	const min = Math.min(...data)
+	const max = Math.max(...data)
+	const range = max - min || 1
+
+	// Generate SVG path with area fill
+	const points = data.map((value, index) => {
+		const x = (index / (data.length - 1)) * 100
+		const y = 100 - ((value - min) / range) * 90 - 5
+		return { x, y }
+	})
+
+	const linePath = `M ${points.map((p) => `${p.x},${p.y}`).join(" L ")}`
+	const areaPath = `${linePath} L 100,100 L 0,100 Z`
+
+	return (
+		<svg viewBox="0 0 100 100" preserveAspectRatio="none" className="h-full w-full">
+			{/* Area fill */}
+			<path d={areaPath} fill={color} fillOpacity={0.1} />
+			{/* Line */}
+			<path
+				d={linePath}
+				fill="none"
+				stroke={color}
+				strokeWidth={1.5}
+				strokeLinecap="round"
+				strokeLinejoin="round"
+				vectorEffect="non-scaling-stroke"
+			/>
+		</svg>
 	)
 }
 
