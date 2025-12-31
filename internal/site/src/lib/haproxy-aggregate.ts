@@ -1,6 +1,49 @@
 import type { HAProxyInfo, HAProxyStats, SystemRecord, SystemStats } from "@/types"
 
 /**
+ * Pre-group types for environment/zone classification
+ */
+export type PreGroupType = "pre" | "uat" | "lan" | "wan"
+
+/**
+ * Extract pre-group (environment/zone) from group name.
+ * Pattern: "ha-pre-*" → "pre"
+ * Pattern: "ha-uat-*" → "uat"
+ * Pattern: "ha-lan*" → "lan"
+ * Pattern: "ha-*" (others) → "wan"
+ */
+export function extractPreGroup(groupName: string): PreGroupType {
+	if (groupName.startsWith("ha-pre-") || groupName === "ha-pre") return "pre"
+	if (groupName.startsWith("ha-uat-") || groupName === "ha-uat") return "uat"
+	if (groupName.startsWith("ha-lan")) return "lan"
+	return "wan"
+}
+
+/**
+ * Group groups by pre-group type
+ */
+export function groupByPreGroup(groups: Map<string, unknown>): Map<PreGroupType, string[]> {
+	const preGroups = new Map<PreGroupType, string[]>([
+		["pre", []],
+		["uat", []],
+		["lan", []],
+		["wan", []],
+	])
+
+	for (const groupName of groups.keys()) {
+		const preGroup = extractPreGroup(groupName)
+		preGroups.get(preGroup)?.push(groupName)
+	}
+
+	// Sort group names within each pre-group
+	for (const [, groupList] of preGroups) {
+		groupList.sort()
+	}
+
+	return preGroups
+}
+
+/**
  * Extract group name from hostname.
  * Pattern: "ha-xxx-1", "ha-xxx-2" → "ha-xxx"
  * Pattern: "ha-web-api-1" → "ha-web-api"
@@ -248,10 +291,15 @@ export function formatBytes(bytes: number): string {
 }
 
 /**
- * Format bytes per second to human readable string
+ * Format bytes per second to bits per second (Mbps, Gbps, etc.)
  */
 export function formatBytesPerSec(bytesPerSec: number): string {
-	return `${formatBytes(bytesPerSec)}/s`
+	const bitsPerSec = bytesPerSec * 8
+	if (bitsPerSec === 0) return "0 bps"
+	const k = 1000 // Use 1000 for bits (networking standard)
+	const sizes = ["bps", "Kbps", "Mbps", "Gbps", "Tbps"]
+	const i = Math.floor(Math.log(bitsPerSec) / Math.log(k))
+	return `${Number.parseFloat((bitsPerSec / k ** i).toFixed(1))} ${sizes[i]}`
 }
 
 /**

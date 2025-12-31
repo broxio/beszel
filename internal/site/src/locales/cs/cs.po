@@ -388,11 +388,14 @@ msgid "Check your notification service"
 msgstr "Zkontrolujte službu upozornění"
 
 #: src/components/containers-table/containers-table.tsx
-#: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/system/smart-table.tsx
 #: src/components/systems-table/systems-table.tsx
 msgid "Clear"
 msgstr "Vymazat"
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Clear All"
+msgstr ""
 
 #: src/components/containers-table/containers-table.tsx
 msgid "Click on a container to view more information."
@@ -675,6 +678,10 @@ msgstr "Stažení"
 msgid "Duration"
 msgstr "Doba trvání"
 
+#: src/components/routes/haproxy-aggregate.tsx
+#~ msgid "e.g. internal, stats, admin"
+#~ msgstr ""
+
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Edit"
@@ -734,6 +741,14 @@ msgstr "Chyba"
 #: src/components/active-alerts.tsx
 msgid "Exceeds {0}{1} in last {2, plural, one {# minute} other {# minutes}}"
 msgstr "Překračuje {0}{1} za {2, plural, one {poslední # minutu} few {poslední # minuty} other {posledních # minut}}"
+
+#: src/components/routes/haproxy-aggregate.tsx
+#~ msgid "Exclude proxies:"
+#~ msgstr ""
+
+#: src/components/routes/haproxy-aggregate.tsx
+#~ msgid "Excluding {0} pattern(s): {1}"
+#~ msgstr ""
 
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Exec main PID"
@@ -797,6 +812,10 @@ msgstr "Nepodařilo se aktualizovat upozornění"
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Failed: {0}"
 msgstr "Neúspěšné: {0}"
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Filter by zone:"
+msgstr ""
 
 #: src/components/routes/haproxy-aggregate.tsx
 msgid "Filter groups:"
@@ -1503,7 +1522,11 @@ msgid "Select {foo}"
 msgstr "Vybrat {foo}"
 
 #: src/components/routes/haproxy-aggregate.tsx
-msgid "Select All"
+#~ msgid "Select All"
+#~ msgstr ""
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "selected"
 msgstr ""
 
 #: src/components/routes/system.tsx

@@ -388,11 +388,14 @@ msgid "Check your notification service"
 msgstr "Provjerite Vaš servis notifikacija"
 
 #: src/components/containers-table/containers-table.tsx
-#: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/system/smart-table.tsx
 #: src/components/systems-table/systems-table.tsx
 msgid "Clear"
 msgstr "Očisti"
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Clear All"
+msgstr ""
 
 #: src/components/containers-table/containers-table.tsx
 msgid "Click on a container to view more information."
@@ -675,6 +678,10 @@ msgstr "Preuzmi"
 msgid "Duration"
 msgstr "Trajanje"
 
+#: src/components/routes/haproxy-aggregate.tsx
+#~ msgid "e.g. internal, stats, admin"
+#~ msgstr ""
+
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Edit"
@@ -734,6 +741,14 @@ msgstr "Greška"
 #: src/components/active-alerts.tsx
 msgid "Exceeds {0}{1} in last {2, plural, one {# minute} other {# minutes}}"
 msgstr "Premašuje {0}{1} u posljednjih {2, plural, one {# minuta} other {# minute}}"
+
+#: src/components/routes/haproxy-aggregate.tsx
+#~ msgid "Exclude proxies:"
+#~ msgstr ""
+
+#: src/components/routes/haproxy-aggregate.tsx
+#~ msgid "Excluding {0} pattern(s): {1}"
+#~ msgstr ""
 
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Exec main PID"
@@ -797,6 +812,10 @@ msgstr "Ažuriranje upozorenja nije uspjelo"
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Failed: {0}"
 msgstr "Neuspjelo: {0}"
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Filter by zone:"
+msgstr ""
 
 #: src/components/routes/haproxy-aggregate.tsx
 msgid "Filter groups:"
@@ -1503,7 +1522,11 @@ msgid "Select {foo}"
 msgstr ""
 
 #: src/components/routes/haproxy-aggregate.tsx
-msgid "Select All"
+#~ msgid "Select All"
+#~ msgstr ""
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "selected"
 msgstr ""
 
 #: src/components/routes/system.tsx

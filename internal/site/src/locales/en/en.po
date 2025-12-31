@@ -383,11 +383,14 @@ msgid "Check your notification service"
 msgstr "Check your notification service"
 
 #: src/components/containers-table/containers-table.tsx
-#: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/system/smart-table.tsx
 #: src/components/systems-table/systems-table.tsx
 msgid "Clear"
 msgstr "Clear"
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Clear All"
+msgstr "Clear All"
 
 #: src/components/containers-table/containers-table.tsx
 msgid "Click on a container to view more information."
@@ -670,6 +673,10 @@ msgstr "Download"
 msgid "Duration"
 msgstr "Duration"
 
+#: src/components/routes/haproxy-aggregate.tsx
+#~ msgid "e.g. internal, stats, admin"
+#~ msgstr "e.g. internal, stats, admin"
+
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Edit"
@@ -729,6 +736,14 @@ msgstr "Error"
 #: src/components/active-alerts.tsx
 msgid "Exceeds {0}{1} in last {2, plural, one {# minute} other {# minutes}}"
 msgstr "Exceeds {0}{1} in last {2, plural, one {# minute} other {# minutes}}"
+
+#: src/components/routes/haproxy-aggregate.tsx
+#~ msgid "Exclude proxies:"
+#~ msgstr "Exclude proxies:"
+
+#: src/components/routes/haproxy-aggregate.tsx
+#~ msgid "Excluding {0} pattern(s): {1}"
+#~ msgstr "Excluding {0} pattern(s): {1}"
 
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Exec main PID"
@@ -792,6 +807,10 @@ msgstr "Failed to update alert"
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Failed: {0}"
 msgstr "Failed: {0}"
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "Filter by zone:"
+msgstr "Filter by zone:"
 
 #: src/components/routes/haproxy-aggregate.tsx
 msgid "Filter groups:"
@@ -1498,8 +1517,12 @@ msgid "Select {foo}"
 msgstr "Select {foo}"
 
 #: src/components/routes/haproxy-aggregate.tsx
-msgid "Select All"
-msgstr "Select All"
+#~ msgid "Select All"
+#~ msgstr "Select All"
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "selected"
+msgstr "selected"
 
 #: src/components/routes/system.tsx
 msgid "Sent"

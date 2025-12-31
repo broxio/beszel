@@ -6,18 +6,21 @@ import { $systems } from "@/lib/stores"
 import {
 	calculateGroupAggregates,
 	extractHAProxyData,
+	extractPreGroup,
 	filterHAProxySystems,
 	formatBytesPerSec,
 	formatNumber,
+	groupByPreGroup,
 	groupSystemsByPattern,
 	type GroupAggregates,
+	type PreGroupType,
 } from "@/lib/haproxy-aggregate"
 import type { SystemRecord, SystemStats, SystemStatsRecord } from "@/types"
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { FooterRepoLink } from "@/components/footer-repo-link"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ChevronDownIcon, ChevronUpIcon, RefreshCwIcon, ServerIcon, FilterIcon } from "lucide-react"
+import { ChevronDownIcon, ChevronUpIcon, RefreshCwIcon, ServerIcon, FilterIcon, LayersIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 // Colors for HTTP response codes
@@ -31,12 +34,21 @@ const RESPONSE_COLORS = {
 
 const POLL_INTERVAL = 10000 // 10 seconds
 
+// Pre-group display configuration
+const PRE_GROUP_CONFIG: Record<PreGroupType, { label: string; color: string }> = {
+	pre: { label: "PRE", color: "bg-orange-500 hover:bg-orange-600" },
+	uat: { label: "UAT", color: "bg-purple-500 hover:bg-purple-600" },
+	lan: { label: "LAN", color: "bg-blue-500 hover:bg-blue-600" },
+	wan: { label: "WAN", color: "bg-green-500 hover:bg-green-600" },
+}
+
 export default memo(function HAProxyAggregatePage() {
 	const { t } = useLingui()
 	const [statsMap, setStatsMap] = useState<Map<string, SystemStats>>(new Map())
 	const [loading, setLoading] = useState(false)
 	const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
 	const [selectedGroups, setSelectedGroups] = useState<Set<string>>(new Set())
+	const [selectedPreGroups, setSelectedPreGroups] = useState<Set<PreGroupType>>(new Set())
 
 	// Get systems only once on mount to avoid re-renders from store updates
 	const [haproxySystems, setHaproxySystems] = useState<SystemRecord[]>([])
@@ -124,6 +136,9 @@ export default memo(function HAProxyAggregatePage() {
 	// Group by pattern
 	const groups = useMemo(() => groupSystemsByPattern(haproxySystems), [haproxySystems])
 
+	// Group groups by pre-group type (pre, uat, lan, wan)
+	const preGroups = useMemo(() => groupByPreGroup(groups), [groups])
+
 	// Calculate aggregates per group (only systems with HAProxy data)
 	const { groupAggregates, groupStats } = useMemo(() => {
 		const aggregates = new Map<string, GroupAggregates>()
@@ -164,16 +179,31 @@ export default memo(function HAProxyAggregatePage() {
 	}, [groups, statsMap])
 
 	// Filter groups based on selection (empty = show all)
+	// Pre-groups take precedence: if any pre-group is selected, filter by pre-group first
 	const filteredGroups = useMemo(() => {
-		if (selectedGroups.size === 0) return groups
+		// If no filters at all, show everything
+		if (selectedPreGroups.size === 0 && selectedGroups.size === 0) return groups
+
 		const filtered = new Map<string, SystemRecord[]>()
+
 		for (const [name, systems] of groups) {
-			if (selectedGroups.has(name)) {
-				filtered.set(name, systems)
+			const groupPreGroup = extractPreGroup(name)
+
+			// If pre-groups are selected, check if this group belongs to any selected pre-group
+			if (selectedPreGroups.size > 0) {
+				if (!selectedPreGroups.has(groupPreGroup)) continue
 			}
+
+			// If individual groups are also selected, further filter
+			if (selectedGroups.size > 0) {
+				if (!selectedGroups.has(name)) continue
+			}
+
+			filtered.set(name, systems)
 		}
+
 		return filtered
-	}, [groups, selectedGroups])
+	}, [groups, selectedGroups, selectedPreGroups])
 
 	// Toggle group selection
 	const toggleGroup = (groupName: string) => {
@@ -188,12 +218,25 @@ export default memo(function HAProxyAggregatePage() {
 		})
 	}
 
-	// Select all / clear all
-	const selectAllGroups = () => {
-		setSelectedGroups(new Set(groups.keys()))
-	}
-	const clearGroupSelection = () => {
+	// Toggle pre-group selection
+	const togglePreGroup = (preGroupType: PreGroupType) => {
+		setSelectedPreGroups((prev) => {
+			const next = new Set(prev)
+			if (next.has(preGroupType)) {
+				next.delete(preGroupType)
+			} else {
+				next.add(preGroupType)
+			}
+			return next
+		})
+		// Clear individual group selection when pre-group changes
 		setSelectedGroups(new Set())
+	}
+
+	// Clear all selections
+	const clearAllSelections = () => {
+		setSelectedGroups(new Set())
+		setSelectedPreGroups(new Set())
 	}
 
 	// Set page title
@@ -244,7 +287,14 @@ export default memo(function HAProxyAggregatePage() {
 						<h1 className="text-[1.6rem] font-semibold">{t`HAProxy Aggregate`}</h1>
 						<p className="text-sm text-muted-foreground mt-1">
 							{t`${totalOnline} online, ${totalOffline} offline across ${groups.size} groups`}
-							{selectedGroups.size > 0 && ` (${selectedGroups.size} selected)`}
+							{(selectedPreGroups.size > 0 || selectedGroups.size > 0) && (
+								<span className="ml-1">
+									({selectedPreGroups.size > 0 && `${selectedPreGroups.size} zone`}
+									{selectedPreGroups.size > 0 && selectedGroups.size > 0 && ", "}
+									{selectedGroups.size > 0 && `${selectedGroups.size} group`}
+									{" "}{t`selected`})
+								</span>
+							)}
 						</p>
 					</div>
 					<div className="flex items-center gap-4">
@@ -259,37 +309,95 @@ export default memo(function HAProxyAggregatePage() {
 					</div>
 				</div>
 
+				{/* Pre-Group Filter (Zone/Environment) */}
+				{groups.size > 0 && (
+					<div className="px-4 sm:px-6 pb-4 border-t pt-4">
+						<div className="flex items-center gap-2 mb-2">
+							<LayersIcon className="h-4 w-4 text-muted-foreground" />
+							<span className="text-sm text-muted-foreground">{t`Filter by zone:`}</span>
+							{(selectedPreGroups.size > 0 || selectedGroups.size > 0) && (
+								<Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={clearAllSelections}>
+									{t`Clear All`}
+								</Button>
+							)}
+						</div>
+						<div className="flex flex-wrap gap-2">
+							{(["pre", "uat", "lan", "wan"] as PreGroupType[]).map((preGroupType) => {
+								const groupList = preGroups.get(preGroupType) || []
+								if (groupList.length === 0) return null
+
+								const isSelected = selectedPreGroups.has(preGroupType)
+								const config = PRE_GROUP_CONFIG[preGroupType]
+
+								// Calculate totals for this pre-group
+								let totalOnlineInPreGroup = 0
+								let totalSystemsInPreGroup = 0
+								for (const gName of groupList) {
+									const stats = groupStats.get(gName)
+									if (stats) {
+										totalOnlineInPreGroup += stats.online
+										totalSystemsInPreGroup += stats.total
+									}
+								}
+
+								return (
+									<Badge
+										key={preGroupType}
+										variant="default"
+										className={cn(
+											"cursor-pointer transition-colors text-white",
+											isSelected ? config.color : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
+										)}
+										onClick={() => togglePreGroup(preGroupType)}
+									>
+										{config.label}
+										<span className="ml-1 opacity-80">
+											({totalOnlineInPreGroup}/{totalSystemsInPreGroup})
+										</span>
+									</Badge>
+								)
+							})}
+						</div>
+					</div>
+				)}
+
 				{/* Group Filter */}
-				{groups.size > 1 && (
+				{groups.size > 0 && (
 					<div className="px-4 sm:px-6 pb-4 border-t pt-4">
 						<div className="flex items-center gap-2 mb-2">
 							<FilterIcon className="h-4 w-4 text-muted-foreground" />
 							<span className="text-sm text-muted-foreground">{t`Filter groups:`}</span>
-							{selectedGroups.size > 0 && (
-								<Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={clearGroupSelection}>
-									{t`Clear`}
-								</Button>
-							)}
-							{selectedGroups.size === 0 && groups.size > 3 && (
-								<Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={selectAllGroups}>
-									{t`Select All`}
-								</Button>
-							)}
 						</div>
 						<div className="flex flex-wrap gap-2">
 							{Array.from(groups.keys())
 								.sort()
 								.map((groupName) => {
+									const groupPreGroup = extractPreGroup(groupName)
 									const isSelected = selectedGroups.has(groupName)
+									const isInSelectedPreGroup = selectedPreGroups.size === 0 || selectedPreGroups.has(groupPreGroup)
 									const stats = groupStats.get(groupName)
 									const hasOffline = stats && stats.offline > 0
+
+									// Dim groups that are not in selected pre-groups
+									if (!isInSelectedPreGroup) {
+										return (
+											<Badge
+												key={groupName}
+												variant="outline"
+												className="cursor-not-allowed opacity-30"
+											>
+												{groupName}
+											</Badge>
+										)
+									}
+
 									return (
 										<Badge
 											key={groupName}
-											variant={selectedGroups.size === 0 || isSelected ? "default" : "outline"}
+											variant={(selectedGroups.size === 0 && selectedPreGroups.size === 0) || isSelected ? "default" : "outline"}
 											className={cn(
 												"cursor-pointer transition-colors",
-												selectedGroups.size === 0 || isSelected
+												(selectedGroups.size === 0 && selectedPreGroups.size === 0) || isSelected
 													? "bg-primary hover:bg-primary/80"
 													: "hover:bg-muted"
 											)}
@@ -307,6 +415,7 @@ export default memo(function HAProxyAggregatePage() {
 						</div>
 					</div>
 				)}
+
 			</Card>
 
 			{/* Summary Cards */}
@@ -348,12 +457,16 @@ const SummaryCards = memo(function SummaryCards({
 		let totalRequestRate = 0
 		let totalSystemCount = 0
 
-		for (const [, agg] of aggregates) {
-			totalSessions += agg.totals.currentSessions
-			totalBytesIn += agg.totals.bytesInRate
-			totalBytesOut += agg.totals.bytesOutRate
-			totalRequestRate += agg.totals.requestRate
-			totalSystemCount += agg.totals.systemCount
+		// Only sum aggregates for groups that are in the filtered groups map
+		for (const groupName of groups.keys()) {
+			const agg = aggregates.get(groupName)
+			if (agg) {
+				totalSessions += agg.totals.currentSessions
+				totalBytesIn += agg.totals.bytesInRate
+				totalBytesOut += agg.totals.bytesOutRate
+				totalRequestRate += agg.totals.requestRate
+				totalSystemCount += agg.totals.systemCount
+			}
 		}
 
 		return {
