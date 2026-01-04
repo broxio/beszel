@@ -189,26 +189,28 @@ export function calculateTotals(
 			// Only aggregate frontends and backends, not individual servers
 			if (proxy.t !== "FRONTEND" && proxy.t !== "BACKEND") continue
 
-			totals.currentSessions += proxy.sc ?? 0
-			totals.totalSessions += proxy.st ?? 0
-			totals.bytesIn += proxy.bi ?? 0
-			totals.bytesOut += proxy.bo ?? 0
-			totals.bytesInRate += proxy.bir ?? 0
-			totals.bytesOutRate += proxy.bor ?? 0
-			totals.requestRate += proxy.rr ?? 0
-			totals.totalRequests += proxy.rt ?? 0
-			totals.resp1xx += proxy.r1 ?? 0
-			totals.resp2xx += proxy.r2 ?? 0
-			totals.resp3xx += proxy.r3 ?? 0
-			totals.resp4xx += proxy.r4 ?? 0
-			totals.resp5xx += proxy.r5 ?? 0
-
-			if (proxy.t === "BACKEND") {
+			if (proxy.t === "FRONTEND") {
+				// Traffic stats from FRONTEND only to avoid double-counting
+				// (Frontend In/Out = actual client traffic)
+				totals.bytesIn += proxy.bi ?? 0
+				totals.bytesOut += proxy.bo ?? 0
+				totals.bytesInRate += proxy.bir ?? 0
+				totals.bytesOutRate += proxy.bor ?? 0
+				totals.requestRate += proxy.rr ?? 0
+				totals.totalRequests += proxy.rt ?? 0
+				totals.resp1xx += proxy.r1 ?? 0
+				totals.resp2xx += proxy.r2 ?? 0
+				totals.resp3xx += proxy.r3 ?? 0
+				totals.resp4xx += proxy.r4 ?? 0
+				totals.resp5xx += proxy.r5 ?? 0
+				totals.currentSessions += proxy.sc ?? 0
+				totals.totalSessions += proxy.st ?? 0
+				totals.frontendCount++
+			} else {
+				// BACKEND - only count server stats
 				totals.activeServers += proxy.as ?? 0
 				totals.backupServers += proxy.bs ?? 0
 				totals.backendCount++
-			} else {
-				totals.frontendCount++
 			}
 		}
 	}
