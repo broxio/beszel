@@ -34,9 +34,25 @@ HAProxy systems are classified into zones based on hostname patterns:
 - History stored in ref to avoid unnecessary re-renders
 - Combined sparklines for filtered/selected groups in Summary and Traffic Overview cards
 
+#### Connection Retry Logic (Agent)
+HAProxy socket connections use exponential backoff for resilience:
+- **Max retries:** 3 attempts per operation
+- **Initial backoff:** 100ms
+- **Backoff multiplier:** 2.0x (100ms → 200ms → 400ms)
+- **Max backoff cap:** 2 seconds
+- **Health tracking:** Consecutive failures tracked, warning logged after 5+ failures
+
+Key functions in `agent/haproxy.go`:
+- `dialSocketWithRetry()` - Socket connection with exponential backoff
+- `executeSocketCommand()` - Unified helper for all socket commands
+- `GetConnectionHealth()` - Exposes failure count for monitoring
+
+All fetch operations use retry logic: `fetchInfo`, `fetchStats`, `fetchPools`, `fetchActivity`, `fetchServersState`
+
 ### File Structure
 - `internal/site/src/components/routes/haproxy-aggregate.tsx` - Main aggregate page
 - `internal/site/src/lib/haproxy-aggregate.ts` - Calculation utilities and types
+- `agent/haproxy.go` - HAProxy agent with stats collection and retry logic
 
 ### Data Flow
 1. Page polls `system_stats` collection every 10 seconds
