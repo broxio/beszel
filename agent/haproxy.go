@@ -56,6 +56,14 @@ type haproxyPrevCounters struct {
 	time     time.Time
 }
 
+// Retry configuration for HAProxy connections
+const (
+	maxRetries       = 3
+	initialBackoff   = 100 * time.Millisecond
+	maxBackoff       = 2 * time.Second
+	backoffMultiplier = 2.0
+)
+
 // HAProxyManager manages HAProxy stats collection
 type HAProxyManager struct {
 	sync.Mutex
@@ -72,6 +80,9 @@ type HAProxyManager struct {
 	updatePeriod time.Duration
 	filter       map[string]struct{}              // filter to specific frontends/backends (nil = all)
 	prevCounters map[string]*haproxyPrevCounters // previous counters per proxy (key: "name:type")
+	// Connection health tracking
+	consecutiveFailures int
+	lastError          error
 }
 
 // NewHAProxyManager creates a new HAProxy stats manager
@@ -125,6 +136,75 @@ func NewHAProxyManager() (*HAProxyManager, error) {
 
 	slog.Info("HAProxy monitoring enabled")
 	return hm, nil
+}
+
+// dialSocketWithRetry attempts to connect to the Unix socket with exponential backoff
+func (hm *HAProxyManager) dialSocketWithRetry() (net.Conn, error) {
+	var lastErr error
+	backoff := initialBackoff
+
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		conn, err := net.DialTimeout("unix", hm.socketPath, 5*time.Second)
+		if err == nil {
+			// Reset failure count on successful connection
+			hm.consecutiveFailures = 0
+			hm.lastError = nil
+			return conn, nil
+		}
+
+		lastErr = err
+
+		// Don't sleep after the last attempt
+		if attempt < maxRetries-1 {
+			slog.Debug("HAProxy socket connection failed, retrying",
+				"attempt", attempt+1,
+				"maxRetries", maxRetries,
+				"backoff", backoff,
+				"err", err)
+			time.Sleep(backoff)
+
+			// Exponential backoff with cap
+			backoff = time.Duration(float64(backoff) * backoffMultiplier)
+			if backoff > maxBackoff {
+				backoff = maxBackoff
+			}
+		}
+	}
+
+	// Track consecutive failures
+	hm.consecutiveFailures++
+	hm.lastError = lastErr
+
+	if hm.consecutiveFailures > 5 {
+		slog.Warn("HAProxy connection persistently failing",
+			"consecutiveFailures", hm.consecutiveFailures,
+			"err", lastErr)
+	}
+
+	return nil, fmt.Errorf("socket connection failed after %d retries: %w", maxRetries, lastErr)
+}
+
+// executeSocketCommand connects to socket, sends command, and returns reader
+func (hm *HAProxyManager) executeSocketCommand(command string) (io.ReadCloser, error) {
+	conn, err := hm.dialSocketWithRetry()
+	if err != nil {
+		return nil, err
+	}
+
+	// Send command
+	if _, err := conn.Write([]byte(command + "\n")); err != nil {
+		conn.Close()
+		return nil, fmt.Errorf("socket write failed: %w", err)
+	}
+
+	return conn, nil
+}
+
+// GetConnectionHealth returns the current connection health status
+func (hm *HAProxyManager) GetConnectionHealth() (failures int, lastErr error) {
+	hm.Lock()
+	defer hm.Unlock()
+	return hm.consecutiveFailures, hm.lastError
 }
 
 // GetStats returns current HAProxy stats (returns a copy to avoid race conditions)
@@ -303,16 +383,11 @@ func (hm *HAProxyManager) fetchInfo() (*system.HAProxyInfo, error) {
 		return nil, fmt.Errorf("socket path not configured for show info")
 	}
 
-	conn, err := net.DialTimeout("unix", hm.socketPath, 5*time.Second)
+	conn, err := hm.executeSocketCommand("show info")
 	if err != nil {
-		return nil, fmt.Errorf("socket connection failed: %w", err)
+		return nil, err
 	}
 	defer conn.Close()
-
-	// Send info command
-	if _, err := conn.Write([]byte("show info\n")); err != nil {
-		return nil, fmt.Errorf("socket write failed: %w", err)
-	}
 
 	return hm.parseInfo(conn)
 }
@@ -400,33 +475,21 @@ func (hm *HAProxyManager) parseInfo(reader io.Reader) (*system.HAProxyInfo, erro
 
 // fetchStats retrieves stats from HAProxy via socket or HTTP
 func (hm *HAProxyManager) fetchStats() ([]system.HAProxyStats, error) {
-	var reader io.Reader
-	var closer io.Closer
-
 	if hm.socketPath != "" {
-		// Connect via Unix socket
-		conn, err := net.DialTimeout("unix", hm.socketPath, 5*time.Second)
+		// Connect via Unix socket with retry
+		conn, err := hm.executeSocketCommand("show stat")
 		if err != nil {
 			// Fall back to HTTP if socket fails and HTTP is configured
 			if hm.httpURL != "" {
 				return hm.fetchStatsHTTP()
 			}
-			return nil, fmt.Errorf("socket connection failed: %w", err)
+			return nil, err
 		}
-		closer = conn
-		reader = conn
-
-		// Send stats command
-		if _, err := conn.Write([]byte("show stat\n")); err != nil {
-			conn.Close()
-			return nil, fmt.Errorf("socket write failed: %w", err)
-		}
-	} else {
-		return hm.fetchStatsHTTP()
+		defer conn.Close()
+		return hm.parseCSV(conn)
 	}
 
-	defer closer.Close()
-	return hm.parseCSV(reader)
+	return hm.fetchStatsHTTP()
 }
 
 // fetchStatsHTTP retrieves stats via HTTP endpoint
@@ -589,15 +652,11 @@ func (hm *HAProxyManager) fetchPools() ([]system.HAProxyPool, *system.HAProxyPoo
 		return nil, nil, fmt.Errorf("socket path not configured for show pools")
 	}
 
-	conn, err := net.DialTimeout("unix", hm.socketPath, 5*time.Second)
+	conn, err := hm.executeSocketCommand("show pools")
 	if err != nil {
-		return nil, nil, fmt.Errorf("socket connection failed: %w", err)
+		return nil, nil, err
 	}
 	defer conn.Close()
-
-	if _, err := conn.Write([]byte("show pools\n")); err != nil {
-		return nil, nil, fmt.Errorf("socket write failed: %w", err)
-	}
 
 	return hm.parsePools(conn)
 }
@@ -659,15 +718,11 @@ func (hm *HAProxyManager) fetchActivity() ([]system.HAProxyActivity, error) {
 		return nil, fmt.Errorf("socket path not configured for show activity")
 	}
 
-	conn, err := net.DialTimeout("unix", hm.socketPath, 5*time.Second)
+	conn, err := hm.executeSocketCommand("show activity")
 	if err != nil {
-		return nil, fmt.Errorf("socket connection failed: %w", err)
+		return nil, err
 	}
 	defer conn.Close()
-
-	if _, err := conn.Write([]byte("show activity\n")); err != nil {
-		return nil, fmt.Errorf("socket write failed: %w", err)
-	}
 
 	return hm.parseActivity(conn)
 }
@@ -751,15 +806,11 @@ func (hm *HAProxyManager) fetchServersState() ([]system.HAProxyServerState, erro
 		return nil, fmt.Errorf("socket path not configured for show servers state")
 	}
 
-	conn, err := net.DialTimeout("unix", hm.socketPath, 5*time.Second)
+	conn, err := hm.executeSocketCommand("show servers state")
 	if err != nil {
-		return nil, fmt.Errorf("socket connection failed: %w", err)
+		return nil, err
 	}
 	defer conn.Close()
-
-	if _, err := conn.Write([]byte("show servers state\n")); err != nil {
-		return nil, fmt.Errorf("socket write failed: %w", err)
-	}
 
 	return hm.parseServersState(conn)
 }
