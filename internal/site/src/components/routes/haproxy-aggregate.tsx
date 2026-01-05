@@ -698,29 +698,35 @@ const TrafficOverviewCard = memo(function TrafficOverviewCard({
 	)
 })
 
-// Large sparkline component that fills container
-function LargeSparkline({ data, color }: { data: number[]; color: string }) {
-	if (data.length < 2) {
+// Large sparkline component that fills container (memoized)
+const LargeSparkline = memo(function LargeSparkline({ data, color }: { data: number[]; color: string }) {
+	// Memoize SVG path calculations
+	const { linePath, areaPath } = useMemo(() => {
+		if (data.length < 2) return { linePath: null, areaPath: null }
+
+		const min = Math.min(...data)
+		const max = Math.max(...data)
+		const range = max - min || 1
+
+		const points = data.map((value, index) => {
+			const x = (index / (data.length - 1)) * 100
+			const y = 100 - ((value - min) / range) * 90 - 5
+			return { x, y }
+		})
+
+		const line = `M ${points.map((p) => `${p.x},${p.y}`).join(" L ")}`
+		const area = `${line} L 100,100 L 0,100 Z`
+
+		return { linePath: line, areaPath: area }
+	}, [data])
+
+	if (!linePath) {
 		return (
 			<div className="h-full w-full flex items-center justify-center text-muted-foreground text-sm border border-dashed rounded">
 				{data.length === 0 ? "Collecting data..." : "Waiting for more data..."}
 			</div>
 		)
 	}
-
-	const min = Math.min(...data)
-	const max = Math.max(...data)
-	const range = max - min || 1
-
-	// Generate SVG path with area fill
-	const points = data.map((value, index) => {
-		const x = (index / (data.length - 1)) * 100
-		const y = 100 - ((value - min) / range) * 90 - 5
-		return { x, y }
-	})
-
-	const linePath = `M ${points.map((p) => `${p.x},${p.y}`).join(" L ")}`
-	const areaPath = `${linePath} L 100,100 L 0,100 Z`
 
 	return (
 		<svg viewBox="0 0 100 100" preserveAspectRatio="none" className="h-full w-full">
@@ -738,7 +744,7 @@ function LargeSparkline({ data, color }: { data: number[]; color: string }) {
 			/>
 		</svg>
 	)
-}
+})
 
 // Group card
 const GroupCard = memo(function GroupCard({
@@ -962,7 +968,7 @@ function ResponseBarChart({ data }: ResponseBarChartProps) {
 	)
 }
 
-// Sparkline component for traffic trends
+// Sparkline component for traffic trends (memoized)
 interface SparklineProps {
 	data: number[]
 	color?: string
@@ -970,8 +976,25 @@ interface SparklineProps {
 	width?: number
 }
 
-function Sparkline({ data, color = "#3b82f6", height = 24, width = 80 }: SparklineProps) {
-	if (data.length < 2) {
+const Sparkline = memo(function Sparkline({ data, color = "#3b82f6", height = 24, width = 80 }: SparklineProps) {
+	// Memoize SVG path calculation
+	const pathD = useMemo(() => {
+		if (data.length < 2) return null
+
+		const min = Math.min(...data)
+		const max = Math.max(...data)
+		const range = max - min || 1
+
+		const points = data.map((value, index) => {
+			const x = (index / (data.length - 1)) * width
+			const y = height - ((value - min) / range) * (height - 4) - 2
+			return `${x},${y}`
+		})
+
+		return `M ${points.join(" L ")}`
+	}, [data, width, height])
+
+	if (!pathD) {
 		return (
 			<div
 				className="flex items-center justify-center text-muted-foreground text-xs"
@@ -981,19 +1004,6 @@ function Sparkline({ data, color = "#3b82f6", height = 24, width = 80 }: Sparkli
 			</div>
 		)
 	}
-
-	const min = Math.min(...data)
-	const max = Math.max(...data)
-	const range = max - min || 1
-
-	// Generate SVG path
-	const points = data.map((value, index) => {
-		const x = (index / (data.length - 1)) * width
-		const y = height - ((value - min) / range) * (height - 4) - 2
-		return `${x},${y}`
-	})
-
-	const pathD = `M ${points.join(" L ")}`
 
 	return (
 		<svg width={width} height={height} className="inline-block">
@@ -1007,7 +1017,7 @@ function Sparkline({ data, color = "#3b82f6", height = 24, width = 80 }: Sparkli
 			/>
 		</svg>
 	)
-}
+})
 
 // Traffic stat item with sparkline
 interface TrafficStatItemProps {
