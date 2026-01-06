@@ -10,8 +10,9 @@ PUSH="${PUSH:-false}"
 NO_CACHE="${NO_CACHE:-false}"
 
 # Platform configuration (from upstream workflow)
-# Default: linux/amd64,linux/arm64,linux/arm/v7
-PLATFORMS="${PLATFORMS:-linux/amd64,linux/arm64,linux/arm/v7}"
+# Default: linux/amd64,linux/arm64
+# Note: linux/arm/v7 disabled due to purego incompatibility (GPU NVML support)
+PLATFORMS="${PLATFORMS:-linux/amd64,linux/arm64}"
 
 # Full version tag
 TAG="${VERSION}-${RELEASE}"
