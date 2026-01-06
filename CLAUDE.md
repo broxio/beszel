@@ -61,3 +61,51 @@ All fetch operations use retry logic: `fetchInfo`, `fetchStats`, `fetchPools`, `
 4. Calculates aggregates per group (FRONTEND stats only for traffic)
 5. Accumulates traffic history for sparklines
 6. Displays combined data based on zone/group selection
+
+## Build Notes
+
+### Docker Multi-Platform Build
+
+**ARM v7 Not Supported** (as of upstream v0.18.x)
+
+The upstream added GPU NVML support using the `purego` library (`github.com/ebitengine/purego`), which does not support ARM v7 architecture.
+
+**Error when building for `linux/arm/v7`:**
+```
+# github.com/ebitengine/purego/internal/fakecgo
+undefined: threadentry
+undefined: x_cgo_init
+undefined: _cgo_sys_thread_start
+```
+
+**Workaround:** Exclude ARM v7 from build platforms:
+```bash
+# Build without ARM v7
+PLATFORMS="linux/amd64,linux/arm64" REGISTRY=docker.io/username PUSH=true ./build-docker.sh
+```
+
+**Supported platforms:**
+- `linux/amd64` ✓
+- `linux/arm64` ✓
+- `linux/arm/v7` ✗ (purego incompatibility)
+
+### Git Workflow
+
+**Remotes:**
+- `origin` → GitHub (upstream fork)
+- `gitlab` → Self-hosted GitLab
+- `upstream` → Original upstream repo
+
+**Sync main from GitHub to GitLab:**
+```bash
+git checkout main
+git pull origin main
+git push gitlab main
+```
+
+**Update feature branch (merge strategy):**
+```bash
+git checkout feature/haproxy-monitoring
+git merge main
+git push gitlab feature/haproxy-monitoring
+```
