@@ -23,7 +23,7 @@ import HAProxyPools from "@/components/charts/haproxy-pools"
 import HAProxyActivity from "@/components/charts/haproxy-activity"
 import HAProxyServers from "@/components/charts/haproxy-servers"
 import { getPbTimestamp, pb } from "@/lib/api"
-import { ChartType, Os, SystemStatus, Unit } from "@/lib/enums"
+import { ChartType, SystemStatus, Unit } from "@/lib/enums"
 import { batteryStateTranslations } from "@/lib/i18n"
 import {
 	$allSystemsById,
@@ -174,8 +174,7 @@ export default memo(function SystemDetail({ id }: { id: string }) {
 	const isLongerChart = !["1m", "1h"].includes(chartTime) // true if chart time is not 1m or 1h
 	const userSettings = $userSettings.get()
 	const chartWrapRef = useRef<HTMLDivElement>(null)
-	const [details, setDetails] = useState<SystemDetailsRecord | null>(null)
-	const isPodman = useMemo(() => details?.podman ?? system.info?.p ?? false, [details, system.info?.p])
+	const [details, setDetails] = useState<SystemDetailsRecord>({} as SystemDetailsRecord)
 
 	useEffect(() => {
 		return () => {
@@ -185,7 +184,7 @@ export default memo(function SystemDetail({ id }: { id: string }) {
 			persistChartTime.current = false
 			setSystemStats([])
 			setContainerData([])
-			setDetails(null)
+			setDetails({} as SystemDetailsRecord)
 			$containerFilter.set("")
 		}
 	}, [id])
@@ -230,7 +229,6 @@ export default memo(function SystemDetail({ id }: { id: string }) {
 	}, [system.id])
 
 	// subscribe to realtime metrics if chart time is 1m
-	// biome-ignore lint/correctness/useExhaustiveDependencies: not necessary
 	useEffect(() => {
 		let unsub = () => {}
 		if (!system.id || chartTime !== "1m") {
@@ -268,7 +266,6 @@ export default memo(function SystemDetail({ id }: { id: string }) {
 		}
 	}, [chartTime, system.id])
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: not necessary
 	const chartData: ChartData = useMemo(() => {
 		const lastCreated = Math.max(
 			(systemStats.at(-1)?.created as number) ?? 0,
@@ -308,7 +305,6 @@ export default memo(function SystemDetail({ id }: { id: string }) {
 	}, [])
 
 	// get stats
-	// biome-ignore lint/correctness/useExhaustiveDependencies: not necessary
 	useEffect(() => {
 		if (!system.id || !chartTime || chartTime === "1m") {
 			return
@@ -416,6 +412,8 @@ export default memo(function SystemDetail({ id }: { id: string }) {
 	const hasGpuPowerData = lastGpuVals.some((gpu) => gpu.p !== undefined || gpu.pp !== undefined)
 	const hasGpuEnginesData = lastGpuVals.some((gpu) => gpu.e !== undefined)
 	const hasHAProxyData = (systemStats.at(-1)?.stats?.hap?.length ?? 0) > 0
+	const isLinux = !(details?.os ?? system.info?.os)
+	const isPodman = details?.podman ?? system.info?.p ?? false
 
 	return (
 		<>
@@ -977,7 +975,7 @@ export default memo(function SystemDetail({ id }: { id: string }) {
 					<LazyContainersTable systemId={system.id} />
 				)}
 
-				{system.info?.os === Os.Linux && compareSemVer(chartData.agentVersion, parseSemVer("0.16.0")) >= 0 && (
+				{isLinux && compareSemVer(chartData.agentVersion, parseSemVer("0.16.0")) >= 0 && (
 					<LazySystemdTable systemId={system.id} />
 				)}
 			</div>
