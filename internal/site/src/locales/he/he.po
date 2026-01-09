@@ -29,6 +29,10 @@ msgstr "{0} מתוך {1} שורה(ות) נבחרו."
 msgid "{0} systems"
 msgstr ""
 
+#: src/components/routes/system/info-bar.tsx
+msgid "{cores, plural, one {# core} other {# cores}}"
+msgstr ""
+
 #: src/lib/utils.ts
 msgid "{count, plural, one {{countString} day} other {{countString} days}}"
 msgstr "{count, plural, one {{countString} יום} two {{countString} ימים} other {{countString} ימים}}"
@@ -40,6 +44,10 @@ msgstr "{count, plural, one {{countString} שעה} two {{countString} שעות} 
 #: src/lib/utils.ts
 msgid "{count, plural, one {{countString} minute} few {{countString} minutes} many {{countString} minutes} other {{countString} minutes}}"
 msgstr "{count, plural, one {{countString} דקה} two {{countString} דקות} other {{countString} דקות}}"
+
+#: src/components/routes/system/info-bar.tsx
+msgid "{threads, plural, one {# thread} other {# threads}}"
+msgstr ""
 
 #. placeholder {0}: groups.size
 #: src/components/routes/haproxy-aggregate.tsx
@@ -660,7 +668,7 @@ msgstr "תיעוד"
 
 #. Context: System is down
 #: src/components/alerts-history-columns.tsx
-#: src/components/routes/system.tsx
+#: src/components/routes/system/info-bar.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 #: src/lib/alerts.ts
 msgid "Down"
@@ -1022,8 +1030,8 @@ msgstr "כתובת אימייל לא תקינה."
 
 #. Linux kernel
 #: src/components/routes/system.tsx
-msgid "Kernel"
-msgstr "קרנל"
+#~ msgid "Kernel"
+#~ msgstr "קרנל"
 
 #: src/components/routes/settings/general.tsx
 msgid "Language"
@@ -1117,6 +1125,7 @@ msgid "Max 1 min"
 msgstr "מקס 1 דק'"
 
 #: src/components/containers-table/containers-table-columns.tsx
+#: src/components/routes/system/info-bar.tsx
 #: src/components/systemd-table/systemd-table-columns.tsx
 #: src/components/systemd-table/systemd-table.tsx
 #: src/components/systems-table/systems-table-columns.tsx
@@ -1712,8 +1721,8 @@ msgstr "פורמט זמן"
 msgid "To email(s)"
 msgstr "לאימייל(ים)"
 
-#: src/components/routes/system.tsx
-#: src/components/routes/system.tsx
+#: src/components/routes/system/info-bar.tsx
+#: src/components/routes/system/info-bar.tsx
 msgid "Toggle grid"
 msgstr "החלף רשת"
 
@@ -1879,7 +1888,7 @@ msgid "Unlimited"
 msgstr "ללא הגבלה"
 
 #. Context: System is up
-#: src/components/routes/system.tsx
+#: src/components/routes/system/info-bar.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Up"
 msgstr "למעלה"
@@ -1907,7 +1916,7 @@ msgstr "מתעדכן כל 10 דקות."
 msgid "Upload"
 msgstr "העלאה"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/info-bar.tsx
 msgid "Uptime"
 msgstr "זמן פעילות"
 

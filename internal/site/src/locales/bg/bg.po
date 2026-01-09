@@ -29,6 +29,10 @@ msgstr "{0} от {1} селектирани."
 msgid "{0} systems"
 msgstr ""
 
+#: src/components/routes/system/info-bar.tsx
+msgid "{cores, plural, one {# core} other {# cores}}"
+msgstr ""
+
 #: src/lib/utils.ts
 msgid "{count, plural, one {{countString} day} other {{countString} days}}"
 msgstr "{count, plural, one {{countString} ден} other {{countString} дни}}"
@@ -40,6 +44,10 @@ msgstr "{count, plural, one {{countString} час} other {{countString} часа
 #: src/lib/utils.ts
 msgid "{count, plural, one {{countString} minute} few {{countString} minutes} many {{countString} minutes} other {{countString} minutes}}"
 msgstr "{count, plural, one {{countString} минута} few {{countString} минути} many {{countString} минути} other {{countString} минути}}"
+
+#: src/components/routes/system/info-bar.tsx
+msgid "{threads, plural, one {# thread} other {# threads}}"
+msgstr ""
 
 #. placeholder {0}: groups.size
 #: src/components/routes/haproxy-aggregate.tsx
@@ -660,7 +668,7 @@ msgstr "Документация"
 
 #. Context: System is down
 #: src/components/alerts-history-columns.tsx
-#: src/components/routes/system.tsx
+#: src/components/routes/system/info-bar.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 #: src/lib/alerts.ts
 msgid "Down"
@@ -1022,8 +1030,8 @@ msgstr "Невалиден имейл адрес."
 
 #. Linux kernel
 #: src/components/routes/system.tsx
-msgid "Kernel"
-msgstr "Linux Kernel"
+#~ msgid "Kernel"
+#~ msgstr "Linux Kernel"
 
 #: src/components/routes/settings/general.tsx
 msgid "Language"
@@ -1117,6 +1125,7 @@ msgid "Max 1 min"
 msgstr "Максимум 1 минута"
 
 #: src/components/containers-table/containers-table-columns.tsx
+#: src/components/routes/system/info-bar.tsx
 #: src/components/systemd-table/systemd-table-columns.tsx
 #: src/components/systemd-table/systemd-table.tsx
 #: src/components/systems-table/systems-table-columns.tsx
@@ -1712,8 +1721,8 @@ msgstr "Формат на времето"
 msgid "To email(s)"
 msgstr "До имейл(ите)"
 
-#: src/components/routes/system.tsx
-#: src/components/routes/system.tsx
+#: src/components/routes/system/info-bar.tsx
+#: src/components/routes/system/info-bar.tsx
 msgid "Toggle grid"
 msgstr "Превключване на мрежа"
 
@@ -1879,7 +1888,7 @@ msgid "Unlimited"
 msgstr "Неограничено"
 
 #. Context: System is up
-#: src/components/routes/system.tsx
+#: src/components/routes/system/info-bar.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Up"
 msgstr "Нагоре"
@@ -1907,7 +1916,7 @@ msgstr "Актуализира се на всеки 10 минути."
 msgid "Upload"
 msgstr "Качване"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/info-bar.tsx
 msgid "Uptime"
 msgstr "Време на работа"
 

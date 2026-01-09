@@ -29,6 +29,10 @@ msgstr "已选择 {0} / {1} 行"
 msgid "{0} systems"
 msgstr ""
 
+#: src/components/routes/system/info-bar.tsx
+msgid "{cores, plural, one {# core} other {# cores}}"
+msgstr ""
+
 #: src/lib/utils.ts
 msgid "{count, plural, one {{countString} day} other {{countString} days}}"
 msgstr "{count, plural, one {{countString} 天} other {{countString} 天}}"
@@ -40,6 +44,10 @@ msgstr "{count, plural, one {{countString} 小时} other {{countString} 小时}}
 #: src/lib/utils.ts
 msgid "{count, plural, one {{countString} minute} few {{countString} minutes} many {{countString} minutes} other {{countString} minutes}}"
 msgstr "{count, plural, one {{countString} 分钟} few {{countString} 分钟} many {{countString} 分钟} other {{countString} 分钟}}"
+
+#: src/components/routes/system/info-bar.tsx
+msgid "{threads, plural, one {# thread} other {# threads}}"
+msgstr ""
 
 #. placeholder {0}: groups.size
 #: src/components/routes/haproxy-aggregate.tsx
@@ -660,7 +668,7 @@ msgstr "文档"
 
 #. Context: System is down
 #: src/components/alerts-history-columns.tsx
-#: src/components/routes/system.tsx
+#: src/components/routes/system/info-bar.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 #: src/lib/alerts.ts
 msgid "Down"
@@ -1022,8 +1030,8 @@ msgstr "无效的电子邮件地址。"
 
 #. Linux kernel
 #: src/components/routes/system.tsx
-msgid "Kernel"
-msgstr "内核"
+#~ msgid "Kernel"
+#~ msgstr "内核"
 
 #: src/components/routes/settings/general.tsx
 msgid "Language"
@@ -1117,6 +1125,7 @@ msgid "Max 1 min"
 msgstr "1分钟内最大值"
 
 #: src/components/containers-table/containers-table-columns.tsx
+#: src/components/routes/system/info-bar.tsx
 #: src/components/systemd-table/systemd-table-columns.tsx
 #: src/components/systemd-table/systemd-table.tsx
 #: src/components/systems-table/systems-table-columns.tsx
@@ -1712,8 +1721,8 @@ msgstr "时间格式"
 msgid "To email(s)"
 msgstr "发送到电子邮件"
 
-#: src/components/routes/system.tsx
-#: src/components/routes/system.tsx
+#: src/components/routes/system/info-bar.tsx
+#: src/components/routes/system/info-bar.tsx
 msgid "Toggle grid"
 msgstr "切换网格"
 
@@ -1879,7 +1888,7 @@ msgid "Unlimited"
 msgstr "无限制"
 
 #. Context: System is up
-#: src/components/routes/system.tsx
+#: src/components/routes/system/info-bar.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Up"
 msgstr "在线"
@@ -1907,7 +1916,7 @@ msgstr "每 10 分钟更新一次。"
 msgid "Upload"
 msgstr "上传"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/info-bar.tsx
 msgid "Uptime"
 msgstr "正常运行时间"
 

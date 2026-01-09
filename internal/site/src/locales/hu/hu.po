@@ -29,6 +29,10 @@ msgstr "{0} a(z) {1} sorból kiválasztva."
 msgid "{0} systems"
 msgstr ""
 
+#: src/components/routes/system/info-bar.tsx
+msgid "{cores, plural, one {# core} other {# cores}}"
+msgstr ""
+
 #: src/lib/utils.ts
 msgid "{count, plural, one {{countString} day} other {{countString} days}}"
 msgstr "{count, plural, one {{countString} nap} other {{countString} nap}}"
@@ -40,6 +44,10 @@ msgstr "{count, plural, one {{countString} óra} other {{countString} óra}}"
 #: src/lib/utils.ts
 msgid "{count, plural, one {{countString} minute} few {{countString} minutes} many {{countString} minutes} other {{countString} minutes}}"
 msgstr "{count, plural, one {{countString} perc} few {{countString} perc} many {{countString} perc} other {{countString} perc}}"
+
+#: src/components/routes/system/info-bar.tsx
+msgid "{threads, plural, one {# thread} other {# threads}}"
+msgstr ""
 
 #. placeholder {0}: groups.size
 #: src/components/routes/haproxy-aggregate.tsx
@@ -660,7 +668,7 @@ msgstr "Dokumentáció"
 
 #. Context: System is down
 #: src/components/alerts-history-columns.tsx
-#: src/components/routes/system.tsx
+#: src/components/routes/system/info-bar.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 #: src/lib/alerts.ts
 msgid "Down"
@@ -1022,8 +1030,8 @@ msgstr "Érvénytelen e-mail cím."
 
 #. Linux kernel
 #: src/components/routes/system.tsx
-msgid "Kernel"
-msgstr "Kernel"
+#~ msgid "Kernel"
+#~ msgstr "Kernel"
 
 #: src/components/routes/settings/general.tsx
 msgid "Language"
@@ -1117,6 +1125,7 @@ msgid "Max 1 min"
 msgstr "Maximum 1 perc"
 
 #: src/components/containers-table/containers-table-columns.tsx
+#: src/components/routes/system/info-bar.tsx
 #: src/components/systemd-table/systemd-table-columns.tsx
 #: src/components/systemd-table/systemd-table.tsx
 #: src/components/systems-table/systems-table-columns.tsx
@@ -1712,8 +1721,8 @@ msgstr "Időformátum"
 msgid "To email(s)"
 msgstr "E-mailben"
 
-#: src/components/routes/system.tsx
-#: src/components/routes/system.tsx
+#: src/components/routes/system/info-bar.tsx
+#: src/components/routes/system/info-bar.tsx
 msgid "Toggle grid"
 msgstr "Rács ki- és bekapcsolása"
 
@@ -1879,7 +1888,7 @@ msgid "Unlimited"
 msgstr "Korlátlan"
 
 #. Context: System is up
-#: src/components/routes/system.tsx
+#: src/components/routes/system/info-bar.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Up"
 msgstr "Online"
@@ -1907,7 +1916,7 @@ msgstr "10 percenként frissítve."
 msgid "Upload"
 msgstr "Feltöltés"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/info-bar.tsx
 msgid "Uptime"
 msgstr "Üzemidő"
 
