@@ -8,7 +8,7 @@ msgstr ""
 "Language: hu\n"
 "Project-Id-Version: beszel\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2025-11-14 22:51\n"
+"PO-Revision-Date: 2025-12-02 23:18\n"
 "Last-Translator: \n"
 "Language-Team: Hungarian\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -24,14 +24,9 @@ msgstr ""
 msgid "{0} of {1} row(s) selected."
 msgstr "{0} a(z) {1} sorból kiválasztva."
 
-#. placeholder {0}: systems.length
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "{0} systems"
-msgstr ""
-
 #: src/components/routes/system/info-bar.tsx
 msgid "{cores, plural, one {# core} other {# cores}}"
-msgstr ""
+msgstr "{cores, plural, one {# mag} other {# mag}}"
 
 #: src/lib/utils.ts
 msgid "{count, plural, one {{countString} day} other {{countString} days}}"
@@ -47,12 +42,7 @@ msgstr "{count, plural, one {{countString} perc} few {{countString} perc} many {
 
 #: src/components/routes/system/info-bar.tsx
 msgid "{threads, plural, one {# thread} other {# threads}}"
-msgstr ""
-
-#. placeholder {0}: groups.size
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "{totalOnline} online, {totalOffline} offline across {0} groups"
-msgstr ""
+msgstr "{threads, plural, one {# szál} other {# szál}}"
 
 #: src/lib/utils.ts
 msgid "1 hour"
@@ -111,14 +101,6 @@ msgstr "Aktív"
 msgid "Active Alerts"
 msgstr "Aktív riasztások"
 
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "active servers"
-msgstr ""
-
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "Active Servers"
-msgstr ""
-
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Active state"
 msgstr "Aktív állapot"
@@ -127,7 +109,7 @@ msgstr "Aktív állapot"
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Add {foo}"
-msgstr ""
+msgstr "Hozzáadás {foo}"
 
 #: src/components/add-system.tsx
 msgid "Add <0>System</0>"
@@ -161,10 +143,6 @@ msgstr "Utána"
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Agent"
 msgstr "Ügynök"
-
-#: src/components/routes/haproxy-aggregate.tsx
-#~ msgid "Aggregated statistics from {0} HAProxy systems in {1} groups"
-#~ msgstr ""
 
 #: src/components/command-palette.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
@@ -200,10 +178,6 @@ msgstr "Biztosan törölni szeretnéd {name}-t?"
 msgid "Are you sure?"
 msgstr "Biztos vagy benne?"
 
-#: src/components/routes/haproxy-aggregate.tsx
-#~ msgid "Authentication Error"
-#~ msgstr ""
-
 #: src/components/copy-to-clipboard.tsx
 msgid "Automatic copy requires a secure context."
 msgstr "Az automatikus másolás biztonságos környezetet igényel."
@@ -213,17 +187,13 @@ msgid "Average"
 msgstr "Átlag"
 
 #: src/components/routes/system.tsx
-msgid "Average backend response time (ms)"
-msgstr ""
-
-#: src/components/routes/system.tsx
 msgid "Average CPU utilization of containers"
 msgstr "Konténerek átlagos CPU kihasználtsága"
 
 #. placeholder {0}: alertData.unit
 #: src/components/alerts/alerts-sheet.tsx
 msgid "Average drops below <0>{value}{0}</0>"
-msgstr ""
+msgstr "Az átlag esik <0>{value}{0}</0> alá"
 
 #. placeholder {0}: alertData.unit
 #: src/components/alerts/alerts-sheet.tsx
@@ -247,18 +217,6 @@ msgstr "{0} átlagos kihasználtsága"
 msgid "Average utilization of GPU engines"
 msgstr "GPU-k átlagos kihasználtsága"
 
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "Avg Response"
-msgstr ""
-
-#: src/components/routes/haproxy-aggregate.tsx
-#~ msgid "Avg/System"
-#~ msgstr ""
-
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "Backup Servers"
-msgstr ""
-
 #: src/components/command-palette.tsx
 #: src/components/navbar.tsx
 msgid "Backups"
@@ -272,7 +230,7 @@ msgstr "Sávszélesség"
 #. Battery label in systems table header
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Bat"
-msgstr ""
+msgstr "Akk"
 
 #: src/components/routes/system.tsx
 #: src/lib/alerts.ts
@@ -296,7 +254,7 @@ msgstr "Előtte"
 #. placeholder {2}: alert.min
 #: src/components/active-alerts.tsx
 msgid "Below {0}{1} in last {2, plural, one {# minute} other {# minutes}}"
-msgstr ""
+msgstr "{0}{1} alatt az elmúlt {2, plural, one {# percben} other {# percben}}"
 
 #: src/components/login/auth-form.tsx
 msgid "Beszel supports OpenID Connect and many OAuth2 authentication providers."
@@ -401,10 +359,6 @@ msgstr "Ellenőrizd az értesítési szolgáltatásodat"
 msgid "Clear"
 msgstr "Törlés"
 
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "Clear All"
-msgstr ""
-
 #: src/components/containers-table/containers-table.tsx
 msgid "Click on a container to view more information."
 msgstr "Kattintson egy konténerre a további információk megtekintéséhez."
@@ -417,17 +371,9 @@ msgstr "Kattintson egy eszközre további információk megtekintéséhez."
 msgid "Click on a system to view more information."
 msgstr "További információkért kattints egy rendszerre."
 
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "Click refresh to load data"
-msgstr ""
-
 #: src/components/ui/input-copy.tsx
 msgid "Click to copy"
 msgstr "Kattints a másoláshoz"
-
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "Collapse"
-msgstr ""
 
 #: src/components/login/forgot-pass-form.tsx
 #: src/components/login/forgot-pass-form.tsx
@@ -450,10 +396,6 @@ msgstr "Konfliktusok"
 #: src/components/active-alerts.tsx
 msgid "Connection is down"
 msgstr "Kapcsolat megszakadt"
-
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "Connections"
-msgstr ""
 
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/systems-table/systems-table-columns.tsx
@@ -560,26 +502,14 @@ msgstr "Kritikus (%)"
 msgid "Cumulative Download"
 msgstr "Kumulatív letöltés"
 
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "Cumulative Totals"
-msgstr ""
-
 #: src/components/routes/system/network-sheet.tsx
 msgid "Cumulative Upload"
 msgstr "Kumulatív feltöltés"
-
-#: src/components/routes/system.tsx
-msgid "Current sessions across frontends and backends"
-msgstr ""
 
 #. Context: Battery state
 #: src/components/routes/system.tsx
 msgid "Current state"
 msgstr "Jelenlegi állapot"
-
-#: src/components/routes/system.tsx
-msgid "Current status of all HAProxy frontends, backends, and servers"
-msgstr ""
 
 #. Power Cycles
 #: src/components/routes/system/smart-table.tsx
@@ -613,10 +543,6 @@ msgstr "Leírás"
 #: src/components/containers-table/containers-table.tsx
 msgid "Detail"
 msgstr "Részlet"
-
-#: src/components/routes/system.tsx
-msgid "Detailed server state and configuration"
-msgstr ""
 
 #: src/components/routes/system/smart-table.tsx
 msgid "Device"
@@ -686,10 +612,6 @@ msgstr "Letöltés"
 msgid "Duration"
 msgstr "Időtartam"
 
-#: src/components/routes/haproxy-aggregate.tsx
-#~ msgid "e.g. internal, stats, admin"
-#~ msgstr ""
-
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Edit"
@@ -698,7 +620,7 @@ msgstr "Szerkesztés"
 #: src/components/add-system.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Edit {foo}"
-msgstr ""
+msgstr "Szerkesztés {foo}"
 
 #: src/components/login/auth-form.tsx
 #: src/components/login/forgot-pass-form.tsx
@@ -732,6 +654,10 @@ msgstr "Adja meg az e-mail címet..."
 msgid "Enter your one-time password."
 msgstr "Adja meg az egyszeri jelszavát."
 
+#: src/components/routes/settings/tokens-fingerprints.tsx
+msgid "Ephemeral"
+msgstr "Átmeneti"
+
 #: src/components/login/auth-form.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/settings/config-yaml.tsx
@@ -750,17 +676,9 @@ msgstr "Hiba"
 msgid "Exceeds {0}{1} in last {2, plural, one {# minute} other {# minutes}}"
 msgstr "Túllépi a {0}{1} értéket az elmúlt {2, plural, one {# percben} other {# percben}}"
 
-#: src/components/routes/haproxy-aggregate.tsx
-#~ msgid "Exclude proxies:"
-#~ msgstr ""
-
-#: src/components/routes/haproxy-aggregate.tsx
-#~ msgid "Excluding {0} pattern(s): {1}"
-#~ msgstr ""
-
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Exec main PID"
-msgstr ""
+msgstr "Fő folyamat PID"
 
 #: src/components/routes/settings/config-yaml.tsx
 msgid "Existing systems not defined in <0>config.yml</0> will be deleted. Please make regular backups."
@@ -770,9 +688,9 @@ msgstr "A <0>config.yml</0> fájlban nem definiált meglévő rendszerek törlé
 msgid "Exited active"
 msgstr "Aktívként kilépett"
 
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "Expand"
-msgstr ""
+#: src/components/routes/settings/tokens-fingerprints.tsx
+msgid "Expires after one hour or on hub restart."
+msgstr "Lejár egy óra után vagy a hub újraindításakor."
 
 #: src/components/routes/settings/alerts-history-data-table.tsx
 msgid "Export"
@@ -821,14 +739,6 @@ msgstr "Nem sikerült frissíteni a riasztást"
 msgid "Failed: {0}"
 msgstr "Sikertelen: {0}"
 
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "Filter by zone:"
-msgstr ""
-
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "Filter groups:"
-msgstr ""
-
 #: src/components/containers-table/containers-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/system.tsx
@@ -844,7 +754,7 @@ msgstr "Ujjlenyomat"
 
 #: src/components/routes/system/smart-table.tsx
 msgid "Firmware"
-msgstr ""
+msgstr "Firmware"
 
 #: src/components/alerts/alerts-sheet.tsx
 msgid "For <0>{min}</0> {min, plural, one {minute} other {minutes}}"
@@ -859,10 +769,6 @@ msgstr "Elfelejtette a jelszavát?"
 msgctxt "Button to copy install command"
 msgid "FreeBSD command"
 msgstr "FreeBSD parancs"
-
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "Frontends/Backends"
-msgstr ""
 
 #. Context: Battery state
 #: src/lib/i18n.ts
@@ -895,75 +801,6 @@ msgstr "GPU használat"
 msgid "Grid"
 msgstr "Rács"
 
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "Groups"
-msgstr ""
-
-#: src/components/routes/haproxy-aggregate.tsx
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "HAProxy Aggregate"
-msgstr ""
-
-#: src/components/routes/system.tsx
-msgid "HAProxy Error Rate"
-msgstr ""
-
-#: src/components/routes/system.tsx
-#~ msgid "HAProxy Errors"
-#~ msgstr ""
-
-#: src/components/routes/system.tsx
-msgid "HAProxy HTTP Responses"
-msgstr ""
-
-#: src/components/routes/system.tsx
-msgid "HAProxy Memory Pools"
-msgstr ""
-
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "HAProxy offline"
-msgstr ""
-
-#: src/components/routes/system.tsx
-msgid "HAProxy Process Info"
-msgstr ""
-
-#: src/components/routes/system.tsx
-msgid "HAProxy process statistics and runtime information"
-msgstr ""
-
-#: src/components/routes/system.tsx
-msgid "HAProxy Request Rate"
-msgstr ""
-
-#: src/components/routes/system.tsx
-msgid "HAProxy Response Time"
-msgstr ""
-
-#: src/components/routes/system.tsx
-msgid "HAProxy Server States"
-msgstr ""
-
-#: src/components/routes/system.tsx
-msgid "HAProxy Sessions"
-msgstr ""
-
-#: src/components/routes/system.tsx
-msgid "HAProxy Status"
-msgstr ""
-
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "HAProxy systems should be named like \"ha-web-1\", \"ha-api-2\", etc."
-msgstr ""
-
-#: src/components/routes/system.tsx
-msgid "HAProxy Thread Activity"
-msgstr ""
-
-#: src/components/routes/system.tsx
-msgid "HAProxy Traffic"
-msgstr ""
-
 #: src/components/containers-table/containers-table-columns.tsx
 msgid "Health"
 msgstr "Egészség"
@@ -977,26 +814,6 @@ msgstr "Homebrew parancs"
 #: src/components/add-system.tsx
 msgid "Host / IP"
 msgstr "Állomás / IP"
-
-#: src/components/routes/system.tsx
-#~ msgid "HTTP 4xx and 5xx error responses"
-#~ msgstr ""
-
-#: src/components/routes/system.tsx
-msgid "HTTP 4xx and 5xx errors per second"
-msgstr ""
-
-#: src/components/routes/system.tsx
-msgid "HTTP requests per second"
-msgstr ""
-
-#: src/components/routes/system.tsx
-msgid "HTTP response codes per second (1xx-5xx)"
-msgstr ""
-
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "HTTP Responses (Total)"
-msgstr ""
 
 #. Context: Battery state
 #: src/lib/i18n.ts
@@ -1012,26 +829,13 @@ msgctxt "Docker image"
 msgid "Image"
 msgstr "Kép"
 
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "In"
-msgstr ""
-
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Inactive"
 msgstr "Inaktív"
 
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "Individual Systems"
-msgstr ""
-
 #: src/components/login/auth-form.tsx
 msgid "Invalid email address."
 msgstr "Érvénytelen e-mail cím."
-
-#. Linux kernel
-#: src/components/routes/system.tsx
-#~ msgid "Kernel"
-#~ msgstr "Kernel"
 
 #: src/components/routes/settings/general.tsx
 msgid "Language"
@@ -1108,7 +912,7 @@ msgstr "Inkább azt keresi, hogy hol hozhat létre riasztásokat? Kattintson a c
 
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Main PID"
-msgstr ""
+msgstr "Fő PID"
 
 #: src/components/routes/settings/layout.tsx
 msgid "Manage display and notification preferences."
@@ -1140,10 +944,6 @@ msgstr "Memória korlát"
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Memory Peak"
 msgstr "Memória csúcs"
-
-#: src/components/routes/system.tsx
-msgid "Memory pool allocation and usage statistics"
-msgstr ""
 
 #: src/components/routes/system.tsx
 #: src/lib/alerts.ts
@@ -1193,14 +993,6 @@ msgstr "Sávszélesség mértékegysége"
 msgid "No"
 msgstr "Nem"
 
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "No data"
-msgstr ""
-
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "No HAProxy Systems Found"
-msgstr ""
-
 #: src/components/command-palette.tsx
 #: src/components/systemd-table/systemd-table.tsx
 msgid "No results found."
@@ -1224,10 +1016,6 @@ msgstr "Ehhez az eszközhöz nem állnak rendelkezésre S.M.A.R.T. attribútumok
 msgid "No systems found."
 msgstr "Nem található rendszer."
 
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "No systems matching the \"ha-*\" pattern were found."
-msgstr ""
-
 #: src/components/command-palette.tsx
 #: src/components/routes/settings/layout.tsx
 #: src/components/routes/settings/notifications.tsx
@@ -1237,10 +1025,6 @@ msgstr "Értesítések"
 #: src/components/login/auth-form.tsx
 msgid "OAuth 2 / OIDC support"
 msgstr "OAuth 2 / OIDC támogatás"
-
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "offline"
-msgstr ""
 
 #: src/components/routes/settings/config-yaml.tsx
 msgid "On each restart, systems in the database will be updated to match the systems defined in the file."
@@ -1254,10 +1038,6 @@ msgstr "Egyszeri"
 #: src/components/login/auth-form.tsx
 msgid "One-time password"
 msgstr "Egyszeri jelszó"
-
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "online"
-msgstr ""
 
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
@@ -1274,10 +1054,6 @@ msgstr "Vagy folytasd ezzel"
 #: src/components/routes/system/cpu-sheet.tsx
 msgid "Other"
 msgstr "Egyéb"
-
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "Out"
-msgstr ""
 
 #: src/components/alerts/alerts-sheet.tsx
 msgid "Overwrite existing alerts"
@@ -1337,13 +1113,17 @@ msgstr "Szüneteltetve ({pausedSystemsLength})"
 msgid "Per-core average utilization"
 msgstr "Átlagos kihasználtság magonként"
 
-#: src/components/routes/system.tsx
-msgid "Per-thread CPU usage and activity statistics"
-msgstr ""
-
 #: src/components/routes/system/cpu-sheet.tsx
 msgid "Percentage of time spent in each state"
 msgstr "Az idő százalékos aránya minden állapotban"
+
+#: src/components/routes/settings/tokens-fingerprints.tsx
+msgid "Permanent"
+msgstr "Állandó"
+
+#: src/components/routes/settings/tokens-fingerprints.tsx
+msgid "Persistence"
+msgstr "Kitartás"
 
 #: src/components/routes/settings/notifications.tsx
 msgid "Please <0>configure an SMTP server</0> to ensure alerts are delivered."
@@ -1425,10 +1205,6 @@ msgstr "Fogadott"
 msgid "Refresh"
 msgstr "Frissítés"
 
-#: src/components/routes/haproxy-aggregate.tsx
-#~ msgid "Refresh Page"
-#~ msgstr ""
-
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Relationships"
 msgstr "Kapcsolatok"
@@ -1440,11 +1216,6 @@ msgstr "Egyszeri jelszó kérése"
 #: src/components/login/otp-forms.tsx
 msgid "Request OTP"
 msgstr "OTP kérése"
-
-#: src/components/routes/haproxy-aggregate.tsx
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "Request Rate"
-msgstr ""
 
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Required by"
@@ -1510,6 +1281,10 @@ msgstr "Beállítások mentése"
 msgid "Save system"
 msgstr "Rendszer mentése"
 
+#: src/components/routes/settings/tokens-fingerprints.tsx
+msgid "Saved in the database and does not expire until you disable it."
+msgstr "Elmentve az adatbázisban és nem jár le, amíg ki nem kapcsolod."
+
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Schedule"
 msgstr "Ütemezés"
@@ -1538,14 +1313,6 @@ msgstr "Lásd <0>az értesítési beállításokat</0>, hogy konfigurálja, hogy
 msgid "Select {foo}"
 msgstr ""
 
-#: src/components/routes/haproxy-aggregate.tsx
-#~ msgid "Select All"
-#~ msgstr ""
-
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "selected"
-msgstr ""
-
 #: src/components/routes/system.tsx
 msgid "Sent"
 msgstr "Elküldve"
@@ -1561,12 +1328,6 @@ msgstr "Szolgáltatás részletei"
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Services"
 msgstr "Szolgáltatások"
-
-#: src/components/routes/haproxy-aggregate.tsx
-#: src/components/routes/haproxy-aggregate.tsx
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "Sessions"
-msgstr ""
 
 #: src/components/routes/settings/general.tsx
 msgid "Set percentage thresholds for meter colors."
@@ -1650,7 +1411,6 @@ msgid "Systemd Services"
 msgstr "Systemd szolgáltatások"
 
 #: src/components/navbar.tsx
-#: src/components/routes/haproxy-aggregate.tsx
 msgid "Systems"
 msgstr "Rendszer"
 
@@ -1754,14 +1514,6 @@ msgstr "A tokeneket és fingeravtrykkokat a hubhoz való WebSocket kapcsolatok h
 msgid "Total"
 msgstr "Összesen"
 
-#: src/components/routes/system.tsx
-msgid "Total bytes transferred (in + out)"
-msgstr ""
-
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "Total Connections"
-msgstr ""
-
 #: src/components/routes/system/network-sheet.tsx
 msgid "Total data received for each interface"
 msgstr "Összes fogadott adat minden interfészenként"
@@ -1770,36 +1522,10 @@ msgstr "Összes fogadott adat minden interfészenként"
 msgid "Total data sent for each interface"
 msgstr "Összes elküldött adat minden interfészenként"
 
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "Total Requests"
-msgstr ""
-
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "Total Sessions"
-msgstr ""
-
 #. placeholder {0}: data.length
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Total: {0}"
 msgstr "Összesen: {0}"
-
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "Traffic"
-msgstr ""
-
-#: src/components/routes/haproxy-aggregate.tsx
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "Traffic In"
-msgstr ""
-
-#: src/components/routes/haproxy-aggregate.tsx
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "Traffic Out"
-msgstr ""
-
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "Traffic Overview"
-msgstr ""
 
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Triggered by"
@@ -1859,10 +1585,6 @@ msgstr "Bekapcsol, ha a lemez érzékelő túllép egy küszöbértéket"
 msgid "Type"
 msgstr "Típus"
 
-#: src/components/routes/haproxy-aggregate.tsx
-#~ msgid "Unable to fetch HAProxy statistics. Please refresh the page."
-#~ msgstr ""
-
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Unit file"
 msgstr "Egység fájl"
@@ -1902,7 +1624,6 @@ msgid "Update"
 msgstr "Frissítés"
 
 #: src/components/containers-table/containers-table-columns.tsx
-#: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/system/smart-table.tsx
 #: src/components/systemd-table/systemd-table-columns.tsx
 msgid "Updated"
@@ -1963,10 +1684,6 @@ msgstr "Legfrissebb 200 riasztásod áttekintése."
 msgid "Visible Fields"
 msgstr "Látható mezők"
 
-#: src/components/routes/haproxy-aggregate.tsx
-#~ msgid "Waiting for data..."
-#~ msgstr ""
-
 #: src/components/routes/system.tsx
 msgid "Waiting for enough records to display"
 msgstr "Elegendő rekordra várva a megjelenítéshez"
@@ -1992,8 +1709,8 @@ msgid "Webhook / Push notifications"
 msgstr "Webhook / Push értesítések"
 
 #: src/components/routes/settings/tokens-fingerprints.tsx
-msgid "When enabled, this token allows agents to self-register without prior system creation. Expires after one hour or on hub restart."
-msgstr "Ha engedélyezve van, ez a token lehetővé teszi az ügynökök önregisztrációját előzetes rendszerlétrehozás nélkül. Egy óra után vagy a hub újraindításakor lejár."
+msgid "When enabled, this token allows agents to self-register without prior system creation."
+msgstr "Ha engedélyezve van, ez a token lehetővé teszi az ügynökök számára az önregisztrációt rendszer előzetes létrehozása nélkül."
 
 #: src/components/add-system.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx

@@ -1,5 +1,15 @@
 ## 0.18.0
 
+- Add experimental NVML GPU collector. (#1522, #1587)
+
+- Add low battery alerts. (#1507)
+
+- Add battery charge to systems table.
+
+- Add option to make universal token permanent. (#1097, #1614)
+
+- Add `--url` and `--token` command line arguments to the agent. (#1524)
+
 - Collect S.M.A.R.T. data in the background every hour.
 
 - Add `SMART_INTERVAL` environment variable to customize S.M.A.R.T. data collection interval.
@@ -8,7 +18,25 @@
 
 - Add `system_details` collection to store infrequently updated system information.
 
+- Improve S.M.A.R.T. device path lookup for NVMe devices. (#1504)
+
+- Use origin country flags for Spanish, Portuguese, English languages. (#1571)
+
+- Raise `smartctl` timeout to 15 seconds. (#1465)
+
 - Skip known non-unique product UUID when generating fingerprints. (#1556)
+
+- Fix container logs decoding for raw streams. (#1535)
+
+- Fix capacity sorting in S.M.A.R.T. table. (#1551)
+
+- Fix loader visibility when no systems are present. (#1511)
+
+- Rename login honeypot field to prevent password manager autofill (#1011).
+
+- Add Serbian and Bahasa Indonesia translations.
+
+- Update Go dependencies.
 
 ## 0.17.0
 
@@ -294,4 +322,4 @@ Note that the default memory calculation changed in this release, which may caus
 
 ## Older
 
-Release notes are available at https://github.com/henrygd/beszel/releases
+Release notes are available at <https://github.com/henrygd/beszel/releases>

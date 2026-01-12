@@ -8,7 +8,7 @@ msgstr ""
 "Language: hr\n"
 "Project-Id-Version: beszel\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2025-11-14 22:51\n"
+"PO-Revision-Date: 2025-12-02 23:18\n"
 "Last-Translator: \n"
 "Language-Team: Croatian\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
@@ -24,14 +24,9 @@ msgstr ""
 msgid "{0} of {1} row(s) selected."
 msgstr "{0} od {1} redaka izabrano."
 
-#. placeholder {0}: systems.length
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "{0} systems"
-msgstr ""
-
 #: src/components/routes/system/info-bar.tsx
 msgid "{cores, plural, one {# core} other {# cores}}"
-msgstr ""
+msgstr "{cores, plural, one {# jezgra} few {# jezgre} other {# jezgri}}"
 
 #: src/lib/utils.ts
 msgid "{count, plural, one {{countString} day} other {{countString} days}}"
@@ -47,12 +42,7 @@ msgstr "{count, plural, one {{countString} minuta} few {{countString} minuta} ma
 
 #: src/components/routes/system/info-bar.tsx
 msgid "{threads, plural, one {# thread} other {# threads}}"
-msgstr ""
-
-#. placeholder {0}: groups.size
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "{totalOnline} online, {totalOffline} offline across {0} groups"
-msgstr ""
+msgstr "{threads, plural, one {# nit} few {# niti} other {# niti}}"
 
 #: src/lib/utils.ts
 msgid "1 hour"
@@ -111,14 +101,6 @@ msgstr "Aktivan"
 msgid "Active Alerts"
 msgstr "Aktivna upozorenja"
 
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "active servers"
-msgstr ""
-
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "Active Servers"
-msgstr ""
-
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Active state"
 msgstr "Aktivno stanje"
@@ -127,7 +109,7 @@ msgstr "Aktivno stanje"
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Add {foo}"
-msgstr ""
+msgstr "Dodaj {foo}"
 
 #: src/components/add-system.tsx
 msgid "Add <0>System</0>"
@@ -161,10 +143,6 @@ msgstr "Nakon"
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Agent"
 msgstr "Agent"
-
-#: src/components/routes/haproxy-aggregate.tsx
-#~ msgid "Aggregated statistics from {0} HAProxy systems in {1} groups"
-#~ msgstr ""
 
 #: src/components/command-palette.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
@@ -200,10 +178,6 @@ msgstr "Jeste li sigurni da želite izbrisati {name}?"
 msgid "Are you sure?"
 msgstr "Jeste li sigurni?"
 
-#: src/components/routes/haproxy-aggregate.tsx
-#~ msgid "Authentication Error"
-#~ msgstr ""
-
 #: src/components/copy-to-clipboard.tsx
 msgid "Automatic copy requires a secure context."
 msgstr "Automatsko kopiranje zahtijeva siguran kontekst."
@@ -213,17 +187,13 @@ msgid "Average"
 msgstr "Prosjek"
 
 #: src/components/routes/system.tsx
-msgid "Average backend response time (ms)"
-msgstr ""
-
-#: src/components/routes/system.tsx
 msgid "Average CPU utilization of containers"
 msgstr "Prosječna iskorištenost procesora u spremnicima"
 
 #. placeholder {0}: alertData.unit
 #: src/components/alerts/alerts-sheet.tsx
 msgid "Average drops below <0>{value}{0}</0>"
-msgstr ""
+msgstr "Prosjek pada ispod <0>{value}{0}</0>"
 
 #. placeholder {0}: alertData.unit
 #: src/components/alerts/alerts-sheet.tsx
@@ -247,18 +217,6 @@ msgstr "Prosječna iskorištenost {0}"
 msgid "Average utilization of GPU engines"
 msgstr "Prosječna iskorištenost GPU motora"
 
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "Avg Response"
-msgstr ""
-
-#: src/components/routes/haproxy-aggregate.tsx
-#~ msgid "Avg/System"
-#~ msgstr ""
-
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "Backup Servers"
-msgstr ""
-
 #: src/components/command-palette.tsx
 #: src/components/navbar.tsx
 msgid "Backups"
@@ -272,7 +230,7 @@ msgstr "Propusnost"
 #. Battery label in systems table header
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Bat"
-msgstr ""
+msgstr "Bat"
 
 #: src/components/routes/system.tsx
 #: src/lib/alerts.ts
@@ -296,7 +254,7 @@ msgstr "Prije"
 #. placeholder {2}: alert.min
 #: src/components/active-alerts.tsx
 msgid "Below {0}{1} in last {2, plural, one {# minute} other {# minutes}}"
-msgstr ""
+msgstr "Ispod {0}{1} u posljednjih {2, plural, one {# minuti} few {# minute} other {# minuta}}"
 
 #: src/components/login/auth-form.tsx
 msgid "Beszel supports OpenID Connect and many OAuth2 authentication providers."
@@ -348,7 +306,7 @@ msgstr "Otkaži"
 
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Capabilities"
-msgstr ""
+msgstr "Mogućnosti"
 
 #: src/components/routes/system/smart-table.tsx
 msgid "Capacity"
@@ -401,10 +359,6 @@ msgstr "Provjerite Vaš servis notifikacija"
 msgid "Clear"
 msgstr "Očisti"
 
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "Clear All"
-msgstr ""
-
 #: src/components/containers-table/containers-table.tsx
 msgid "Click on a container to view more information."
 msgstr "Kliknite na spremnik za prikaz više informacija."
@@ -417,17 +371,9 @@ msgstr "Kliknite na uređaj da biste vidjeli više informacija."
 msgid "Click on a system to view more information."
 msgstr "Odaberite sustav za prikaz više informacija."
 
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "Click refresh to load data"
-msgstr ""
-
 #: src/components/ui/input-copy.tsx
 msgid "Click to copy"
 msgstr "Pritisnite za kopiranje"
-
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "Collapse"
-msgstr ""
 
 #: src/components/login/forgot-pass-form.tsx
 #: src/components/login/forgot-pass-form.tsx
@@ -450,10 +396,6 @@ msgstr "Sukobi"
 #: src/components/active-alerts.tsx
 msgid "Connection is down"
 msgstr "Veza je pala"
-
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "Connections"
-msgstr ""
 
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/systems-table/systems-table-columns.tsx
@@ -560,26 +502,14 @@ msgstr "Kritično (%)"
 msgid "Cumulative Download"
 msgstr "Kumulativno preuzimanje"
 
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "Cumulative Totals"
-msgstr ""
-
 #: src/components/routes/system/network-sheet.tsx
 msgid "Cumulative Upload"
 msgstr "Kumulativno otpremanje"
-
-#: src/components/routes/system.tsx
-msgid "Current sessions across frontends and backends"
-msgstr ""
 
 #. Context: Battery state
 #: src/components/routes/system.tsx
 msgid "Current state"
 msgstr "Trenutno stanje"
-
-#: src/components/routes/system.tsx
-msgid "Current status of all HAProxy frontends, backends, and servers"
-msgstr ""
 
 #. Power Cycles
 #: src/components/routes/system/smart-table.tsx
@@ -613,10 +543,6 @@ msgstr "Opis"
 #: src/components/containers-table/containers-table.tsx
 msgid "Detail"
 msgstr "Detalj"
-
-#: src/components/routes/system.tsx
-msgid "Detailed server state and configuration"
-msgstr ""
 
 #: src/components/routes/system/smart-table.tsx
 msgid "Device"
@@ -686,10 +612,6 @@ msgstr "Preuzmi"
 msgid "Duration"
 msgstr "Trajanje"
 
-#: src/components/routes/haproxy-aggregate.tsx
-#~ msgid "e.g. internal, stats, admin"
-#~ msgstr ""
-
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Edit"
@@ -698,7 +620,7 @@ msgstr "Uredi"
 #: src/components/add-system.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Edit {foo}"
-msgstr ""
+msgstr "Uredi {foo}"
 
 #: src/components/login/auth-form.tsx
 #: src/components/login/forgot-pass-form.tsx
@@ -732,6 +654,10 @@ msgstr "Unesite email adresu..."
 msgid "Enter your one-time password."
 msgstr "Unesite Vašu jednokratnu lozinku."
 
+#: src/components/routes/settings/tokens-fingerprints.tsx
+msgid "Ephemeral"
+msgstr "Efemeran"
+
 #: src/components/login/auth-form.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/settings/config-yaml.tsx
@@ -750,14 +676,6 @@ msgstr "Greška"
 msgid "Exceeds {0}{1} in last {2, plural, one {# minute} other {# minutes}}"
 msgstr "Premašuje {0}{1} u posljednjih {2, plural, one {# minuta} other {# minute}}"
 
-#: src/components/routes/haproxy-aggregate.tsx
-#~ msgid "Exclude proxies:"
-#~ msgstr ""
-
-#: src/components/routes/haproxy-aggregate.tsx
-#~ msgid "Excluding {0} pattern(s): {1}"
-#~ msgstr ""
-
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Exec main PID"
 msgstr "Glavni PID izvršavanja"
@@ -770,9 +688,9 @@ msgstr "Postojeći sistemi koji nisu definirani u <0>config.yml</0> će biti izb
 msgid "Exited active"
 msgstr "Izašlo aktivno"
 
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "Expand"
-msgstr ""
+#: src/components/routes/settings/tokens-fingerprints.tsx
+msgid "Expires after one hour or on hub restart."
+msgstr "Istječe nakon jednog sata ili ponovnog pokretanja huba."
 
 #: src/components/routes/settings/alerts-history-data-table.tsx
 msgid "Export"
@@ -821,14 +739,6 @@ msgstr "Ažuriranje upozorenja nije uspjelo"
 msgid "Failed: {0}"
 msgstr "Neuspjelo: {0}"
 
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "Filter by zone:"
-msgstr ""
-
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "Filter groups:"
-msgstr ""
-
 #: src/components/containers-table/containers-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/system.tsx
@@ -844,7 +754,7 @@ msgstr "Otisak prsta"
 
 #: src/components/routes/system/smart-table.tsx
 msgid "Firmware"
-msgstr ""
+msgstr "Firmver"
 
 #: src/components/alerts/alerts-sheet.tsx
 msgid "For <0>{min}</0> {min, plural, one {minute} other {minutes}}"
@@ -859,10 +769,6 @@ msgstr "Zaboravljena lozinka?"
 msgctxt "Button to copy install command"
 msgid "FreeBSD command"
 msgstr "FreeBSD naredba"
-
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "Frontends/Backends"
-msgstr ""
 
 #. Context: Battery state
 #: src/lib/i18n.ts
@@ -895,75 +801,6 @@ msgstr "Iskorištenost GPU-a"
 msgid "Grid"
 msgstr "Mreža"
 
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "Groups"
-msgstr ""
-
-#: src/components/routes/haproxy-aggregate.tsx
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "HAProxy Aggregate"
-msgstr ""
-
-#: src/components/routes/system.tsx
-msgid "HAProxy Error Rate"
-msgstr ""
-
-#: src/components/routes/system.tsx
-#~ msgid "HAProxy Errors"
-#~ msgstr ""
-
-#: src/components/routes/system.tsx
-msgid "HAProxy HTTP Responses"
-msgstr ""
-
-#: src/components/routes/system.tsx
-msgid "HAProxy Memory Pools"
-msgstr ""
-
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "HAProxy offline"
-msgstr ""
-
-#: src/components/routes/system.tsx
-msgid "HAProxy Process Info"
-msgstr ""
-
-#: src/components/routes/system.tsx
-msgid "HAProxy process statistics and runtime information"
-msgstr ""
-
-#: src/components/routes/system.tsx
-msgid "HAProxy Request Rate"
-msgstr ""
-
-#: src/components/routes/system.tsx
-msgid "HAProxy Response Time"
-msgstr ""
-
-#: src/components/routes/system.tsx
-msgid "HAProxy Server States"
-msgstr ""
-
-#: src/components/routes/system.tsx
-msgid "HAProxy Sessions"
-msgstr ""
-
-#: src/components/routes/system.tsx
-msgid "HAProxy Status"
-msgstr ""
-
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "HAProxy systems should be named like \"ha-web-1\", \"ha-api-2\", etc."
-msgstr ""
-
-#: src/components/routes/system.tsx
-msgid "HAProxy Thread Activity"
-msgstr ""
-
-#: src/components/routes/system.tsx
-msgid "HAProxy Traffic"
-msgstr ""
-
 #: src/components/containers-table/containers-table-columns.tsx
 msgid "Health"
 msgstr "Zdravlje"
@@ -977,26 +814,6 @@ msgstr "Homebrew naredba"
 #: src/components/add-system.tsx
 msgid "Host / IP"
 msgstr "Host / IP"
-
-#: src/components/routes/system.tsx
-#~ msgid "HTTP 4xx and 5xx error responses"
-#~ msgstr ""
-
-#: src/components/routes/system.tsx
-msgid "HTTP 4xx and 5xx errors per second"
-msgstr ""
-
-#: src/components/routes/system.tsx
-msgid "HTTP requests per second"
-msgstr ""
-
-#: src/components/routes/system.tsx
-msgid "HTTP response codes per second (1xx-5xx)"
-msgstr ""
-
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "HTTP Responses (Total)"
-msgstr ""
 
 #. Context: Battery state
 #: src/lib/i18n.ts
@@ -1012,26 +829,13 @@ msgctxt "Docker image"
 msgid "Image"
 msgstr "Slika"
 
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "In"
-msgstr ""
-
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Inactive"
 msgstr "Neaktivno"
 
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "Individual Systems"
-msgstr ""
-
 #: src/components/login/auth-form.tsx
 msgid "Invalid email address."
 msgstr "Nevažeća adresa e-pošte."
-
-#. Linux kernel
-#: src/components/routes/system.tsx
-#~ msgid "Kernel"
-#~ msgstr "Jezgra"
 
 #: src/components/routes/settings/general.tsx
 msgid "Language"
@@ -1142,10 +946,6 @@ msgid "Memory Peak"
 msgstr "Vrhunac memorije"
 
 #: src/components/routes/system.tsx
-msgid "Memory pool allocation and usage statistics"
-msgstr ""
-
-#: src/components/routes/system.tsx
 #: src/lib/alerts.ts
 msgid "Memory Usage"
 msgstr "Upotreba memorije"
@@ -1156,7 +956,7 @@ msgstr "Upotreba memorije Docker spremnika"
 
 #: src/components/routes/system/smart-table.tsx
 msgid "Model"
-msgstr ""
+msgstr "Model"
 
 #: src/components/add-system.tsx
 #: src/components/alerts-history-columns.tsx
@@ -1193,14 +993,6 @@ msgstr "Mjerna jedinica za mrežu"
 msgid "No"
 msgstr "Ne"
 
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "No data"
-msgstr ""
-
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "No HAProxy Systems Found"
-msgstr ""
-
 #: src/components/command-palette.tsx
 #: src/components/systemd-table/systemd-table.tsx
 msgid "No results found."
@@ -1224,10 +1016,6 @@ msgstr "Nema dostupnih S.M.A.R.T. atributa za ovaj uređaj."
 msgid "No systems found."
 msgstr "Nije pronađen nijedan sustav."
 
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "No systems matching the \"ha-*\" pattern were found."
-msgstr ""
-
 #: src/components/command-palette.tsx
 #: src/components/routes/settings/layout.tsx
 #: src/components/routes/settings/notifications.tsx
@@ -1237,10 +1025,6 @@ msgstr "Obavijesti"
 #: src/components/login/auth-form.tsx
 msgid "OAuth 2 / OIDC support"
 msgstr "Podrška za OAuth 2 / OIDC"
-
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "offline"
-msgstr ""
 
 #: src/components/routes/settings/config-yaml.tsx
 msgid "On each restart, systems in the database will be updated to match the systems defined in the file."
@@ -1254,10 +1038,6 @@ msgstr "Jednokratno"
 #: src/components/login/auth-form.tsx
 msgid "One-time password"
 msgstr "Jednokratna lozinka"
-
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "online"
-msgstr ""
 
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
@@ -1274,10 +1054,6 @@ msgstr "Ili nastavi sa"
 #: src/components/routes/system/cpu-sheet.tsx
 msgid "Other"
 msgstr "Ostalo"
-
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "Out"
-msgstr ""
 
 #: src/components/alerts/alerts-sheet.tsx
 msgid "Overwrite existing alerts"
@@ -1337,13 +1113,17 @@ msgstr "Pauzirano ({pausedSystemsLength})"
 msgid "Per-core average utilization"
 msgstr "Prosječna iskorištenost po jezgri"
 
-#: src/components/routes/system.tsx
-msgid "Per-thread CPU usage and activity statistics"
-msgstr ""
-
 #: src/components/routes/system/cpu-sheet.tsx
 msgid "Percentage of time spent in each state"
 msgstr "Postotak vremena provedenog u svakom stanju"
+
+#: src/components/routes/settings/tokens-fingerprints.tsx
+msgid "Permanent"
+msgstr "Trajan"
+
+#: src/components/routes/settings/tokens-fingerprints.tsx
+msgid "Persistence"
+msgstr "Postojanost"
 
 #: src/components/routes/settings/notifications.tsx
 msgid "Please <0>configure an SMTP server</0> to ensure alerts are delivered."
@@ -1425,10 +1205,6 @@ msgstr "Primljeno"
 msgid "Refresh"
 msgstr "Osvježi"
 
-#: src/components/routes/haproxy-aggregate.tsx
-#~ msgid "Refresh Page"
-#~ msgstr ""
-
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Relationships"
 msgstr "Odnosi"
@@ -1440,11 +1216,6 @@ msgstr "Zatraži jednokratnu lozinku"
 #: src/components/login/otp-forms.tsx
 msgid "Request OTP"
 msgstr "Zatraži OTP"
-
-#: src/components/routes/haproxy-aggregate.tsx
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "Request Rate"
-msgstr ""
 
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Required by"
@@ -1475,7 +1246,7 @@ msgstr "Nastavi"
 #: src/components/systems-table/systems-table-columns.tsx
 msgctxt "Root disk label"
 msgid "Root"
-msgstr ""
+msgstr "Korijen"
 
 #: src/components/routes/settings/tokens-fingerprints.tsx
 msgid "Rotate token"
@@ -1510,6 +1281,10 @@ msgstr "Spremi Postavke"
 msgid "Save system"
 msgstr "Spremi sustav"
 
+#: src/components/routes/settings/tokens-fingerprints.tsx
+msgid "Saved in the database and does not expire until you disable it."
+msgstr "Spremljeno u bazi podataka i ne istječe dok ga ne onemogućite."
+
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Schedule"
 msgstr "Raspored"
@@ -1536,15 +1311,7 @@ msgstr "Pogledajte <0>postavke obavijesti</0> da biste konfigurirali način prim
 
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Select {foo}"
-msgstr ""
-
-#: src/components/routes/haproxy-aggregate.tsx
-#~ msgid "Select All"
-#~ msgstr ""
-
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "selected"
-msgstr ""
+msgstr "Odaberi {foo}"
 
 #: src/components/routes/system.tsx
 msgid "Sent"
@@ -1561,12 +1328,6 @@ msgstr "Detalji usluge"
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Services"
 msgstr "Usluge"
-
-#: src/components/routes/haproxy-aggregate.tsx
-#: src/components/routes/haproxy-aggregate.tsx
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "Sessions"
-msgstr ""
 
 #: src/components/routes/settings/general.tsx
 msgid "Set percentage thresholds for meter colors."
@@ -1647,10 +1408,9 @@ msgstr "Prosječno opterećenje sustava kroz vrijeme"
 
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Systemd Services"
-msgstr ""
+msgstr "Systemd servisi"
 
 #: src/components/navbar.tsx
-#: src/components/routes/haproxy-aggregate.tsx
 msgid "Systems"
 msgstr "Sistemi"
 
@@ -1754,14 +1514,6 @@ msgstr "Tokeni se uz otiske koriste za autentifikaciju WebSocket veza prema sred
 msgid "Total"
 msgstr "Ukupno"
 
-#: src/components/routes/system.tsx
-msgid "Total bytes transferred (in + out)"
-msgstr ""
-
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "Total Connections"
-msgstr ""
-
 #: src/components/routes/system/network-sheet.tsx
 msgid "Total data received for each interface"
 msgstr "Ukupni podaci primljeni za svako sučelje"
@@ -1770,36 +1522,10 @@ msgstr "Ukupni podaci primljeni za svako sučelje"
 msgid "Total data sent for each interface"
 msgstr "Ukupni podaci poslani za svako sučelje"
 
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "Total Requests"
-msgstr ""
-
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "Total Sessions"
-msgstr ""
-
 #. placeholder {0}: data.length
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Total: {0}"
 msgstr "Ukupno: {0}"
-
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "Traffic"
-msgstr ""
-
-#: src/components/routes/haproxy-aggregate.tsx
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "Traffic In"
-msgstr ""
-
-#: src/components/routes/haproxy-aggregate.tsx
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "Traffic Out"
-msgstr ""
-
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "Traffic Overview"
-msgstr ""
 
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Triggered by"
@@ -1827,7 +1553,7 @@ msgstr "Pokreće se kada bilo koji senzor prijeđe prag"
 
 #: src/lib/alerts.ts
 msgid "Triggers when battery charge drops below a threshold"
-msgstr ""
+msgstr "Pokreće se kada razina baterije padne ispod praga"
 
 #: src/lib/alerts.ts
 msgid "Triggers when combined up/down exceeds a threshold"
@@ -1858,10 +1584,6 @@ msgstr "Pokreće se kada iskorištenost bilo kojeg diska premaši prag"
 #: src/components/routes/system/smart-table.tsx
 msgid "Type"
 msgstr "Vrsta"
-
-#: src/components/routes/haproxy-aggregate.tsx
-#~ msgid "Unable to fetch HAProxy statistics. Please refresh the page."
-#~ msgstr ""
 
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Unit file"
@@ -1902,7 +1624,6 @@ msgid "Update"
 msgstr "Ažuriraj"
 
 #: src/components/containers-table/containers-table-columns.tsx
-#: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/system/smart-table.tsx
 #: src/components/systemd-table/systemd-table-columns.tsx
 msgid "Updated"
@@ -1963,10 +1684,6 @@ msgstr "Pogledajte posljednjih 200 upozorenja."
 msgid "Visible Fields"
 msgstr "Vidljiva polja"
 
-#: src/components/routes/haproxy-aggregate.tsx
-#~ msgid "Waiting for data..."
-#~ msgstr ""
-
 #: src/components/routes/system.tsx
 msgid "Waiting for enough records to display"
 msgstr "Čeka se na više podataka prije prikaza"
@@ -1992,8 +1709,8 @@ msgid "Webhook / Push notifications"
 msgstr "Webhook / Push obavijest"
 
 #: src/components/routes/settings/tokens-fingerprints.tsx
-msgid "When enabled, this token allows agents to self-register without prior system creation. Expires after one hour or on hub restart."
-msgstr "Kada je podešen, ovaj token dopušta agentima da se prijave bez prvobitnog stvaranja sustava. Ističe nakon jednog sata ili ponovnog pokretanja središnje kontrole."
+msgid "When enabled, this token allows agents to self-register without prior system creation."
+msgstr "Kada je omogućen, ovaj token omogućuje agentima da se sami registriraju bez prethodnog stvaranja sustava."
 
 #: src/components/add-system.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
