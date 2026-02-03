@@ -8,7 +8,7 @@ msgstr ""
 "Language: pt\n"
 "Project-Id-Version: beszel\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2025-12-05 20:24\n"
+"PO-Revision-Date: 2026-01-31 21:16\n"
 "Last-Translator: \n"
 "Language-Team: Portuguese\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -47,7 +47,7 @@ msgstr "{count, plural, one {{countString} minuto} other {{countString} minutos}
 
 #: src/components/routes/system/info-bar.tsx
 msgid "{threads, plural, one {# thread} other {# threads}}"
-msgstr "{threads, plural, one {# thread} other {# threads}}"
+msgstr ""
 
 #. placeholder {0}: groups.size
 #: src/components/routes/haproxy-aggregate.tsx
@@ -175,6 +175,7 @@ msgstr "Alertas"
 
 #: src/components/command-palette.tsx
 #: src/components/containers-table/containers-table.tsx
+#: src/components/navbar.tsx
 #: src/components/routes/containers.tsx
 msgid "All Containers"
 msgstr "Todos os Contêineres"
@@ -260,7 +261,7 @@ msgstr "Largura de Banda"
 #. Battery label in systems table header
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Bat"
-msgstr "Bat"
+msgstr ""
 
 #: src/components/routes/system.tsx
 #: src/lib/alerts.ts
@@ -314,7 +315,7 @@ msgstr "Bytes (KB/s, MB/s, GB/s)"
 
 #: src/components/charts/mem-chart.tsx
 msgid "Cache / Buffers"
-msgstr ""
+msgstr "Cache / Buffers"
 
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Can reload"
@@ -956,7 +957,7 @@ msgstr "Comando Homebrew"
 
 #: src/components/add-system.tsx
 msgid "Host / IP"
-msgstr ""
+msgstr "Host / IP"
 
 #: src/components/routes/system.tsx
 msgid "HTTP 4xx and 5xx errors per second"
@@ -1004,6 +1005,7 @@ msgstr ""
 msgid "Invalid email address."
 msgstr "Endereço de email inválido."
 
+#: src/components/lang-toggle.tsx
 #: src/components/routes/settings/general.tsx
 msgid "Language"
 msgstr "Idioma"
@@ -1549,6 +1551,7 @@ msgstr "Defina os limiares de porcentagem para as cores do medidor."
 
 #: src/components/command-palette.tsx
 #: src/components/command-palette.tsx
+#: src/components/navbar.tsx
 #: src/components/routes/settings/layout.tsx
 #: src/components/routes/settings/layout.tsx
 msgid "Settings"
@@ -1645,7 +1648,7 @@ msgstr "Tarefas"
 #: src/components/routes/system/smart-table.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Temp"
-msgstr ""
+msgstr "Temp"
 
 #: src/components/routes/system.tsx
 #: src/lib/alerts.ts
@@ -1702,13 +1705,14 @@ msgid "Toggle grid"
 msgstr "Alternar grade"
 
 #: src/components/mode-toggle.tsx
+#: src/components/mode-toggle.tsx
 msgid "Toggle theme"
 msgstr "Alternar tema"
 
 #: src/components/add-system.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
 msgid "Token"
-msgstr ""
+msgstr "Token"
 
 #: src/components/command-palette.tsx
 #: src/components/routes/settings/layout.tsx

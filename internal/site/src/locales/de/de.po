@@ -8,7 +8,7 @@ msgstr ""
 "Language: de\n"
 "Project-Id-Version: beszel\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2025-12-05 20:24\n"
+"PO-Revision-Date: 2026-01-31 21:16\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -175,6 +175,7 @@ msgstr "Warnungen"
 
 #: src/components/command-palette.tsx
 #: src/components/containers-table/containers-table.tsx
+#: src/components/navbar.tsx
 #: src/components/routes/containers.tsx
 msgid "All Containers"
 msgstr "Alle Container"
@@ -260,7 +261,7 @@ msgstr "Bandbreite"
 #. Battery label in systems table header
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Bat"
-msgstr "Bat"
+msgstr ""
 
 #: src/components/routes/system.tsx
 #: src/lib/alerts.ts
@@ -660,11 +661,11 @@ msgstr "Dokumentation"
 #: src/components/systems-table/systems-table-columns.tsx
 #: src/lib/alerts.ts
 msgid "Down"
-msgstr "Offline"
+msgstr "Inaktiv"
 
 #: src/components/systems-table/systems-table.tsx
 msgid "Down ({downSystemsLength})"
-msgstr "Offline ({downSystemsLength})"
+msgstr "Inaktiv ({downSystemsLength})"
 
 #: src/components/routes/system/network-sheet.tsx
 msgid "Download"
@@ -1004,6 +1005,7 @@ msgstr ""
 msgid "Invalid email address."
 msgstr "Ungültige E-Mail-Adresse."
 
+#: src/components/lang-toggle.tsx
 #: src/components/routes/settings/general.tsx
 msgid "Language"
 msgstr "Sprache"
@@ -1140,7 +1142,7 @@ msgstr "Name"
 #: src/components/containers-table/containers-table-columns.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Net"
-msgstr "Netz"
+msgstr "Netzwerk"
 
 #: src/components/routes/system.tsx
 msgid "Network traffic of docker containers"
@@ -1318,7 +1320,7 @@ msgstr "Prozentsatz der Zeit in jedem Zustand"
 
 #: src/components/routes/settings/tokens-fingerprints.tsx
 msgid "Permanent"
-msgstr "Permanent"
+msgstr ""
 
 #: src/components/routes/settings/tokens-fingerprints.tsx
 msgid "Persistence"
@@ -1549,6 +1551,7 @@ msgstr "Prozentuale Schwellenwerte für Zählerfarben festlegen."
 
 #: src/components/command-palette.tsx
 #: src/components/command-palette.tsx
+#: src/components/navbar.tsx
 #: src/components/routes/settings/layout.tsx
 #: src/components/routes/settings/layout.tsx
 msgid "Settings"
@@ -1701,6 +1704,7 @@ msgstr "An E-Mail(s)"
 msgid "Toggle grid"
 msgstr "Raster umschalten"
 
+#: src/components/mode-toggle.tsx
 #: src/components/mode-toggle.tsx
 msgid "Toggle theme"
 msgstr "Darstellung umschalten"
@@ -1862,11 +1866,11 @@ msgstr "Unbegrenzt"
 #: src/components/routes/system/info-bar.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Up"
-msgstr "aktiv"
+msgstr "Aktiv"
 
 #: src/components/systems-table/systems-table.tsx
 msgid "Up ({upSystemsLength})"
-msgstr "aktiv ({upSystemsLength})"
+msgstr "Aktiv ({upSystemsLength})"
 
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Update"
