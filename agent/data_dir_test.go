@@ -1,5 +1,4 @@
 //go:build testing
-// +build testing
 
 package agent
 
@@ -17,7 +16,7 @@ func TestGetDataDir(t *testing.T) {
 	// Test with explicit dataDir parameter
 	t.Run("explicit data dir", func(t *testing.T) {
 		tempDir := t.TempDir()
-		result, err := getDataDir(tempDir)
+		result, err := GetDataDir(tempDir)
 		require.NoError(t, err)
 		assert.Equal(t, tempDir, result)
 	})
@@ -26,7 +25,7 @@ func TestGetDataDir(t *testing.T) {
 	t.Run("explicit data dir - create new", func(t *testing.T) {
 		tempDir := t.TempDir()
 		newDir := filepath.Join(tempDir, "new-data-dir")
-		result, err := getDataDir(newDir)
+		result, err := GetDataDir(newDir)
 		require.NoError(t, err)
 		assert.Equal(t, newDir, result)
 
@@ -52,7 +51,7 @@ func TestGetDataDir(t *testing.T) {
 
 		os.Setenv("BESZEL_AGENT_DATA_DIR", tempDir)
 
-		result, err := getDataDir()
+		result, err := GetDataDir()
 		require.NoError(t, err)
 		assert.Equal(t, tempDir, result)
 	})
@@ -60,7 +59,7 @@ func TestGetDataDir(t *testing.T) {
 	// Test with invalid explicit dataDir
 	t.Run("invalid explicit data dir", func(t *testing.T) {
 		invalidPath := "/invalid/path/that/cannot/be/created"
-		_, err := getDataDir(invalidPath)
+		_, err := GetDataDir(invalidPath)
 		assert.Error(t, err)
 	})
 
@@ -79,7 +78,7 @@ func TestGetDataDir(t *testing.T) {
 
 		// This will try platform-specific defaults, which may or may not work
 		// We're mainly testing that it doesn't panic and returns some result
-		result, err := getDataDir()
+		result, err := GetDataDir()
 		// We don't assert success/failure here since it depends on system permissions
 		// Just verify we get a string result if no error
 		if err == nil {

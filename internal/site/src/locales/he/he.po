@@ -103,6 +103,7 @@ msgstr "פעולות"
 
 #: src/components/alerts-history-columns.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
+#: src/components/routes/settings/heartbeat.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Active"
 msgstr "פעיל"
@@ -157,6 +158,10 @@ msgstr "מנהל"
 #: src/components/systemd-table/systemd-table.tsx
 msgid "After"
 msgstr "אחרי"
+
+#: src/components/routes/settings/heartbeat.tsx
+msgid "After setting the environment variables, restart your Beszel hub for changes to take effect."
+msgstr "לאחר הגדרת משתני הסביבה, הפעל מחדש את ה-Beszel hub שלך כדי שהשינויים ייכנסו לתוקף."
 
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Agent"
@@ -379,6 +384,10 @@ msgstr "בדוק את {email} לקישור איפוס."
 #: src/components/routes/settings/layout.tsx
 msgid "Check logs for more details."
 msgstr "בדוק לוגים לפרטים נוספים"
+
+#: src/components/routes/settings/heartbeat.tsx
+msgid "Check your monitoring service"
+msgstr "בדוק את שירות הניטור שלך"
 
 #: src/components/routes/settings/notifications.tsx
 msgid "Check your notification service"
@@ -705,6 +714,14 @@ msgstr "ריק"
 msgid "End Time"
 msgstr "זמן סיום"
 
+#: src/components/routes/settings/heartbeat.tsx
+msgid "Endpoint URL"
+msgstr "URL של נקודת קצה"
+
+#: src/components/routes/settings/heartbeat.tsx
+msgid "Endpoint URL to ping (required)"
+msgstr "URL של נקודת קצה לפינג (חובה)"
+
 #: src/components/login/login.tsx
 msgid "Enter email address to reset password"
 msgstr "הכנס כתובת אימייל לאיפוס סיסמה"
@@ -724,6 +741,9 @@ msgstr "זמני"
 #: src/components/login/auth-form.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/settings/config-yaml.tsx
+#: src/components/routes/settings/heartbeat.tsx
+#: src/components/routes/settings/heartbeat.tsx
+#: src/components/routes/settings/heartbeat.tsx
 #: src/components/routes/settings/notifications.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/settings/quiet-hours.tsx
@@ -731,6 +751,10 @@ msgstr "זמני"
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Error"
 msgstr "שגיאה"
+
+#: src/components/routes/settings/heartbeat.tsx
+msgid "Example:"
+msgstr "דוגמה:"
 
 #. placeholder {0}: alert.value
 #. placeholder {1}: info.unit
@@ -792,6 +816,10 @@ msgstr "אימות נכשל"
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Failed to save settings"
 msgstr "שמירת הגדרות נכשלה"
+
+#: src/components/routes/settings/heartbeat.tsx
+msgid "Failed to send heartbeat"
+msgstr "שליחת פעימת הלב נכשלה"
 
 #: src/components/routes/settings/notifications.tsx
 msgid "Failed to send test notification"
@@ -949,6 +977,18 @@ msgstr ""
 msgid "Health"
 msgstr "בריאות"
 
+#: src/components/routes/settings/layout.tsx
+msgid "Heartbeat"
+msgstr "פעימת לב"
+
+#: src/components/routes/settings/heartbeat.tsx
+msgid "Heartbeat Monitoring"
+msgstr "ניטור פעימות לב"
+
+#: src/components/routes/settings/heartbeat.tsx
+msgid "Heartbeat sent successfully"
+msgstr "פעימת הלב נשלחה בהצלחה"
+
 #: src/components/add-system.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
 msgctxt "Button to copy install command"
@@ -974,6 +1014,13 @@ msgstr ""
 #: src/components/routes/haproxy-aggregate.tsx
 msgid "HTTP Responses (Total)"
 msgstr ""
+#: src/components/routes/settings/heartbeat.tsx
+msgid "HTTP Method"
+msgstr "שיטת HTTP"
+
+#: src/components/routes/settings/heartbeat.tsx
+msgid "HTTP method: POST, GET, or HEAD (default: POST)"
+msgstr "שיטת HTTP: POST, GET, או HEAD (ברירת מחדל: POST)"
 
 #. Context: Battery state
 #: src/lib/i18n.ts
@@ -1000,6 +1047,9 @@ msgstr "לא פעיל"
 #: src/components/routes/haproxy-aggregate.tsx
 msgid "Individual Systems"
 msgstr ""
+#: src/components/routes/settings/heartbeat.tsx
+msgid "Interval"
+msgstr "מרווח"
 
 #: src/components/login/auth-form.tsx
 msgid "Invalid email address."
@@ -1305,6 +1355,10 @@ msgstr "מושהה"
 msgid "Paused ({pausedSystemsLength})"
 msgstr "מושהה ({pausedSystemsLength})"
 
+#: src/components/routes/settings/heartbeat.tsx
+msgid "Payload format"
+msgstr "פורמט מטען (Payload)"
+
 #: src/components/routes/system/cpu-sheet.tsx
 #: src/components/routes/system/cpu-sheet.tsx
 msgid "Per-core average utilization"
@@ -1511,6 +1565,10 @@ msgstr "חיפוש"
 msgid "Search for systems or settings..."
 msgstr "חפש מערכות או הגדרות..."
 
+#: src/components/routes/settings/heartbeat.tsx
+msgid "Seconds between pings (default: 60)"
+msgstr "שניות בין פינגים (ברירת מחדל: 60)"
+
 #: src/components/alerts/alerts-sheet.tsx
 msgid "See <0>notification settings</0> to configure how you receive alerts."
 msgstr "ראה <0>הגדרות התראות</0> כדי להגדיר כיצד אתה מקבל התראות."
@@ -1522,6 +1580,17 @@ msgstr "בחר {foo}"
 #: src/components/routes/haproxy-aggregate.tsx
 msgid "selected"
 msgstr ""
+#: src/components/routes/settings/heartbeat.tsx
+msgid "Send a single heartbeat ping to verify your endpoint is working."
+msgstr "שלח פינג פעימת לב בודד כדי לוודא שנקודת הקצה שלך עובדת."
+
+#: src/components/routes/settings/heartbeat.tsx
+msgid "Send periodic outbound pings to an external monitoring service so you can monitor Beszel without exposing it to the internet."
+msgstr "שלח פינגים יוצאים תקופתיים לשירות ניטור חיצוני כדי שתוכל לנטר את Beszel מבלי לחשוף אותו לאינטרנט."
+
+#: src/components/routes/settings/heartbeat.tsx
+msgid "Send test heartbeat"
+msgstr "שלח פעימת לב לבדיקה"
 
 #: src/components/routes/system.tsx
 msgid "Sent"
@@ -1548,6 +1617,10 @@ msgstr ""
 #: src/components/routes/settings/general.tsx
 msgid "Set percentage thresholds for meter colors."
 msgstr "הגדר סף אחוזים עבור צבעי מד."
+
+#: src/components/routes/settings/heartbeat.tsx
+msgid "Set the following environment variables on your Beszel hub to enable heartbeat monitoring:"
+msgstr "הגדר את משתני הסביבה הבאים ב-Beszel hub שלך כדי לאפשר ניטור פעימות לב:"
 
 #: src/components/command-palette.tsx
 #: src/components/command-palette.tsx
@@ -1667,9 +1740,17 @@ msgstr "טמפרטורות של חיישני המערכת"
 msgid "Test <0>URL</0>"
 msgstr "בדוק <0>URL</0>"
 
+#: src/components/routes/settings/heartbeat.tsx
+msgid "Test heartbeat"
+msgstr "בדוק פעימת לב"
+
 #: src/components/routes/settings/notifications.tsx
 msgid "Test notification sent"
 msgstr "התראת בדיקה נשלחה"
+
+#: src/components/routes/settings/heartbeat.tsx
+msgid "The overall status is <0>ok</0> when all systems are up, <1>warn</1> when alerts are triggered, and <2>error</2> when any system is down."
+msgstr "הסטטוס הכללי הוא <0>ok</0> כשכל המערכות פועלות, <1>warn</1> כשמופעלות התראות, ו-<2>error</2> כשמערכת כלשהי מושבתת."
 
 #: src/components/login/forgot-pass-form.tsx
 msgid "Then log into the backend and reset your user account password in the users table."
@@ -1892,6 +1973,7 @@ msgid "Upload"
 msgstr "העלאה"
 
 #: src/components/routes/system/info-bar.tsx
+#: src/components/systems-table/systems-table-columns.tsx
 msgid "Uptime"
 msgstr "זמן פעילות"
 
@@ -1965,6 +2047,10 @@ msgstr "Webhook / התראות דחיפה"
 #: src/components/routes/settings/tokens-fingerprints.tsx
 msgid "When enabled, this token allows agents to self-register without prior system creation."
 msgstr "כאשר מופעל, אסימון זה מאפשר לסוכנים להירשם באופן עצמי ללא יצירת מערכת מוקדמת."
+
+#: src/components/routes/settings/heartbeat.tsx
+msgid "When using POST, each heartbeat includes a JSON payload with system status summary, list of down systems, and triggered alerts."
+msgstr "בשימוש ב-POST, כל פעימת לב כוללת מטען JSON עם סיכום סטטוס המערכת, רשימת מערכות מושבתות והתראות שהופעלו."
 
 #: src/components/add-system.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
