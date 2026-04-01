@@ -5,8 +5,8 @@ package agent
 import (
 	"context"
 	"fmt"
-	"os"
 	"testing"
+	"time"
 
 	"github.com/henrygd/beszel/internal/entities/system"
 
@@ -329,34 +329,10 @@ func TestNewSensorConfigWithEnv(t *testing.T) {
 }
 
 func TestNewSensorConfig(t *testing.T) {
-	// Save original environment variables
-	originalPrimary, hasPrimary := os.LookupEnv("BESZEL_AGENT_PRIMARY_SENSOR")
-	originalSys, hasSys := os.LookupEnv("BESZEL_AGENT_SYS_SENSORS")
-	originalSensors, hasSensors := os.LookupEnv("BESZEL_AGENT_SENSORS")
-
-	// Restore environment variables after the test
-	defer func() {
-		// Clean up test environment variables
-		os.Unsetenv("BESZEL_AGENT_PRIMARY_SENSOR")
-		os.Unsetenv("BESZEL_AGENT_SYS_SENSORS")
-		os.Unsetenv("BESZEL_AGENT_SENSORS")
-
-		// Restore original values if they existed
-		if hasPrimary {
-			os.Setenv("BESZEL_AGENT_PRIMARY_SENSOR", originalPrimary)
-		}
-		if hasSys {
-			os.Setenv("BESZEL_AGENT_SYS_SENSORS", originalSys)
-		}
-		if hasSensors {
-			os.Setenv("BESZEL_AGENT_SENSORS", originalSensors)
-		}
-	}()
-
 	// Set test environment variables
-	os.Setenv("BESZEL_AGENT_PRIMARY_SENSOR", "test_primary")
-	os.Setenv("BESZEL_AGENT_SYS_SENSORS", "/test/path")
-	os.Setenv("BESZEL_AGENT_SENSORS", "test_sensor1,test_*,test_sensor3")
+	t.Setenv("BESZEL_AGENT_PRIMARY_SENSOR", "test_primary")
+	t.Setenv("BESZEL_AGENT_SYS_SENSORS", "/test/path")
+	t.Setenv("BESZEL_AGENT_SENSORS", "test_sensor1,test_*,test_sensor3")
 
 	agent := &Agent{}
 	result := agent.newSensorConfig()
@@ -550,4 +526,67 @@ func TestGetTempsWithPanicRecovery(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestGetTempsWithTimeout(t *testing.T) {
+	agent := &Agent{
+		sensorConfig: &SensorConfig{
+			context: context.Background(),
+		},
+	}
+
+	originalTimeout := temperatureFetchTimeout
+	t.Cleanup(func() {
+		temperatureFetchTimeout = originalTimeout
+	})
+	temperatureFetchTimeout = 10 * time.Millisecond
+
+	t.Run("returns temperatures before timeout", func(t *testing.T) {
+		temps, err := agent.getTempsWithTimeout(func(ctx context.Context) ([]sensors.TemperatureStat, error) {
+			return []sensors.TemperatureStat{{SensorKey: "cpu_temp", Temperature: 42}}, nil
+		})
+
+		require.NoError(t, err)
+		require.Len(t, temps, 1)
+		assert.Equal(t, "cpu_temp", temps[0].SensorKey)
+	})
+
+	t.Run("returns timeout error when collector hangs", func(t *testing.T) {
+		temps, err := agent.getTempsWithTimeout(func(ctx context.Context) ([]sensors.TemperatureStat, error) {
+			time.Sleep(50 * time.Millisecond)
+			return []sensors.TemperatureStat{{SensorKey: "cpu_temp", Temperature: 42}}, nil
+		})
+
+		assert.Nil(t, temps)
+		assert.ErrorIs(t, err, errTemperatureFetchTimeout)
+	})
+}
+
+func TestUpdateTemperaturesSkipsOnTimeout(t *testing.T) {
+	agent := &Agent{
+		systemInfo: system.Info{DashboardTemp: 99},
+		sensorConfig: &SensorConfig{
+			context: context.Background(),
+		},
+	}
+
+	originalTimeout := temperatureFetchTimeout
+	t.Cleanup(func() {
+		temperatureFetchTimeout = originalTimeout
+		getSensorTemps = sensors.TemperaturesWithContext
+	})
+	temperatureFetchTimeout = 10 * time.Millisecond
+	getSensorTemps = func(ctx context.Context) ([]sensors.TemperatureStat, error) {
+		time.Sleep(50 * time.Millisecond)
+		return nil, nil
+	}
+
+	stats := &system.Stats{
+		Temperatures: map[string]float64{"stale": 50},
+	}
+
+	agent.updateTemperatures(stats)
+
+	assert.Equal(t, 0.0, agent.systemInfo.DashboardTemp)
+	assert.Equal(t, map[string]float64{}, stats.Temperatures)
 }

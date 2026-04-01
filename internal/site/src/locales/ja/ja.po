@@ -8,7 +8,7 @@ msgstr ""
 "Language: ja\n"
 "Project-Id-Version: beszel\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2026-01-31 21:16\n"
+"PO-Revision-Date: 2026-03-27 19:17\n"
 "Last-Translator: \n"
 "Language-Team: Japanese\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
@@ -17,6 +17,12 @@ msgstr ""
 "X-Crowdin-Language: ja\n"
 "X-Crowdin-File: /main/internal/site/src/locales/en/en.po\n"
 "X-Crowdin-File-ID: 32\n"
+
+#. placeholder {0}: newVersion.v
+#: src/components/footer-repo-link.tsx
+msgctxt "New version available"
+msgid "{0} available"
+msgstr ""
 
 #. placeholder {0}: table.getFilteredSelectedRowModel().rows.length
 #. placeholder {1}: table.getFilteredRowModel().rows.length
@@ -59,7 +65,7 @@ msgid "1 hour"
 msgstr "1時間"
 
 #. Load average
-#: src/components/charts/load-average-chart.tsx
+#: src/components/routes/system/charts/load-average-chart.tsx
 msgid "1 min"
 msgstr "1分"
 
@@ -76,7 +82,7 @@ msgid "12 hours"
 msgstr "12時間"
 
 #. Load average
-#: src/components/charts/load-average-chart.tsx
+#: src/components/routes/system/charts/load-average-chart.tsx
 msgid "15 min"
 msgstr "15分"
 
@@ -89,7 +95,7 @@ msgid "30 days"
 msgstr "30日間"
 
 #. Load average
-#: src/components/charts/load-average-chart.tsx
+#: src/components/routes/system/charts/load-average-chart.tsx
 msgid "5 min"
 msgstr "5分"
 
@@ -125,18 +131,13 @@ msgid "Active state"
 msgstr "アクティブ状態"
 
 #: src/components/add-system.tsx
+#: src/components/add-system.tsx
+#: src/components/navbar.tsx
+#: src/components/navbar.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Add {foo}"
 msgstr "{foo}を追加"
-
-#: src/components/add-system.tsx
-msgid "Add <0>System</0>"
-msgstr "<0>システム</0>を追加"
-
-#: src/components/add-system.tsx
-msgid "Add system"
-msgstr "システムを追加"
 
 #: src/components/routes/settings/notifications.tsx
 msgid "Add URL"
@@ -152,6 +153,7 @@ msgstr "メインレイアウトの幅を調整"
 
 #: src/components/command-palette.tsx
 #: src/components/command-palette.tsx
+#: src/components/navbar.tsx
 msgid "Admin"
 msgstr "管理者"
 
@@ -181,6 +183,7 @@ msgstr "アラート"
 #: src/components/command-palette.tsx
 #: src/components/containers-table/containers-table.tsx
 #: src/components/navbar.tsx
+#: src/components/navbar.tsx
 #: src/components/routes/containers.tsx
 msgid "All Containers"
 msgstr "すべてのコンテナ"
@@ -206,7 +209,7 @@ msgstr "よろしいですか？"
 msgid "Automatic copy requires a secure context."
 msgstr "自動コピーには安全なコンテキストが必要です。"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/chart-card.tsx
 msgid "Average"
 msgstr "平均"
 
@@ -215,6 +218,7 @@ msgid "Average backend response time (ms)"
 msgstr ""
 
 #: src/components/routes/system.tsx
+#: src/components/routes/system/charts/cpu-charts.tsx
 msgid "Average CPU utilization of containers"
 msgstr "コンテナの平均CPU使用率"
 
@@ -228,20 +232,20 @@ msgstr "平均が<0>{value}{0}</0>を下回っています"
 msgid "Average exceeds <0>{value}{0}</0>"
 msgstr "平均が<0>{value}{0}</0>を超えています"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/gpu-charts.tsx
 msgid "Average power consumption of GPUs"
 msgstr "GPUの平均消費電力"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/cpu-charts.tsx
 msgid "Average system-wide CPU utilization"
 msgstr "システム全体の平均CPU使用率"
 
 #. placeholder {0}: gpu.n
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/gpu-charts.tsx
 msgid "Average utilization of {0}"
 msgstr "{0}の平均使用率"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/gpu-charts.tsx
 msgid "Average utilization of GPU engines"
 msgstr "GPUエンジンの平均使用率"
 
@@ -258,7 +262,7 @@ msgstr ""
 msgid "Backups"
 msgstr "バックアップ"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/network-charts.tsx
 #: src/lib/alerts.ts
 msgid "Bandwidth"
 msgstr "帯域幅"
@@ -268,7 +272,7 @@ msgstr "帯域幅"
 msgid "Bat"
 msgstr "バッテリー"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/sensor-charts.tsx
 #: src/lib/alerts.ts
 msgid "Battery"
 msgstr "バッテリー"
@@ -318,7 +322,7 @@ msgstr "ブート状態"
 msgid "Bytes (KB/s, MB/s, GB/s)"
 msgstr "バイト (KB/s, MB/s, GB/s)"
 
-#: src/components/charts/mem-chart.tsx
+#: src/components/routes/system/charts/memory-charts.tsx
 msgid "Cache / Buffers"
 msgstr "キャッシュ / バッファ"
 
@@ -364,7 +368,7 @@ msgstr "メトリックの表示単位を変更します。"
 msgid "Change general application options."
 msgstr "一般的なアプリケーションオプションを変更します。"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/sensor-charts.tsx
 msgid "Charge"
 msgstr "充電"
 
@@ -376,6 +380,10 @@ msgstr "充電中"
 #: src/components/routes/settings/general.tsx
 msgid "Chart options"
 msgstr "チャートオプション"
+
+#: src/components/routes/system/info-bar.tsx
+msgid "Chart width"
+msgstr "チャートの幅"
 
 #: src/components/login/forgot-pass-form.tsx
 msgid "Check {email} for a reset link."
@@ -452,6 +460,9 @@ msgstr "接続が切断されました"
 #: src/components/routes/haproxy-aggregate.tsx
 msgid "Connections"
 msgstr ""
+#: src/components/routes/system.tsx
+msgid "Containers"
+msgstr "コンテナ"
 
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/systems-table/systems-table-columns.tsx
@@ -508,11 +519,16 @@ msgstr "下記のエージェントの<0>docker-compose.yml</0>内容をコピ�
 msgid "Copy YAML"
 msgstr "YAMLをコピー"
 
+#: src/components/routes/system.tsx
+msgctxt "Core system metrics"
+msgid "Core"
+msgstr ""
+
 #: src/components/containers-table/containers-table-columns.tsx
 #: src/components/systemd-table/systemd-table-columns.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "CPU"
-msgstr "CPU"
+msgstr ""
 
 #: src/components/routes/system/cpu-sheet.tsx
 msgid "CPU Cores"
@@ -530,8 +546,8 @@ msgstr "CPU時間"
 msgid "CPU Time Breakdown"
 msgstr "CPU 時間の内訳"
 
-#: src/components/routes/system.tsx
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/cpu-charts.tsx
+#: src/components/routes/system/charts/cpu-charts.tsx
 #: src/components/routes/system/cpu-sheet.tsx
 #: src/lib/alerts.ts
 msgid "CPU Usage"
@@ -571,7 +587,7 @@ msgid "Current sessions across frontends and backends"
 msgstr ""
 
 #. Context: Battery state
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/sensor-charts.tsx
 msgid "Current state"
 msgstr "現在の状態"
 
@@ -588,6 +604,11 @@ msgstr "サイクル"
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Daily"
 msgstr "毎日"
+
+#: src/components/routes/system/info-bar.tsx
+msgctxt "Default system layout option"
+msgid "Default"
+msgstr ""
 
 #: src/components/routes/settings/general.tsx
 msgid "Default time period"
@@ -625,11 +646,12 @@ msgstr "デバイス"
 msgid "Discharging"
 msgstr "放電中"
 
+#: src/components/routes/system.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Disk"
 msgstr "ディスク"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/disk-charts.tsx
 msgid "Disk I/O"
 msgstr "ディスクI/O"
 
@@ -637,25 +659,31 @@ msgstr "ディスクI/O"
 msgid "Disk unit"
 msgstr "ディスク単位"
 
-#: src/components/charts/disk-chart.tsx
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/disk-charts.tsx
+#: src/components/routes/system/charts/disk-charts.tsx
+#: src/components/routes/system/charts/extra-fs-charts.tsx
 #: src/lib/alerts.ts
 msgid "Disk Usage"
 msgstr "ディスク使用率"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/extra-fs-charts.tsx
 msgid "Disk usage of {extraFsName}"
 msgstr "{extraFsName}のディスク使用率"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/info-bar.tsx
+msgctxt "Layout display options"
+msgid "Display"
+msgstr ""
+
+#: src/components/routes/system/charts/cpu-charts.tsx
 msgid "Docker CPU Usage"
 msgstr "Docker CPU使用率"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/memory-charts.tsx
 msgid "Docker Memory Usage"
 msgstr "Dockerメモリ使用率"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/network-charts.tsx
 msgid "Docker Network I/O"
 msgstr "DockerネットワークI/O"
 
@@ -844,7 +872,7 @@ msgstr ""
 
 #: src/components/containers-table/containers-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
-#: src/components/routes/system.tsx
+#: src/components/routes/system/chart-card.tsx
 #: src/components/routes/system/smart-table.tsx
 #: src/components/systemd-table/systemd-table.tsx
 #: src/components/systems-table/systems-table.tsx
@@ -878,6 +906,7 @@ msgid "Frontends/Backends"
 msgstr ""
 
 #. Context: Battery state
+#: src/components/routes/system/info-bar.tsx
 #: src/lib/i18n.ts
 msgid "Full"
 msgstr "満充電"
@@ -893,10 +922,14 @@ msgid "Global"
 msgstr "グローバル"
 
 #: src/components/routes/system.tsx
+msgid "GPU"
+msgstr ""
+
+#: src/components/routes/system/charts/gpu-charts.tsx
 msgid "GPU Engines"
 msgstr "GPUエンジン"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/gpu-charts.tsx
 msgid "GPU Power Draw"
 msgstr "GPUの消費電力"
 
@@ -904,6 +937,7 @@ msgstr "GPUの消費電力"
 msgid "GPU Usage"
 msgstr "GPU使用率"
 
+#: src/components/routes/system/info-bar.tsx
 #: src/components/systems-table/systems-table.tsx
 msgid "Grid"
 msgstr "グリッド"
@@ -1077,7 +1111,7 @@ msgstr "ライフサイクル"
 msgid "limit"
 msgstr "制限"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/load-average-chart.tsx
 msgid "Load Average"
 msgstr "負荷平均"
 
@@ -1106,6 +1140,7 @@ msgstr "ロード状態"
 msgid "Loading..."
 msgstr "読み込み中..."
 
+#: src/components/navbar.tsx
 #: src/components/navbar.tsx
 msgid "Log Out"
 msgstr "ログアウト"
@@ -1143,7 +1178,7 @@ msgid "Manual setup instructions"
 msgstr "手動セットアップの手順"
 
 #. Chart select field. Please try to keep this short.
-#: src/components/routes/system.tsx
+#: src/components/routes/system/chart-card.tsx
 msgid "Max 1 min"
 msgstr "最大1分"
 
@@ -1169,14 +1204,16 @@ msgid "Memory pool allocation and usage statistics"
 msgstr ""
 
 #: src/components/routes/system.tsx
+#: src/components/routes/system/charts/memory-charts.tsx
 #: src/lib/alerts.ts
 msgid "Memory Usage"
 msgstr "メモリ使用率"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/memory-charts.tsx
 msgid "Memory usage of docker containers"
 msgstr "Dockerコンテナのメモリ使用率"
 
+#. Device model
 #: src/components/routes/system/smart-table.tsx
 msgid "Model"
 msgstr "モデル"
@@ -1194,11 +1231,11 @@ msgstr "名前"
 msgid "Net"
 msgstr "帯域"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/network-charts.tsx
 msgid "Network traffic of docker containers"
 msgstr "Dockerコンテナのネットワークトラフィック"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/network-charts.tsx
 #: src/components/routes/system/network-sheet.tsx
 #: src/components/routes/system/network-sheet.tsx
 #: src/components/routes/system/network-sheet.tsx
@@ -1417,13 +1454,18 @@ msgstr "アカウントにサインインしてください"
 msgid "Port"
 msgstr "ポート"
 
+#: src/components/containers-table/containers-table-columns.tsx
+msgctxt "Container ports"
+msgid "Ports"
+msgstr ""
+
 #. Power On Time
 #: src/components/routes/system/smart-table.tsx
 msgid "Power On"
 msgstr "電源オン"
 
-#: src/components/routes/system.tsx
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/gpu-charts.tsx
+#: src/components/routes/system/charts/memory-charts.tsx
 msgid "Precise utilization at the recorded time"
 msgstr "記録された時点での正確な利用"
 
@@ -1445,12 +1487,12 @@ msgid "Quiet Hours"
 msgstr "サイレント時間"
 
 #. Disk read
-#: src/components/routes/system.tsx
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/disk-charts.tsx
+#: src/components/routes/system/charts/extra-fs-charts.tsx
 msgid "Read"
 msgstr "読み取り"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/network-charts.tsx
 msgid "Received"
 msgstr "受信"
 
@@ -1528,6 +1570,10 @@ msgstr "S.M.A.R.T.詳細"
 msgid "S.M.A.R.T. Self-Test"
 msgstr "S.M.A.R.T.セルフテスト"
 
+#: src/components/add-system.tsx
+msgid "Save {foo}"
+msgstr "{foo} を保存"
+
 #: src/components/routes/settings/notifications.tsx
 msgid "Save address using enter key or comma. Leave blank to disable email notifications."
 msgstr "Enterキーまたはカンマを使用してアドレスを保存します。空白のままにするとメール通知が無効になります。"
@@ -1536,10 +1582,6 @@ msgstr "Enterキーまたはカンマを使用してアドレスを保存しま�
 #: src/components/routes/settings/notifications.tsx
 msgid "Save Settings"
 msgstr "設定を保存"
-
-#: src/components/add-system.tsx
-msgid "Save system"
-msgstr "システムを保存"
 
 #: src/components/routes/settings/tokens-fingerprints.tsx
 msgid "Saved in the database and does not expire until you disable it."
@@ -1592,7 +1634,7 @@ msgstr "外部監視サービスに定期的にアウトバウンド ping を送
 msgid "Send test heartbeat"
 msgstr "テストハートビートを送信"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/network-charts.tsx
 msgid "Sent"
 msgstr "送信"
 
@@ -1604,6 +1646,7 @@ msgstr "シリアル番号"
 msgid "Service Details"
 msgstr "サービス詳細"
 
+#: src/components/routes/system.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Services"
 msgstr "サービス"
@@ -1625,8 +1668,10 @@ msgstr "ハートビート監視を有効にするには、Beszel ハブで次�
 #: src/components/command-palette.tsx
 #: src/components/command-palette.tsx
 #: src/components/navbar.tsx
+#: src/components/navbar.tsx
 #: src/components/routes/settings/layout.tsx
 #: src/components/routes/settings/layout.tsx
+#: src/components/routes/system/info-bar.tsx
 msgid "Settings"
 msgstr "設定"
 
@@ -1670,17 +1715,18 @@ msgstr "ステータス"
 msgid "Sub State"
 msgstr "サブ状態"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/memory-charts.tsx
 msgid "Swap space used by the system"
 msgstr "システムが使用するスワップ領域"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/memory-charts.tsx
 msgid "Swap Usage"
 msgstr "スワップ使用量"
 
 #: src/components/add-system.tsx
 #: src/components/alerts-history-columns.tsx
 #: src/components/containers-table/containers-table-columns.tsx
+#: src/components/navbar.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/settings/quiet-hours.tsx
@@ -1692,7 +1738,7 @@ msgstr "スワップ使用量"
 msgid "System"
 msgstr "システム"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/load-average-chart.tsx
 msgid "System load averages over time"
 msgstr "システムの負荷平均の推移"
 
@@ -1713,6 +1759,11 @@ msgstr "システムはデータディレクトリ内の<0>config.yml</0>ファ�
 msgid "Table"
 msgstr "テーブル"
 
+#: src/components/routes/system/info-bar.tsx
+msgctxt "Tabs system layout option"
+msgid "Tabs"
+msgstr ""
+
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Tasks"
 msgstr "タスク"
@@ -1723,7 +1774,7 @@ msgstr "タスク"
 msgid "Temp"
 msgstr "温度"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/sensor-charts.tsx
 #: src/lib/alerts.ts
 msgid "Temperature"
 msgstr "温度"
@@ -1732,7 +1783,7 @@ msgstr "温度"
 msgid "Temperature unit"
 msgstr "温度単位"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/sensor-charts.tsx
 msgid "Temperatures of system sensors"
 msgstr "システムセンサーの温度"
 
@@ -1764,11 +1815,11 @@ msgstr "この操作は元に戻せません。これにより、データベー
 msgid "This will permanently delete all selected records from the database."
 msgstr "これにより、選択したすべてのレコードがデータベースから完全に削除されます。"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/extra-fs-charts.tsx
 msgid "Throughput of {extraFsName}"
 msgstr "{extraFsName}のスループット"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/disk-charts.tsx
 msgid "Throughput of root filesystem"
 msgstr "ルートファイルシステムのスループット"
 
@@ -1779,11 +1830,6 @@ msgstr "時間形式"
 #: src/components/routes/settings/notifications.tsx
 msgid "To email(s)"
 msgstr "宛先メールアドレス"
-
-#: src/components/routes/system/info-bar.tsx
-#: src/components/routes/system/info-bar.tsx
-msgid "Toggle grid"
-msgstr "グリッドを切り替え"
 
 #: src/components/mode-toggle.tsx
 #: src/components/mode-toggle.tsx
@@ -1977,20 +2023,20 @@ msgstr "アップロード"
 msgid "Uptime"
 msgstr "稼働時間"
 
-#: src/components/routes/system.tsx
-#: src/components/routes/system.tsx
-#: src/components/routes/system.tsx
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/extra-fs-charts.tsx
+#: src/components/routes/system/charts/gpu-charts.tsx
+#: src/components/routes/system/charts/gpu-charts.tsx
+#: src/components/routes/system/charts/gpu-charts.tsx
 #: src/components/routes/system/cpu-sheet.tsx
 msgid "Usage"
 msgstr "使用量"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/disk-charts.tsx
 msgid "Usage of root partition"
 msgstr "ルートパーティションの使用量"
 
-#: src/components/charts/mem-chart.tsx
-#: src/components/charts/swap-chart.tsx
+#: src/components/routes/system/charts/memory-charts.tsx
+#: src/components/routes/system/charts/memory-charts.tsx
 msgid "Used"
 msgstr "使用中"
 
@@ -2020,7 +2066,7 @@ msgstr "直近200件のアラートを表示します。"
 msgid "Visible Fields"
 msgstr "表示列"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/chart-card.tsx
 msgid "Waiting for enough records to display"
 msgstr "表示するのに十分なレコードを待っています"
 
@@ -2059,8 +2105,8 @@ msgid "Windows command"
 msgstr "Windows コマンド"
 
 #. Disk write
-#: src/components/routes/system.tsx
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/disk-charts.tsx
+#: src/components/routes/system/charts/extra-fs-charts.tsx
 msgid "Write"
 msgstr "書き込み"
 

@@ -2,14 +2,17 @@ package agent
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"path"
 	"runtime"
 	"strconv"
 	"strings"
+	"time"
 	"unicode/utf8"
 
+	"github.com/henrygd/beszel/agent/utils"
 	"github.com/henrygd/beszel/internal/entities/system"
 
 	"github.com/shirou/gopsutil/v4/common"
@@ -23,12 +26,13 @@ type SensorConfig struct {
 	isBlacklist    bool
 	hasWildcards   bool
 	skipCollection bool
+	firstRun       bool
 }
 
 func (a *Agent) newSensorConfig() *SensorConfig {
-	primarySensor, _ := GetEnv("PRIMARY_SENSOR")
-	sysSensors, _ := GetEnv("SYS_SENSORS")
-	sensorsEnvVal, sensorsSet := GetEnv("SENSORS")
+	primarySensor, _ := utils.GetEnv("PRIMARY_SENSOR")
+	sysSensors, _ := utils.GetEnv("SYS_SENSORS")
+	sensorsEnvVal, sensorsSet := utils.GetEnv("SENSORS")
 	skipCollection := sensorsSet && sensorsEnvVal == ""
 
 	return a.newSensorConfigWithEnv(primarySensor, sysSensors, sensorsEnvVal, skipCollection)
@@ -37,6 +41,11 @@ func (a *Agent) newSensorConfig() *SensorConfig {
 // Matches sensors.TemperaturesWithContext to allow for panic recovery (gopsutil/issues/1832)
 type getTempsFn func(ctx context.Context) ([]sensors.TemperatureStat, error)
 
+var (
+	errTemperatureFetchTimeout = errors.New("temperature collection timed out")
+	temperatureFetchTimeout    = 2 * time.Second
+)
+
 // newSensorConfigWithEnv creates a SensorConfig with the provided environment variables
 // sensorsSet indicates if the SENSORS environment variable was explicitly set (even to empty string)
 func (a *Agent) newSensorConfigWithEnv(primarySensor, sysSensors, sensorsEnvVal string, skipCollection bool) *SensorConfig {
@@ -44,6 +53,7 @@ func (a *Agent) newSensorConfigWithEnv(primarySensor, sysSensors, sensorsEnvVal 
 		context:        context.Background(),
 		primarySensor:  primarySensor,
 		skipCollection: skipCollection,
+		firstRun:       true,
 		sensors:        make(map[string]struct{}),
 	}
 
@@ -85,10 +95,12 @@ func (a *Agent) updateTemperatures(systemStats *system.Stats) {
 	// reset high temp
 	a.systemInfo.DashboardTemp = 0
 
-	temps, err := a.getTempsWithPanicRecovery(getSensorTemps)
+	temps, err := a.getTempsWithTimeout(getSensorTemps)
 	if err != nil {
 		// retry once on panic (gopsutil/issues/1832)
-		temps, err = a.getTempsWithPanicRecovery(getSensorTemps)
+		if !errors.Is(err, errTemperatureFetchTimeout) {
+			temps, err = a.getTempsWithTimeout(getSensorTemps)
+		}
 		if err != nil {
 			slog.Warn("Error updating temperatures", "err", err)
 			if len(systemStats.Temperatures) > 0 {
@@ -135,7 +147,7 @@ func (a *Agent) updateTemperatures(systemStats *system.Stats) {
 		case sensorName:
 			a.systemInfo.DashboardTemp = sensor.Temperature
 		}
-		systemStats.Temperatures[sensorName] = twoDecimals(sensor.Temperature)
+		systemStats.Temperatures[sensorName] = utils.TwoDecimals(sensor.Temperature)
 	}
 }
 
@@ -149,6 +161,34 @@ func (a *Agent) getTempsWithPanicRecovery(getTemps getTempsFn) (temps []sensors.
 	// get sensor data (error ignored intentionally as it may be only with one sensor)
 	temps, _ = getTemps(a.sensorConfig.context)
 	return
+}
+
+func (a *Agent) getTempsWithTimeout(getTemps getTempsFn) ([]sensors.TemperatureStat, error) {
+	type result struct {
+		temps []sensors.TemperatureStat
+		err   error
+	}
+
+	// Use a longer timeout on the first run to allow for initialization
+	// (e.g. Windows LHM subprocess startup)
+	timeout := temperatureFetchTimeout
+	if a.sensorConfig.firstRun {
+		a.sensorConfig.firstRun = false
+		timeout = 10 * time.Second
+	}
+
+	resultCh := make(chan result, 1)
+	go func() {
+		temps, err := a.getTempsWithPanicRecovery(getTemps)
+		resultCh <- result{temps: temps, err: err}
+	}()
+
+	select {
+	case res := <-resultCh:
+		return res.temps, res.err
+	case <-time.After(timeout):
+		return nil, errTemperatureFetchTimeout
+	}
 }
 
 // isValidSensor checks if a sensor is valid based on the sensor name and the sensor config

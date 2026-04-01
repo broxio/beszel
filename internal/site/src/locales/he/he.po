@@ -8,7 +8,7 @@ msgstr ""
 "Language: he\n"
 "Project-Id-Version: beszel\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2026-01-31 21:16\n"
+"PO-Revision-Date: 2026-03-27 19:17\n"
 "Last-Translator: \n"
 "Language-Team: Hebrew\n"
 "Plural-Forms: nplurals=4; plural=n%100==1 ? 0 : n%100==2 ? 1 : n%100==3 || n%100==4 ? 2 : 3;\n"
@@ -17,6 +17,12 @@ msgstr ""
 "X-Crowdin-Language: he\n"
 "X-Crowdin-File: /main/internal/site/src/locales/en/en.po\n"
 "X-Crowdin-File-ID: 32\n"
+
+#. placeholder {0}: newVersion.v
+#: src/components/footer-repo-link.tsx
+msgctxt "New version available"
+msgid "{0} available"
+msgstr ""
 
 #. placeholder {0}: table.getFilteredSelectedRowModel().rows.length
 #. placeholder {1}: table.getFilteredRowModel().rows.length
@@ -59,7 +65,7 @@ msgid "1 hour"
 msgstr "שעה"
 
 #. Load average
-#: src/components/charts/load-average-chart.tsx
+#: src/components/routes/system/charts/load-average-chart.tsx
 msgid "1 min"
 msgstr "דקה אחת"
 
@@ -76,7 +82,7 @@ msgid "12 hours"
 msgstr "12 שעות"
 
 #. Load average
-#: src/components/charts/load-average-chart.tsx
+#: src/components/routes/system/charts/load-average-chart.tsx
 msgid "15 min"
 msgstr "15 דק'"
 
@@ -89,7 +95,7 @@ msgid "30 days"
 msgstr "30 ימים"
 
 #. Load average
-#: src/components/charts/load-average-chart.tsx
+#: src/components/routes/system/charts/load-average-chart.tsx
 msgid "5 min"
 msgstr "5 דק'"
 
@@ -125,18 +131,13 @@ msgid "Active state"
 msgstr "מצב פעיל"
 
 #: src/components/add-system.tsx
+#: src/components/add-system.tsx
+#: src/components/navbar.tsx
+#: src/components/navbar.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Add {foo}"
 msgstr "הוסף {foo}"
-
-#: src/components/add-system.tsx
-msgid "Add <0>System</0>"
-msgstr "הוסף <0>מערכת</0>"
-
-#: src/components/add-system.tsx
-msgid "Add system"
-msgstr "הוסף מערכת"
 
 #: src/components/routes/settings/notifications.tsx
 msgid "Add URL"
@@ -152,6 +153,7 @@ msgstr "התאם את רוחב הפריסה הראשית"
 
 #: src/components/command-palette.tsx
 #: src/components/command-palette.tsx
+#: src/components/navbar.tsx
 msgid "Admin"
 msgstr "מנהל"
 
@@ -181,6 +183,7 @@ msgstr "התראות"
 #: src/components/command-palette.tsx
 #: src/components/containers-table/containers-table.tsx
 #: src/components/navbar.tsx
+#: src/components/navbar.tsx
 #: src/components/routes/containers.tsx
 msgid "All Containers"
 msgstr "כל הקונטיינרים"
@@ -206,7 +209,7 @@ msgstr "האם אתה בטוח?"
 msgid "Automatic copy requires a secure context."
 msgstr "העתקה אוטומטית דורשת הקשר מאובטח."
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/chart-card.tsx
 msgid "Average"
 msgstr "ממוצע"
 
@@ -215,6 +218,7 @@ msgid "Average backend response time (ms)"
 msgstr ""
 
 #: src/components/routes/system.tsx
+#: src/components/routes/system/charts/cpu-charts.tsx
 msgid "Average CPU utilization of containers"
 msgstr "ניצול ממוצע של CPU בקונטיינרים"
 
@@ -228,20 +232,20 @@ msgstr "הממוצע יורד מתחת ל-<0>{value}{0}</0>"
 msgid "Average exceeds <0>{value}{0}</0>"
 msgstr "הממוצע עולה על <0>{value}{0}</0>"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/gpu-charts.tsx
 msgid "Average power consumption of GPUs"
 msgstr "צריכת חשמל ממוצעת של GPUs"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/cpu-charts.tsx
 msgid "Average system-wide CPU utilization"
 msgstr "ניצול ממוצע כלל-מערכתי של CPU"
 
 #. placeholder {0}: gpu.n
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/gpu-charts.tsx
 msgid "Average utilization of {0}"
 msgstr "ניצול ממוצע של {0}"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/gpu-charts.tsx
 msgid "Average utilization of GPU engines"
 msgstr "ניצול ממוצע של מנועי GPU"
 
@@ -258,7 +262,7 @@ msgstr ""
 msgid "Backups"
 msgstr "גיבויים"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/network-charts.tsx
 #: src/lib/alerts.ts
 msgid "Bandwidth"
 msgstr "רוחב פס"
@@ -268,7 +272,7 @@ msgstr "רוחב פס"
 msgid "Bat"
 msgstr "סוללה"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/sensor-charts.tsx
 #: src/lib/alerts.ts
 msgid "Battery"
 msgstr "סוללה"
@@ -318,7 +322,7 @@ msgstr "מצב אתחול"
 msgid "Bytes (KB/s, MB/s, GB/s)"
 msgstr "בתים (KB/s, MB/s, GB/s)"
 
-#: src/components/charts/mem-chart.tsx
+#: src/components/routes/system/charts/memory-charts.tsx
 msgid "Cache / Buffers"
 msgstr "מטמון / חוצצים"
 
@@ -364,7 +368,7 @@ msgstr "שנה יחידות תצוגה עבור מדדים."
 msgid "Change general application options."
 msgstr "שנה אפשרויות כלליות של היישום."
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/sensor-charts.tsx
 msgid "Charge"
 msgstr "טעינה"
 
@@ -376,6 +380,10 @@ msgstr "בטעינה"
 #: src/components/routes/settings/general.tsx
 msgid "Chart options"
 msgstr "אפשרויות גרף"
+
+#: src/components/routes/system/info-bar.tsx
+msgid "Chart width"
+msgstr "רוחב תרשים"
 
 #: src/components/login/forgot-pass-form.tsx
 msgid "Check {email} for a reset link."
@@ -452,6 +460,9 @@ msgstr "החיבור נפל"
 #: src/components/routes/haproxy-aggregate.tsx
 msgid "Connections"
 msgstr ""
+#: src/components/routes/system.tsx
+msgid "Containers"
+msgstr "קונטיינרים"
 
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/systems-table/systems-table-columns.tsx
@@ -508,6 +519,11 @@ msgstr "העתק את תוכן ה-<0>docker-compose.yml</0> עבור הסוכן 
 msgid "Copy YAML"
 msgstr "העתק YAML"
 
+#: src/components/routes/system.tsx
+msgctxt "Core system metrics"
+msgid "Core"
+msgstr ""
+
 #: src/components/containers-table/containers-table-columns.tsx
 #: src/components/systemd-table/systemd-table-columns.tsx
 #: src/components/systems-table/systems-table-columns.tsx
@@ -530,8 +546,8 @@ msgstr "זמן CPU"
 msgid "CPU Time Breakdown"
 msgstr "פירוט זמן CPU"
 
-#: src/components/routes/system.tsx
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/cpu-charts.tsx
+#: src/components/routes/system/charts/cpu-charts.tsx
 #: src/components/routes/system/cpu-sheet.tsx
 #: src/lib/alerts.ts
 msgid "CPU Usage"
@@ -571,7 +587,7 @@ msgid "Current sessions across frontends and backends"
 msgstr ""
 
 #. Context: Battery state
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/sensor-charts.tsx
 msgid "Current state"
 msgstr "מצב נוכחי"
 
@@ -588,6 +604,11 @@ msgstr "מחזורים"
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Daily"
 msgstr "יומי"
+
+#: src/components/routes/system/info-bar.tsx
+msgctxt "Default system layout option"
+msgid "Default"
+msgstr ""
 
 #: src/components/routes/settings/general.tsx
 msgid "Default time period"
@@ -625,11 +646,12 @@ msgstr "התקן"
 msgid "Discharging"
 msgstr "בפריקה"
 
+#: src/components/routes/system.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Disk"
 msgstr "דיסק"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/disk-charts.tsx
 msgid "Disk I/O"
 msgstr "דיסק I/O"
 
@@ -637,25 +659,31 @@ msgstr "דיסק I/O"
 msgid "Disk unit"
 msgstr "יחידת דיסק"
 
-#: src/components/charts/disk-chart.tsx
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/disk-charts.tsx
+#: src/components/routes/system/charts/disk-charts.tsx
+#: src/components/routes/system/charts/extra-fs-charts.tsx
 #: src/lib/alerts.ts
 msgid "Disk Usage"
 msgstr "שימוש בדיסק"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/extra-fs-charts.tsx
 msgid "Disk usage of {extraFsName}"
 msgstr "שימוש בדיסק של {extraFsName}"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/info-bar.tsx
+msgctxt "Layout display options"
+msgid "Display"
+msgstr ""
+
+#: src/components/routes/system/charts/cpu-charts.tsx
 msgid "Docker CPU Usage"
 msgstr "שימוש CPU של Docker"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/memory-charts.tsx
 msgid "Docker Memory Usage"
 msgstr "שימוש זיכרון של Docker"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/network-charts.tsx
 msgid "Docker Network I/O"
 msgstr "I/O של רשת Docker"
 
@@ -844,7 +872,7 @@ msgstr ""
 
 #: src/components/containers-table/containers-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
-#: src/components/routes/system.tsx
+#: src/components/routes/system/chart-card.tsx
 #: src/components/routes/system/smart-table.tsx
 #: src/components/systemd-table/systemd-table.tsx
 #: src/components/systems-table/systems-table.tsx
@@ -878,6 +906,7 @@ msgid "Frontends/Backends"
 msgstr ""
 
 #. Context: Battery state
+#: src/components/routes/system/info-bar.tsx
 #: src/lib/i18n.ts
 msgid "Full"
 msgstr "מלא"
@@ -893,10 +922,14 @@ msgid "Global"
 msgstr "גלובלי"
 
 #: src/components/routes/system.tsx
+msgid "GPU"
+msgstr "מעבד גרפי"
+
+#: src/components/routes/system/charts/gpu-charts.tsx
 msgid "GPU Engines"
 msgstr "מנועי GPU"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/gpu-charts.tsx
 msgid "GPU Power Draw"
 msgstr "צריכת חשמל GPU"
 
@@ -904,6 +937,7 @@ msgstr "צריכת חשמל GPU"
 msgid "GPU Usage"
 msgstr "שימוש GPU"
 
+#: src/components/routes/system/info-bar.tsx
 #: src/components/systems-table/systems-table.tsx
 msgid "Grid"
 msgstr "רשת"
@@ -1077,7 +1111,7 @@ msgstr "מחזור חיים"
 msgid "limit"
 msgstr "גבול"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/load-average-chart.tsx
 msgid "Load Average"
 msgstr "ממוצע עומס"
 
@@ -1106,6 +1140,7 @@ msgstr "מצב עומס"
 msgid "Loading..."
 msgstr "טוען..."
 
+#: src/components/navbar.tsx
 #: src/components/navbar.tsx
 msgid "Log Out"
 msgstr "התנתק"
@@ -1143,7 +1178,7 @@ msgid "Manual setup instructions"
 msgstr "הוראות התקנה ידניות"
 
 #. Chart select field. Please try to keep this short.
-#: src/components/routes/system.tsx
+#: src/components/routes/system/chart-card.tsx
 msgid "Max 1 min"
 msgstr "מקס 1 דק'"
 
@@ -1169,14 +1204,16 @@ msgid "Memory pool allocation and usage statistics"
 msgstr ""
 
 #: src/components/routes/system.tsx
+#: src/components/routes/system/charts/memory-charts.tsx
 #: src/lib/alerts.ts
 msgid "Memory Usage"
 msgstr "שימוש בזיכרון"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/memory-charts.tsx
 msgid "Memory usage of docker containers"
 msgstr "שימוש בזיכרון של קונטיינרים של Docker"
 
+#. Device model
 #: src/components/routes/system/smart-table.tsx
 msgid "Model"
 msgstr "דגם"
@@ -1194,11 +1231,11 @@ msgstr "שם"
 msgid "Net"
 msgstr "רשת"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/network-charts.tsx
 msgid "Network traffic of docker containers"
 msgstr "תעבורת רשת של קונטיינרים של Docker"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/network-charts.tsx
 #: src/components/routes/system/network-sheet.tsx
 #: src/components/routes/system/network-sheet.tsx
 #: src/components/routes/system/network-sheet.tsx
@@ -1417,13 +1454,18 @@ msgstr "אנא התחבר לחשבון שלך"
 msgid "Port"
 msgstr "פורט"
 
+#: src/components/containers-table/containers-table-columns.tsx
+msgctxt "Container ports"
+msgid "Ports"
+msgstr ""
+
 #. Power On Time
 #: src/components/routes/system/smart-table.tsx
 msgid "Power On"
 msgstr "הפעלה"
 
-#: src/components/routes/system.tsx
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/gpu-charts.tsx
+#: src/components/routes/system/charts/memory-charts.tsx
 msgid "Precise utilization at the recorded time"
 msgstr "ניצול מדויק בזמן הרשום"
 
@@ -1445,12 +1487,12 @@ msgid "Quiet Hours"
 msgstr "שעות שקט"
 
 #. Disk read
-#: src/components/routes/system.tsx
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/disk-charts.tsx
+#: src/components/routes/system/charts/extra-fs-charts.tsx
 msgid "Read"
 msgstr "קריאה"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/network-charts.tsx
 msgid "Received"
 msgstr "התקבל"
 
@@ -1528,6 +1570,10 @@ msgstr "פרטי S.M.A.R.T."
 msgid "S.M.A.R.T. Self-Test"
 msgstr "בדיקה עצמית S.M.A.R.T."
 
+#: src/components/add-system.tsx
+msgid "Save {foo}"
+msgstr "שמור {foo}"
+
 #: src/components/routes/settings/notifications.tsx
 msgid "Save address using enter key or comma. Leave blank to disable email notifications."
 msgstr "שמור כתובת באמצעות מקש enter או פסיק. השאר ריק כדי להשבית התראות אימייל."
@@ -1536,10 +1582,6 @@ msgstr "שמור כתובת באמצעות מקש enter או פסיק. השאר 
 #: src/components/routes/settings/notifications.tsx
 msgid "Save Settings"
 msgstr "שמור הגדרות"
-
-#: src/components/add-system.tsx
-msgid "Save system"
-msgstr "שמור מערכת"
 
 #: src/components/routes/settings/tokens-fingerprints.tsx
 msgid "Saved in the database and does not expire until you disable it."
@@ -1592,7 +1634,7 @@ msgstr "שלח פינגים יוצאים תקופתיים לשירות ניטו�
 msgid "Send test heartbeat"
 msgstr "שלח פעימת לב לבדיקה"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/network-charts.tsx
 msgid "Sent"
 msgstr "נשלח"
 
@@ -1604,6 +1646,7 @@ msgstr "מספר סידורי"
 msgid "Service Details"
 msgstr "פרטי שירות"
 
+#: src/components/routes/system.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Services"
 msgstr "שירותים"
@@ -1625,8 +1668,10 @@ msgstr "הגדר את משתני הסביבה הבאים ב-Beszel hub שלך כ
 #: src/components/command-palette.tsx
 #: src/components/command-palette.tsx
 #: src/components/navbar.tsx
+#: src/components/navbar.tsx
 #: src/components/routes/settings/layout.tsx
 #: src/components/routes/settings/layout.tsx
+#: src/components/routes/system/info-bar.tsx
 msgid "Settings"
 msgstr "הגדרות"
 
@@ -1670,17 +1715,18 @@ msgstr "סטטוס"
 msgid "Sub State"
 msgstr "מצב משני"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/memory-charts.tsx
 msgid "Swap space used by the system"
 msgstr "שטח swap בשימוש על ידי המערכת"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/memory-charts.tsx
 msgid "Swap Usage"
 msgstr "שימוש ב-Swap"
 
 #: src/components/add-system.tsx
 #: src/components/alerts-history-columns.tsx
 #: src/components/containers-table/containers-table-columns.tsx
+#: src/components/navbar.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/settings/quiet-hours.tsx
@@ -1692,7 +1738,7 @@ msgstr "שימוש ב-Swap"
 msgid "System"
 msgstr "מערכת"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/load-average-chart.tsx
 msgid "System load averages over time"
 msgstr "ממוצעי עומס מערכת לאורך זמן"
 
@@ -1713,6 +1759,11 @@ msgstr "מערכות יכולות להיות מנוהלות בקובץ <0>config
 msgid "Table"
 msgstr "טבלה"
 
+#: src/components/routes/system/info-bar.tsx
+msgctxt "Tabs system layout option"
+msgid "Tabs"
+msgstr ""
+
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Tasks"
 msgstr "משימות"
@@ -1723,7 +1774,7 @@ msgstr "משימות"
 msgid "Temp"
 msgstr "טמפ'"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/sensor-charts.tsx
 #: src/lib/alerts.ts
 msgid "Temperature"
 msgstr "טמפרטורה"
@@ -1732,7 +1783,7 @@ msgstr "טמפרטורה"
 msgid "Temperature unit"
 msgstr "יחידת טמפרטורה"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/sensor-charts.tsx
 msgid "Temperatures of system sensors"
 msgstr "טמפרטורות של חיישני המערכת"
 
@@ -1764,11 +1815,11 @@ msgstr "פעולה זו לא ניתנת לביטול. פעולה זו תמחק �
 msgid "This will permanently delete all selected records from the database."
 msgstr "פעולה זו תמחק לצמיתות את כל הרשומות שנבחרו ממסד הנתונים."
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/extra-fs-charts.tsx
 msgid "Throughput of {extraFsName}"
 msgstr "תפוקה של {extraFsName}"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/disk-charts.tsx
 msgid "Throughput of root filesystem"
 msgstr "תפוקה של מערכת הקבצים הראשית"
 
@@ -1779,11 +1830,6 @@ msgstr "פורמט זמן"
 #: src/components/routes/settings/notifications.tsx
 msgid "To email(s)"
 msgstr "לאימייל(ים)"
-
-#: src/components/routes/system/info-bar.tsx
-#: src/components/routes/system/info-bar.tsx
-msgid "Toggle grid"
-msgstr "החלף רשת"
 
 #: src/components/mode-toggle.tsx
 #: src/components/mode-toggle.tsx
@@ -1977,20 +2023,20 @@ msgstr "העלאה"
 msgid "Uptime"
 msgstr "זמן פעילות"
 
-#: src/components/routes/system.tsx
-#: src/components/routes/system.tsx
-#: src/components/routes/system.tsx
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/extra-fs-charts.tsx
+#: src/components/routes/system/charts/gpu-charts.tsx
+#: src/components/routes/system/charts/gpu-charts.tsx
+#: src/components/routes/system/charts/gpu-charts.tsx
 #: src/components/routes/system/cpu-sheet.tsx
 msgid "Usage"
 msgstr "שימוש"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/disk-charts.tsx
 msgid "Usage of root partition"
 msgstr "שימוש במחיצה הראשית"
 
-#: src/components/charts/mem-chart.tsx
-#: src/components/charts/swap-chart.tsx
+#: src/components/routes/system/charts/memory-charts.tsx
+#: src/components/routes/system/charts/memory-charts.tsx
 msgid "Used"
 msgstr "בשימוש"
 
@@ -2020,7 +2066,7 @@ msgstr "צפה ב-200 ההתראות האחרונות שלך."
 msgid "Visible Fields"
 msgstr "שדות גלויים"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/chart-card.tsx
 msgid "Waiting for enough records to display"
 msgstr "ממתין לרשומות מספיקות לתצוגה"
 
@@ -2059,8 +2105,8 @@ msgid "Windows command"
 msgstr "פקודת Windows"
 
 #. Disk write
-#: src/components/routes/system.tsx
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/disk-charts.tsx
+#: src/components/routes/system/charts/extra-fs-charts.tsx
 msgid "Write"
 msgstr "כתיבה"
 

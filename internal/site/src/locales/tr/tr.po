@@ -8,7 +8,7 @@ msgstr ""
 "Language: tr\n"
 "Project-Id-Version: beszel\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2026-01-31 21:16\n"
+"PO-Revision-Date: 2026-03-02 13:16\n"
 "Last-Translator: \n"
 "Language-Team: Turkish\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -17,6 +17,12 @@ msgstr ""
 "X-Crowdin-Language: tr\n"
 "X-Crowdin-File: /main/internal/site/src/locales/en/en.po\n"
 "X-Crowdin-File-ID: 32\n"
+
+#. placeholder {0}: newVersion.v
+#: src/components/footer-repo-link.tsx
+msgctxt "New version available"
+msgid "{0} available"
+msgstr ""
 
 #. placeholder {0}: table.getFilteredSelectedRowModel().rows.length
 #. placeholder {1}: table.getFilteredRowModel().rows.length
@@ -59,7 +65,7 @@ msgid "1 hour"
 msgstr "1 saat"
 
 #. Load average
-#: src/components/charts/load-average-chart.tsx
+#: src/components/routes/system/charts/load-average-chart.tsx
 msgid "1 min"
 msgstr "1 dk"
 
@@ -76,7 +82,7 @@ msgid "12 hours"
 msgstr "12 saat"
 
 #. Load average
-#: src/components/charts/load-average-chart.tsx
+#: src/components/routes/system/charts/load-average-chart.tsx
 msgid "15 min"
 msgstr "15 dk"
 
@@ -89,7 +95,7 @@ msgid "30 days"
 msgstr "30 gün"
 
 #. Load average
-#: src/components/charts/load-average-chart.tsx
+#: src/components/routes/system/charts/load-average-chart.tsx
 msgid "5 min"
 msgstr "5 dk"
 
@@ -125,18 +131,13 @@ msgid "Active state"
 msgstr "Aktif durum"
 
 #: src/components/add-system.tsx
+#: src/components/add-system.tsx
+#: src/components/navbar.tsx
+#: src/components/navbar.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Add {foo}"
 msgstr "{foo} ekle"
-
-#: src/components/add-system.tsx
-msgid "Add <0>System</0>"
-msgstr "<0>Sistem</0> Ekle"
-
-#: src/components/add-system.tsx
-msgid "Add system"
-msgstr "Sistem ekle"
 
 #: src/components/routes/settings/notifications.tsx
 msgid "Add URL"
@@ -152,6 +153,7 @@ msgstr "Ana düzenin genişliğini ayarla"
 
 #: src/components/command-palette.tsx
 #: src/components/command-palette.tsx
+#: src/components/navbar.tsx
 msgid "Admin"
 msgstr "Yönetici"
 
@@ -161,7 +163,7 @@ msgstr "Sonra"
 
 #: src/components/routes/settings/heartbeat.tsx
 msgid "After setting the environment variables, restart your Beszel hub for changes to take effect."
-msgstr "Ortam değişkenlerini ayarladıktan sonra, değişikliklerin etkili olması için Beszel hub'ınızı yeniden başlatın."
+msgstr "Ortam değişkenlerini ayarladıktan sonra, değişikliklerin etkili olması için Beszel Hub'ınızı yeniden başlatın."
 
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Agent"
@@ -180,6 +182,7 @@ msgstr "Uyarılar"
 
 #: src/components/command-palette.tsx
 #: src/components/containers-table/containers-table.tsx
+#: src/components/navbar.tsx
 #: src/components/navbar.tsx
 #: src/components/routes/containers.tsx
 msgid "All Containers"
@@ -206,7 +209,7 @@ msgstr "Emin misiniz?"
 msgid "Automatic copy requires a secure context."
 msgstr "Otomatik kopyalama güvenli bir bağlam gerektirir."
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/chart-card.tsx
 msgid "Average"
 msgstr "Ortalama"
 
@@ -215,6 +218,7 @@ msgid "Average backend response time (ms)"
 msgstr ""
 
 #: src/components/routes/system.tsx
+#: src/components/routes/system/charts/cpu-charts.tsx
 msgid "Average CPU utilization of containers"
 msgstr "Konteynerlerin ortalama CPU kullanımı"
 
@@ -228,20 +232,20 @@ msgstr "Ortalama <0>{value}{0}</0> altına düşüyor"
 msgid "Average exceeds <0>{value}{0}</0>"
 msgstr "Ortalama <0>{value}{0}</0> aşıyor"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/gpu-charts.tsx
 msgid "Average power consumption of GPUs"
 msgstr "GPU ların ortalama güç tüketimi"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/cpu-charts.tsx
 msgid "Average system-wide CPU utilization"
 msgstr "Sistem genelinde ortalama CPU kullanımı"
 
 #. placeholder {0}: gpu.n
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/gpu-charts.tsx
 msgid "Average utilization of {0}"
 msgstr "{0} ortalama kullanımı"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/gpu-charts.tsx
 msgid "Average utilization of GPU engines"
 msgstr "GPU motorlarının ortalama kullanımı"
 
@@ -258,7 +262,7 @@ msgstr ""
 msgid "Backups"
 msgstr "Yedekler"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/network-charts.tsx
 #: src/lib/alerts.ts
 msgid "Bandwidth"
 msgstr "Bant Genişliği"
@@ -268,7 +272,7 @@ msgstr "Bant Genişliği"
 msgid "Bat"
 msgstr "Pil"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/sensor-charts.tsx
 #: src/lib/alerts.ts
 msgid "Battery"
 msgstr "Pil"
@@ -318,7 +322,7 @@ msgstr "Önyükleme durumu"
 msgid "Bytes (KB/s, MB/s, GB/s)"
 msgstr "Bayt (KB/s, MB/s, GB/s)"
 
-#: src/components/charts/mem-chart.tsx
+#: src/components/routes/system/charts/memory-charts.tsx
 msgid "Cache / Buffers"
 msgstr "Önbellek / Tamponlar"
 
@@ -364,7 +368,7 @@ msgstr "Metrikler için görüntüleme birimlerini değiştirin."
 msgid "Change general application options."
 msgstr "Genel uygulama seçeneklerini değiştirin."
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/sensor-charts.tsx
 msgid "Charge"
 msgstr "Şarj"
 
@@ -376,6 +380,10 @@ msgstr "Şarj oluyor"
 #: src/components/routes/settings/general.tsx
 msgid "Chart options"
 msgstr "Grafik seçenekleri"
+
+#: src/components/routes/system/info-bar.tsx
+msgid "Chart width"
+msgstr "Grafik genişliği"
 
 #: src/components/login/forgot-pass-form.tsx
 msgid "Check {email} for a reset link."
@@ -452,6 +460,9 @@ msgstr "Bağlantı kesildi"
 #: src/components/routes/haproxy-aggregate.tsx
 msgid "Connections"
 msgstr ""
+#: src/components/routes/system.tsx
+msgid "Containers"
+msgstr "Konteynerler"
 
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/systems-table/systems-table-columns.tsx
@@ -508,11 +519,16 @@ msgstr "Aşağıdaki agent için <0>docker-compose.yml</0> içeriğini kopyalay�
 msgid "Copy YAML"
 msgstr "YAML'ı kopyala"
 
+#: src/components/routes/system.tsx
+msgctxt "Core system metrics"
+msgid "Core"
+msgstr ""
+
 #: src/components/containers-table/containers-table-columns.tsx
 #: src/components/systemd-table/systemd-table-columns.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "CPU"
-msgstr "CPU"
+msgstr "İşlemci"
 
 #: src/components/routes/system/cpu-sheet.tsx
 msgid "CPU Cores"
@@ -530,8 +546,8 @@ msgstr "CPU zamanı"
 msgid "CPU Time Breakdown"
 msgstr "CPU Zaman Dağılımı"
 
-#: src/components/routes/system.tsx
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/cpu-charts.tsx
+#: src/components/routes/system/charts/cpu-charts.tsx
 #: src/components/routes/system/cpu-sheet.tsx
 #: src/lib/alerts.ts
 msgid "CPU Usage"
@@ -571,7 +587,7 @@ msgid "Current sessions across frontends and backends"
 msgstr ""
 
 #. Context: Battery state
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/sensor-charts.tsx
 msgid "Current state"
 msgstr "Mevcut durum"
 
@@ -588,6 +604,11 @@ msgstr "Döngüler"
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Daily"
 msgstr "Günlük"
+
+#: src/components/routes/system/info-bar.tsx
+msgctxt "Default system layout option"
+msgid "Default"
+msgstr ""
 
 #: src/components/routes/settings/general.tsx
 msgid "Default time period"
@@ -625,11 +646,12 @@ msgstr "Cihaz"
 msgid "Discharging"
 msgstr "Boşalıyor"
 
+#: src/components/routes/system.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Disk"
-msgstr "Disk"
+msgstr "Depolama alanı"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/disk-charts.tsx
 msgid "Disk I/O"
 msgstr "Disk G/Ç"
 
@@ -637,25 +659,31 @@ msgstr "Disk G/Ç"
 msgid "Disk unit"
 msgstr "Disk birimi"
 
-#: src/components/charts/disk-chart.tsx
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/disk-charts.tsx
+#: src/components/routes/system/charts/disk-charts.tsx
+#: src/components/routes/system/charts/extra-fs-charts.tsx
 #: src/lib/alerts.ts
 msgid "Disk Usage"
 msgstr "Disk Kullanımı"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/extra-fs-charts.tsx
 msgid "Disk usage of {extraFsName}"
 msgstr "{extraFsName} disk kullanımı"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/info-bar.tsx
+msgctxt "Layout display options"
+msgid "Display"
+msgstr ""
+
+#: src/components/routes/system/charts/cpu-charts.tsx
 msgid "Docker CPU Usage"
 msgstr "Docker CPU Kullanımı"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/memory-charts.tsx
 msgid "Docker Memory Usage"
 msgstr "Docker Bellek Kullanımı"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/network-charts.tsx
 msgid "Docker Network I/O"
 msgstr "Docker Ağ G/Ç"
 
@@ -844,7 +872,7 @@ msgstr ""
 
 #: src/components/containers-table/containers-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
-#: src/components/routes/system.tsx
+#: src/components/routes/system/chart-card.tsx
 #: src/components/routes/system/smart-table.tsx
 #: src/components/systemd-table/systemd-table.tsx
 #: src/components/systems-table/systems-table.tsx
@@ -878,6 +906,7 @@ msgid "Frontends/Backends"
 msgstr ""
 
 #. Context: Battery state
+#: src/components/routes/system/info-bar.tsx
 #: src/lib/i18n.ts
 msgid "Full"
 msgstr "Dolu"
@@ -893,10 +922,14 @@ msgid "Global"
 msgstr "Genel"
 
 #: src/components/routes/system.tsx
+msgid "GPU"
+msgstr ""
+
+#: src/components/routes/system/charts/gpu-charts.tsx
 msgid "GPU Engines"
 msgstr "GPU motorları"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/gpu-charts.tsx
 msgid "GPU Power Draw"
 msgstr "GPU Güç Çekimi"
 
@@ -904,6 +937,7 @@ msgstr "GPU Güç Çekimi"
 msgid "GPU Usage"
 msgstr "GPU Kullanımı"
 
+#: src/components/routes/system/info-bar.tsx
 #: src/components/systems-table/systems-table.tsx
 msgid "Grid"
 msgstr "Izgara"
@@ -979,7 +1013,7 @@ msgstr "Sağlık"
 
 #: src/components/routes/settings/layout.tsx
 msgid "Heartbeat"
-msgstr "Heartbeat"
+msgstr ""
 
 #: src/components/routes/settings/heartbeat.tsx
 msgid "Heartbeat Monitoring"
@@ -1077,7 +1111,7 @@ msgstr "Yaşam döngüsü"
 msgid "limit"
 msgstr "Sınır"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/load-average-chart.tsx
 msgid "Load Average"
 msgstr "Yük Ortalaması"
 
@@ -1106,6 +1140,7 @@ msgstr "Yükleme durumu"
 msgid "Loading..."
 msgstr "Yükleniyor..."
 
+#: src/components/navbar.tsx
 #: src/components/navbar.tsx
 msgid "Log Out"
 msgstr "Çıkış Yap"
@@ -1143,7 +1178,7 @@ msgid "Manual setup instructions"
 msgstr "Manuel kurulum talimatları"
 
 #. Chart select field. Please try to keep this short.
-#: src/components/routes/system.tsx
+#: src/components/routes/system/chart-card.tsx
 msgid "Max 1 min"
 msgstr "Maks 1 dk"
 
@@ -1169,17 +1204,19 @@ msgid "Memory pool allocation and usage statistics"
 msgstr ""
 
 #: src/components/routes/system.tsx
+#: src/components/routes/system/charts/memory-charts.tsx
 #: src/lib/alerts.ts
 msgid "Memory Usage"
 msgstr "Bellek Kullanımı"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/memory-charts.tsx
 msgid "Memory usage of docker containers"
 msgstr "Docker konteynerlerinin bellek kullanımı"
 
+#. Device model
 #: src/components/routes/system/smart-table.tsx
 msgid "Model"
-msgstr "Model"
+msgstr ""
 
 #: src/components/add-system.tsx
 #: src/components/alerts-history-columns.tsx
@@ -1194,11 +1231,11 @@ msgstr "Ad"
 msgid "Net"
 msgstr "Ağ"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/network-charts.tsx
 msgid "Network traffic of docker containers"
 msgstr "Docker konteynerlerinin ağ trafiği"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/network-charts.tsx
 #: src/components/routes/system/network-sheet.tsx
 #: src/components/routes/system/network-sheet.tsx
 #: src/components/routes/system/network-sheet.tsx
@@ -1415,15 +1452,20 @@ msgstr "Lütfen hesabınıza giriş yapın"
 
 #: src/components/add-system.tsx
 msgid "Port"
-msgstr "Port"
+msgstr ""
+
+#: src/components/containers-table/containers-table-columns.tsx
+msgctxt "Container ports"
+msgid "Ports"
+msgstr ""
 
 #. Power On Time
 #: src/components/routes/system/smart-table.tsx
 msgid "Power On"
 msgstr "Güç Açık"
 
-#: src/components/routes/system.tsx
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/gpu-charts.tsx
+#: src/components/routes/system/charts/memory-charts.tsx
 msgid "Precise utilization at the recorded time"
 msgstr "Kayıtlı zamanda kesin kullanım"
 
@@ -1445,12 +1487,12 @@ msgid "Quiet Hours"
 msgstr "Sessiz Saatler"
 
 #. Disk read
-#: src/components/routes/system.tsx
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/disk-charts.tsx
+#: src/components/routes/system/charts/extra-fs-charts.tsx
 msgid "Read"
 msgstr "Oku"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/network-charts.tsx
 msgid "Received"
 msgstr "Alındı"
 
@@ -1528,6 +1570,10 @@ msgstr "S.M.A.R.T. Ayrıntıları"
 msgid "S.M.A.R.T. Self-Test"
 msgstr "S.M.A.R.T. Kendiliğinden Test"
 
+#: src/components/add-system.tsx
+msgid "Save {foo}"
+msgstr "{foo} Kaydet"
+
 #: src/components/routes/settings/notifications.tsx
 msgid "Save address using enter key or comma. Leave blank to disable email notifications."
 msgstr "Adresleri enter tuşu veya virgül ile kaydedin. E-posta bildirimlerini devre dışı bırakmak için boş bırakın."
@@ -1536,10 +1582,6 @@ msgstr "Adresleri enter tuşu veya virgül ile kaydedin. E-posta bildirimlerini 
 #: src/components/routes/settings/notifications.tsx
 msgid "Save Settings"
 msgstr "Ayarları Kaydet"
-
-#: src/components/add-system.tsx
-msgid "Save system"
-msgstr "Sistemi kaydet"
 
 #: src/components/routes/settings/tokens-fingerprints.tsx
 msgid "Saved in the database and does not expire until you disable it."
@@ -1592,7 +1634,7 @@ msgstr "Beszel'i internete maruz bırakmadan izleyebilmeniz için harici bir izl
 msgid "Send test heartbeat"
 msgstr "Test heartbeat gönder"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/network-charts.tsx
 msgid "Sent"
 msgstr "Gönderildi"
 
@@ -1604,6 +1646,7 @@ msgstr "Seri Numarası"
 msgid "Service Details"
 msgstr "Hizmet Ayrıntıları"
 
+#: src/components/routes/system.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Services"
 msgstr "Hizmetler"
@@ -1625,8 +1668,10 @@ msgstr "Heartbeat izlemeyi etkinleştirmek için Beszel hub'ınızda aşağıdak
 #: src/components/command-palette.tsx
 #: src/components/command-palette.tsx
 #: src/components/navbar.tsx
+#: src/components/navbar.tsx
 #: src/components/routes/settings/layout.tsx
 #: src/components/routes/settings/layout.tsx
+#: src/components/routes/system/info-bar.tsx
 msgid "Settings"
 msgstr "Ayarlar"
 
@@ -1670,17 +1715,18 @@ msgstr "Durum"
 msgid "Sub State"
 msgstr "Alt Durum"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/memory-charts.tsx
 msgid "Swap space used by the system"
 msgstr "Sistem tarafından kullanılan takas alanı"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/memory-charts.tsx
 msgid "Swap Usage"
 msgstr "Takas Kullanımı"
 
 #: src/components/add-system.tsx
 #: src/components/alerts-history-columns.tsx
 #: src/components/containers-table/containers-table-columns.tsx
+#: src/components/navbar.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/settings/quiet-hours.tsx
@@ -1692,7 +1738,7 @@ msgstr "Takas Kullanımı"
 msgid "System"
 msgstr "Sistem"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/load-average-chart.tsx
 msgid "System load averages over time"
 msgstr "Zaman içindeki sistem yükü ortalamaları"
 
@@ -1713,6 +1759,11 @@ msgstr "Sistemler, veri dizininizdeki bir <0>config.yml</0> dosyasında yönetil
 msgid "Table"
 msgstr "Tablo"
 
+#: src/components/routes/system/info-bar.tsx
+msgctxt "Tabs system layout option"
+msgid "Tabs"
+msgstr ""
+
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Tasks"
 msgstr "Görevler"
@@ -1723,7 +1774,7 @@ msgstr "Görevler"
 msgid "Temp"
 msgstr "Sıc"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/sensor-charts.tsx
 #: src/lib/alerts.ts
 msgid "Temperature"
 msgstr "Sıcaklık"
@@ -1732,7 +1783,7 @@ msgstr "Sıcaklık"
 msgid "Temperature unit"
 msgstr "Sıcaklık birimi"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/sensor-charts.tsx
 msgid "Temperatures of system sensors"
 msgstr "Sistem sensörlerinin sıcaklıkları"
 
@@ -1742,7 +1793,7 @@ msgstr "<0>URL</0>'yi Test Et"
 
 #: src/components/routes/settings/heartbeat.tsx
 msgid "Test heartbeat"
-msgstr "Test heartbeat"
+msgstr "Heartbeat test et"
 
 #: src/components/routes/settings/notifications.tsx
 msgid "Test notification sent"
@@ -1764,11 +1815,11 @@ msgstr "Bu işlem geri alınamaz. Bu, veritabanından {name} için tüm mevcut k
 msgid "This will permanently delete all selected records from the database."
 msgstr "Bu, seçilen tüm kayıtları veritabanından kalıcı olarak silecektir."
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/extra-fs-charts.tsx
 msgid "Throughput of {extraFsName}"
 msgstr "{extraFsName} verimliliği"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/disk-charts.tsx
 msgid "Throughput of root filesystem"
 msgstr "Kök dosya sisteminin verimliliği"
 
@@ -1780,11 +1831,6 @@ msgstr "Zaman formatı"
 msgid "To email(s)"
 msgstr "E-posta(lar)a"
 
-#: src/components/routes/system/info-bar.tsx
-#: src/components/routes/system/info-bar.tsx
-msgid "Toggle grid"
-msgstr "Izgarayı değiştir"
-
 #: src/components/mode-toggle.tsx
 #: src/components/mode-toggle.tsx
 msgid "Toggle theme"
@@ -1793,7 +1839,7 @@ msgstr "Temayı değiştir"
 #: src/components/add-system.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
 msgid "Token"
-msgstr "Token"
+msgstr "Erişim Anahtarı"
 
 #: src/components/command-palette.tsx
 #: src/components/routes/settings/layout.tsx
@@ -1975,22 +2021,22 @@ msgstr "Yükle"
 #: src/components/routes/system/info-bar.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Uptime"
-msgstr "Uptime"
+msgstr "Çalışma Süresi"
 
-#: src/components/routes/system.tsx
-#: src/components/routes/system.tsx
-#: src/components/routes/system.tsx
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/extra-fs-charts.tsx
+#: src/components/routes/system/charts/gpu-charts.tsx
+#: src/components/routes/system/charts/gpu-charts.tsx
+#: src/components/routes/system/charts/gpu-charts.tsx
 #: src/components/routes/system/cpu-sheet.tsx
 msgid "Usage"
 msgstr "Kullanım"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/disk-charts.tsx
 msgid "Usage of root partition"
 msgstr "Kök bölümün kullanımı"
 
-#: src/components/charts/mem-chart.tsx
-#: src/components/charts/swap-chart.tsx
+#: src/components/routes/system/charts/memory-charts.tsx
+#: src/components/routes/system/charts/memory-charts.tsx
 msgid "Used"
 msgstr "Kullanıldı"
 
@@ -2020,7 +2066,7 @@ msgstr "En son 200 uyarınızı görüntüleyin."
 msgid "Visible Fields"
 msgstr "Görünür Alanlar"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/chart-card.tsx
 msgid "Waiting for enough records to display"
 msgstr "Görüntülemek için yeterli kayıt bekleniyor"
 
@@ -2059,8 +2105,8 @@ msgid "Windows command"
 msgstr "Windows komutu"
 
 #. Disk write
-#: src/components/routes/system.tsx
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/disk-charts.tsx
+#: src/components/routes/system/charts/extra-fs-charts.tsx
 msgid "Write"
 msgstr "Yaz"
 

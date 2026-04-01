@@ -8,7 +8,7 @@ msgstr ""
 "Language: vi\n"
 "Project-Id-Version: beszel\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2026-01-31 21:16\n"
+"PO-Revision-Date: 2026-03-27 19:17\n"
 "Last-Translator: \n"
 "Language-Team: Vietnamese\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
@@ -17,6 +17,12 @@ msgstr ""
 "X-Crowdin-Language: vi\n"
 "X-Crowdin-File: /main/internal/site/src/locales/en/en.po\n"
 "X-Crowdin-File-ID: 32\n"
+
+#. placeholder {0}: newVersion.v
+#: src/components/footer-repo-link.tsx
+msgctxt "New version available"
+msgid "{0} available"
+msgstr ""
 
 #. placeholder {0}: table.getFilteredSelectedRowModel().rows.length
 #. placeholder {1}: table.getFilteredRowModel().rows.length
@@ -59,7 +65,7 @@ msgid "1 hour"
 msgstr "1 giờ"
 
 #. Load average
-#: src/components/charts/load-average-chart.tsx
+#: src/components/routes/system/charts/load-average-chart.tsx
 msgid "1 min"
 msgstr "1 phút"
 
@@ -76,7 +82,7 @@ msgid "12 hours"
 msgstr "12 giờ"
 
 #. Load average
-#: src/components/charts/load-average-chart.tsx
+#: src/components/routes/system/charts/load-average-chart.tsx
 msgid "15 min"
 msgstr "15 phút"
 
@@ -89,7 +95,7 @@ msgid "30 days"
 msgstr "30 ngày"
 
 #. Load average
-#: src/components/charts/load-average-chart.tsx
+#: src/components/routes/system/charts/load-average-chart.tsx
 msgid "5 min"
 msgstr "5 phút"
 
@@ -125,18 +131,13 @@ msgid "Active state"
 msgstr "Trạng thái hoạt động"
 
 #: src/components/add-system.tsx
+#: src/components/add-system.tsx
+#: src/components/navbar.tsx
+#: src/components/navbar.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Add {foo}"
 msgstr "Thêm {foo}"
-
-#: src/components/add-system.tsx
-msgid "Add <0>System</0>"
-msgstr "Thêm <0>Hệ thống</0>"
-
-#: src/components/add-system.tsx
-msgid "Add system"
-msgstr "Thêm hệ thống"
 
 #: src/components/routes/settings/notifications.tsx
 msgid "Add URL"
@@ -152,6 +153,7 @@ msgstr "Điều chỉnh chiều rộng bố cục chính"
 
 #: src/components/command-palette.tsx
 #: src/components/command-palette.tsx
+#: src/components/navbar.tsx
 msgid "Admin"
 msgstr "Quản trị viên"
 
@@ -181,6 +183,7 @@ msgstr "Cảnh báo"
 #: src/components/command-palette.tsx
 #: src/components/containers-table/containers-table.tsx
 #: src/components/navbar.tsx
+#: src/components/navbar.tsx
 #: src/components/routes/containers.tsx
 msgid "All Containers"
 msgstr "Tất cả container"
@@ -206,7 +209,7 @@ msgstr "Bạn có chắc không?"
 msgid "Automatic copy requires a secure context."
 msgstr "Sao chép tự động yêu cầu một ngữ cảnh an toàn."
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/chart-card.tsx
 msgid "Average"
 msgstr "Trung bình"
 
@@ -215,6 +218,7 @@ msgid "Average backend response time (ms)"
 msgstr ""
 
 #: src/components/routes/system.tsx
+#: src/components/routes/system/charts/cpu-charts.tsx
 msgid "Average CPU utilization of containers"
 msgstr "Sử dụng CPU trung bình của các container"
 
@@ -228,20 +232,20 @@ msgstr "Trung bình giảm xuống dưới <0>{value}{0}</0>"
 msgid "Average exceeds <0>{value}{0}</0>"
 msgstr "Trung bình vượt quá <0>{value}{0}</0>"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/gpu-charts.tsx
 msgid "Average power consumption of GPUs"
 msgstr "Tiêu thụ điện năng trung bình của GPU"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/cpu-charts.tsx
 msgid "Average system-wide CPU utilization"
 msgstr "Sử dụng CPU trung bình toàn hệ thống"
 
 #. placeholder {0}: gpu.n
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/gpu-charts.tsx
 msgid "Average utilization of {0}"
 msgstr "Mức sử dụng trung bình của {0}"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/gpu-charts.tsx
 msgid "Average utilization of GPU engines"
 msgstr "Mức sử dụng trung bình của động cơ GPU"
 
@@ -258,7 +262,7 @@ msgstr ""
 msgid "Backups"
 msgstr "Sao lưu"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/network-charts.tsx
 #: src/lib/alerts.ts
 msgid "Bandwidth"
 msgstr "Băng thông"
@@ -268,7 +272,7 @@ msgstr "Băng thông"
 msgid "Bat"
 msgstr "Pin"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/sensor-charts.tsx
 #: src/lib/alerts.ts
 msgid "Battery"
 msgstr "Pin"
@@ -318,7 +322,7 @@ msgstr "Trạng thái khởi động"
 msgid "Bytes (KB/s, MB/s, GB/s)"
 msgstr "Byte (KB/giây, MB/giây, GB/giây)"
 
-#: src/components/charts/mem-chart.tsx
+#: src/components/routes/system/charts/memory-charts.tsx
 msgid "Cache / Buffers"
 msgstr "Bộ nhớ đệm / Bộ đệm"
 
@@ -364,7 +368,7 @@ msgstr "Thay đổi đơn vị hiển thị cho các chỉ số."
 msgid "Change general application options."
 msgstr "Thay đổi các tùy chọn ứng dụng chung."
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/sensor-charts.tsx
 msgid "Charge"
 msgstr "Sạc"
 
@@ -376,6 +380,10 @@ msgstr "Đang sạc"
 #: src/components/routes/settings/general.tsx
 msgid "Chart options"
 msgstr "Tùy chọn biểu đồ"
+
+#: src/components/routes/system/info-bar.tsx
+msgid "Chart width"
+msgstr "Chiều rộng biểu đồ"
 
 #: src/components/login/forgot-pass-form.tsx
 msgid "Check {email} for a reset link."
@@ -452,6 +460,9 @@ msgstr "Mất kết nối"
 #: src/components/routes/haproxy-aggregate.tsx
 msgid "Connections"
 msgstr ""
+#: src/components/routes/system.tsx
+msgid "Containers"
+msgstr "Container"
 
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/systems-table/systems-table-columns.tsx
@@ -508,11 +519,16 @@ msgstr "Sao chép nội dung <0>docker-compose.yml</0> cho tác nhân bên dư�
 msgid "Copy YAML"
 msgstr "Sao chép YAML"
 
+#: src/components/routes/system.tsx
+msgctxt "Core system metrics"
+msgid "Core"
+msgstr ""
+
 #: src/components/containers-table/containers-table-columns.tsx
 #: src/components/systemd-table/systemd-table-columns.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "CPU"
-msgstr "CPU"
+msgstr ""
 
 #: src/components/routes/system/cpu-sheet.tsx
 msgid "CPU Cores"
@@ -530,8 +546,8 @@ msgstr "Thời gian CPU"
 msgid "CPU Time Breakdown"
 msgstr "Phân tích thời gian CPU"
 
-#: src/components/routes/system.tsx
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/cpu-charts.tsx
+#: src/components/routes/system/charts/cpu-charts.tsx
 #: src/components/routes/system/cpu-sheet.tsx
 #: src/lib/alerts.ts
 msgid "CPU Usage"
@@ -571,7 +587,7 @@ msgid "Current sessions across frontends and backends"
 msgstr ""
 
 #. Context: Battery state
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/sensor-charts.tsx
 msgid "Current state"
 msgstr "Trạng thái hiện tại"
 
@@ -588,6 +604,11 @@ msgstr "Chu kỳ"
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Daily"
 msgstr "Hàng ngày"
+
+#: src/components/routes/system/info-bar.tsx
+msgctxt "Default system layout option"
+msgid "Default"
+msgstr ""
 
 #: src/components/routes/settings/general.tsx
 msgid "Default time period"
@@ -625,11 +646,12 @@ msgstr "Thiết bị"
 msgid "Discharging"
 msgstr "Đang xả"
 
+#: src/components/routes/system.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Disk"
 msgstr "Đĩa"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/disk-charts.tsx
 msgid "Disk I/O"
 msgstr "Đĩa I/O"
 
@@ -637,25 +659,31 @@ msgstr "Đĩa I/O"
 msgid "Disk unit"
 msgstr "Đơn vị đĩa"
 
-#: src/components/charts/disk-chart.tsx
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/disk-charts.tsx
+#: src/components/routes/system/charts/disk-charts.tsx
+#: src/components/routes/system/charts/extra-fs-charts.tsx
 #: src/lib/alerts.ts
 msgid "Disk Usage"
 msgstr "Sử dụng Đĩa"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/extra-fs-charts.tsx
 msgid "Disk usage of {extraFsName}"
 msgstr "Sử dụng đĩa của {extraFsName}"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/info-bar.tsx
+msgctxt "Layout display options"
+msgid "Display"
+msgstr ""
+
+#: src/components/routes/system/charts/cpu-charts.tsx
 msgid "Docker CPU Usage"
 msgstr "Sử dụng CPU Docker"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/memory-charts.tsx
 msgid "Docker Memory Usage"
 msgstr "Sử dụng Bộ nhớ Docker"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/network-charts.tsx
 msgid "Docker Network I/O"
 msgstr "Mạng I/O Docker"
 
@@ -698,7 +726,7 @@ msgstr "Chỉnh sửa {foo}"
 #: src/components/login/forgot-pass-form.tsx
 #: src/components/login/otp-forms.tsx
 msgid "Email"
-msgstr "Email"
+msgstr ""
 
 #: src/components/routes/settings/notifications.tsx
 msgid "Email notifications"
@@ -844,7 +872,7 @@ msgstr ""
 
 #: src/components/containers-table/containers-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
-#: src/components/routes/system.tsx
+#: src/components/routes/system/chart-card.tsx
 #: src/components/routes/system/smart-table.tsx
 #: src/components/systemd-table/systemd-table.tsx
 #: src/components/systems-table/systems-table.tsx
@@ -878,6 +906,7 @@ msgid "Frontends/Backends"
 msgstr ""
 
 #. Context: Battery state
+#: src/components/routes/system/info-bar.tsx
 #: src/lib/i18n.ts
 msgid "Full"
 msgstr "Đầy pin"
@@ -893,10 +922,14 @@ msgid "Global"
 msgstr "Toàn cầu"
 
 #: src/components/routes/system.tsx
+msgid "GPU"
+msgstr ""
+
+#: src/components/routes/system/charts/gpu-charts.tsx
 msgid "GPU Engines"
 msgstr "Động cơ GPU"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/gpu-charts.tsx
 msgid "GPU Power Draw"
 msgstr "Mức tiêu thụ điện của GPU"
 
@@ -904,6 +937,7 @@ msgstr "Mức tiêu thụ điện của GPU"
 msgid "GPU Usage"
 msgstr "Sử dụng GPU"
 
+#: src/components/routes/system/info-bar.tsx
 #: src/components/systems-table/systems-table.tsx
 msgid "Grid"
 msgstr "Lưới"
@@ -979,7 +1013,7 @@ msgstr "Sức khỏe"
 
 #: src/components/routes/settings/layout.tsx
 msgid "Heartbeat"
-msgstr "Heartbeat"
+msgstr ""
 
 #: src/components/routes/settings/heartbeat.tsx
 msgid "Heartbeat Monitoring"
@@ -1077,7 +1111,7 @@ msgstr "Vòng đời"
 msgid "limit"
 msgstr "giới hạn"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/load-average-chart.tsx
 msgid "Load Average"
 msgstr "Tải trung bình"
 
@@ -1106,6 +1140,7 @@ msgstr "Trạng thái tải"
 msgid "Loading..."
 msgstr "Đang tải..."
 
+#: src/components/navbar.tsx
 #: src/components/navbar.tsx
 msgid "Log Out"
 msgstr "Đăng xuất"
@@ -1143,7 +1178,7 @@ msgid "Manual setup instructions"
 msgstr "Hướng dẫn cài đặt thủ công"
 
 #. Chart select field. Please try to keep this short.
-#: src/components/routes/system.tsx
+#: src/components/routes/system/chart-card.tsx
 msgid "Max 1 min"
 msgstr "Tối đa 1 phút"
 
@@ -1169,14 +1204,16 @@ msgid "Memory pool allocation and usage statistics"
 msgstr ""
 
 #: src/components/routes/system.tsx
+#: src/components/routes/system/charts/memory-charts.tsx
 #: src/lib/alerts.ts
 msgid "Memory Usage"
 msgstr "Sử dụng Bộ nhớ"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/memory-charts.tsx
 msgid "Memory usage of docker containers"
 msgstr "Sử dụng bộ nhớ của các container Docker"
 
+#. Device model
 #: src/components/routes/system/smart-table.tsx
 msgid "Model"
 msgstr "Mô hình"
@@ -1194,11 +1231,11 @@ msgstr "Tên"
 msgid "Net"
 msgstr "Mạng"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/network-charts.tsx
 msgid "Network traffic of docker containers"
 msgstr "Lưu lượng mạng của các container Docker"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/network-charts.tsx
 #: src/components/routes/system/network-sheet.tsx
 #: src/components/routes/system/network-sheet.tsx
 #: src/components/routes/system/network-sheet.tsx
@@ -1417,13 +1454,18 @@ msgstr "Vui lòng đăng nhập vào tài khoản của bạn"
 msgid "Port"
 msgstr "Cổng"
 
+#: src/components/containers-table/containers-table-columns.tsx
+msgctxt "Container ports"
+msgid "Ports"
+msgstr ""
+
 #. Power On Time
 #: src/components/routes/system/smart-table.tsx
 msgid "Power On"
 msgstr "Bật nguồn"
 
-#: src/components/routes/system.tsx
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/gpu-charts.tsx
+#: src/components/routes/system/charts/memory-charts.tsx
 msgid "Precise utilization at the recorded time"
 msgstr "Sử dụng chính xác tại thời điểm ghi nhận"
 
@@ -1445,12 +1487,12 @@ msgid "Quiet Hours"
 msgstr "Giờ yên tĩnh"
 
 #. Disk read
-#: src/components/routes/system.tsx
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/disk-charts.tsx
+#: src/components/routes/system/charts/extra-fs-charts.tsx
 msgid "Read"
 msgstr "Đọc"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/network-charts.tsx
 msgid "Received"
 msgstr "Đã nhận"
 
@@ -1528,6 +1570,10 @@ msgstr "Chi tiết S.M.A.R.T."
 msgid "S.M.A.R.T. Self-Test"
 msgstr "Tự kiểm tra S.M.A.R.T."
 
+#: src/components/add-system.tsx
+msgid "Save {foo}"
+msgstr "Lưu {foo}"
+
 #: src/components/routes/settings/notifications.tsx
 msgid "Save address using enter key or comma. Leave blank to disable email notifications."
 msgstr "Lưu địa chỉ bằng cách sử dụng phím enter hoặc dấu phẩy. Để trống để vô hiệu hóa thông báo email."
@@ -1536,10 +1582,6 @@ msgstr "Lưu địa chỉ bằng cách sử dụng phím enter hoặc dấu ph�
 #: src/components/routes/settings/notifications.tsx
 msgid "Save Settings"
 msgstr "Lưu Cài đặt"
-
-#: src/components/add-system.tsx
-msgid "Save system"
-msgstr "Lưu hệ thống"
 
 #: src/components/routes/settings/tokens-fingerprints.tsx
 msgid "Saved in the database and does not expire until you disable it."
@@ -1592,7 +1634,7 @@ msgstr "Gửi các ping gửi đi định kỳ đến dịch vụ giám sát bê
 msgid "Send test heartbeat"
 msgstr "Gửi heartbeat thử nghiệm"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/network-charts.tsx
 msgid "Sent"
 msgstr "Đã gửi"
 
@@ -1604,6 +1646,7 @@ msgstr "Số seri"
 msgid "Service Details"
 msgstr "Chi tiết dịch vụ"
 
+#: src/components/routes/system.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Services"
 msgstr "Dịch vụ"
@@ -1625,8 +1668,10 @@ msgstr "Thiết lập các biến môi trường sau trên hub Beszel của bạ
 #: src/components/command-palette.tsx
 #: src/components/command-palette.tsx
 #: src/components/navbar.tsx
+#: src/components/navbar.tsx
 #: src/components/routes/settings/layout.tsx
 #: src/components/routes/settings/layout.tsx
+#: src/components/routes/system/info-bar.tsx
 msgid "Settings"
 msgstr "Cài đặt"
 
@@ -1670,17 +1715,18 @@ msgstr "Trạng thái"
 msgid "Sub State"
 msgstr "Trạng thái phụ"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/memory-charts.tsx
 msgid "Swap space used by the system"
 msgstr "Không gian hoán đổi được sử dụng bởi hệ thống"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/memory-charts.tsx
 msgid "Swap Usage"
 msgstr "Sử dụng Hoán đổi"
 
 #: src/components/add-system.tsx
 #: src/components/alerts-history-columns.tsx
 #: src/components/containers-table/containers-table-columns.tsx
+#: src/components/navbar.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/settings/quiet-hours.tsx
@@ -1692,7 +1738,7 @@ msgstr "Sử dụng Hoán đổi"
 msgid "System"
 msgstr "Hệ thống"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/load-average-chart.tsx
 msgid "System load averages over time"
 msgstr "Tải trung bình của hệ thống theo thời gian"
 
@@ -1713,6 +1759,11 @@ msgstr "Các hệ thống có thể được quản lý trong tệp <0>config.ym
 msgid "Table"
 msgstr "Bảng"
 
+#: src/components/routes/system/info-bar.tsx
+msgctxt "Tabs system layout option"
+msgid "Tabs"
+msgstr ""
+
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Tasks"
 msgstr "Tác vụ"
@@ -1723,7 +1774,7 @@ msgstr "Tác vụ"
 msgid "Temp"
 msgstr "Nhiệt độ"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/sensor-charts.tsx
 #: src/lib/alerts.ts
 msgid "Temperature"
 msgstr "Nhiệt độ"
@@ -1732,7 +1783,7 @@ msgstr "Nhiệt độ"
 msgid "Temperature unit"
 msgstr "Đơn vị nhiệt độ"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/sensor-charts.tsx
 msgid "Temperatures of system sensors"
 msgstr "Nhiệt độ của các cảm biến hệ thống"
 
@@ -1764,11 +1815,11 @@ msgstr "Hành động này không thể hoàn tác. Điều này sẽ xóa vĩnh
 msgid "This will permanently delete all selected records from the database."
 msgstr "Thao tác này sẽ xóa vĩnh viễn tất cả các bản ghi đã chọn khỏi cơ sở dữ liệu."
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/extra-fs-charts.tsx
 msgid "Throughput of {extraFsName}"
 msgstr "Thông lượng của {extraFsName}"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/disk-charts.tsx
 msgid "Throughput of root filesystem"
 msgstr "Thông lượng của hệ thống tệp gốc"
 
@@ -1780,11 +1831,6 @@ msgstr "Định dạng thời gian"
 msgid "To email(s)"
 msgstr "Đến email(s)"
 
-#: src/components/routes/system/info-bar.tsx
-#: src/components/routes/system/info-bar.tsx
-msgid "Toggle grid"
-msgstr "Chuyển đổi lưới"
-
 #: src/components/mode-toggle.tsx
 #: src/components/mode-toggle.tsx
 msgid "Toggle theme"
@@ -1793,7 +1839,7 @@ msgstr "Chuyển đổi chủ đề"
 #: src/components/add-system.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
 msgid "Token"
-msgstr "Token"
+msgstr ""
 
 #: src/components/command-palette.tsx
 #: src/components/routes/settings/layout.tsx
@@ -1975,22 +2021,22 @@ msgstr "Tải lên"
 #: src/components/routes/system/info-bar.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Uptime"
-msgstr "Uptime"
+msgstr "Thời gian hoạt động"
 
-#: src/components/routes/system.tsx
-#: src/components/routes/system.tsx
-#: src/components/routes/system.tsx
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/extra-fs-charts.tsx
+#: src/components/routes/system/charts/gpu-charts.tsx
+#: src/components/routes/system/charts/gpu-charts.tsx
+#: src/components/routes/system/charts/gpu-charts.tsx
 #: src/components/routes/system/cpu-sheet.tsx
 msgid "Usage"
 msgstr "Sử dụng"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/disk-charts.tsx
 msgid "Usage of root partition"
 msgstr "Sử dụng phân vùng gốc"
 
-#: src/components/charts/mem-chart.tsx
-#: src/components/charts/swap-chart.tsx
+#: src/components/routes/system/charts/memory-charts.tsx
+#: src/components/routes/system/charts/memory-charts.tsx
 msgid "Used"
 msgstr "Đã sử dụng"
 
@@ -2020,7 +2066,7 @@ msgstr "Xem 200 cảnh báo gần đây nhất của bạn."
 msgid "Visible Fields"
 msgstr "Các cột hiển thị"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/chart-card.tsx
 msgid "Waiting for enough records to display"
 msgstr "Đang chờ đủ bản ghi để hiển thị"
 
@@ -2059,8 +2105,8 @@ msgid "Windows command"
 msgstr "Lệnh Windows"
 
 #. Disk write
-#: src/components/routes/system.tsx
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/disk-charts.tsx
+#: src/components/routes/system/charts/extra-fs-charts.tsx
 msgid "Write"
 msgstr "Ghi"
 

@@ -18,6 +18,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/henrygd/beszel/agent/utils"
 	"github.com/henrygd/beszel/internal/entities/smart"
 )
 
@@ -156,7 +157,7 @@ func (sm *SmartManager) ScanDevices(force bool) error {
 	currentDevices := sm.devicesSnapshot()
 
 	var configuredDevices []*DeviceInfo
-	if configuredRaw, ok := GetEnv("SMART_DEVICES"); ok {
+	if configuredRaw, ok := utils.GetEnv("SMART_DEVICES"); ok {
 		slog.Info("SMART_DEVICES", "value", configuredRaw)
 		config := strings.TrimSpace(configuredRaw)
 		if config == "" {
@@ -222,7 +223,7 @@ func (sm *SmartManager) ScanDevices(force bool) error {
 }
 
 func (sm *SmartManager) parseConfiguredDevices(config string) ([]*DeviceInfo, error) {
-	splitChar := os.Getenv("SMART_DEVICES_SEPARATOR")
+	splitChar, _ := utils.GetEnv("SMART_DEVICES_SEPARATOR")
 	if splitChar == "" {
 		splitChar = ","
 	}
@@ -260,7 +261,7 @@ func (sm *SmartManager) parseConfiguredDevices(config string) ([]*DeviceInfo, er
 }
 
 func (sm *SmartManager) refreshExcludedDevices() {
-	rawValue, _ := GetEnv("EXCLUDE_SMART")
+	rawValue, _ := utils.GetEnv("EXCLUDE_SMART")
 	sm.excludedDevices = make(map[string]struct{})
 
 	for entry := range strings.SplitSeq(rawValue, ",") {
@@ -870,14 +871,17 @@ func (sm *SmartManager) parseSmartForSata(output []byte) (bool, int) {
 	smartData.FirmwareVersion = data.FirmwareVersion
 	smartData.Capacity = data.UserCapacity.Bytes
 	smartData.Temperature = data.Temperature.Current
-	if smartData.Temperature == 0 {
-		if temp, ok := temperatureFromAtaDeviceStatistics(data.AtaDeviceStatistics); ok {
-			smartData.Temperature = temp
-		}
-	}
 	smartData.SmartStatus = getSmartStatus(smartData.Temperature, data.SmartStatus.Passed)
 	smartData.DiskName = data.Device.Name
 	smartData.DiskType = data.Device.Type
+
+	// get values from ata_device_statistics if necessary
+	var ataDeviceStats smart.AtaDeviceStatistics
+	if smartData.Temperature == 0 {
+		if temp := findAtaDeviceStatisticsValue(&data, &ataDeviceStats, 5, "Current Temperature", 0, 255); temp != nil {
+			smartData.Temperature = uint8(*temp)
+		}
+	}
 
 	// update SmartAttributes
 	smartData.Attributes = make([]*smart.SmartAttribute, 0, len(data.AtaSmartAttributes.Table))
@@ -913,23 +917,20 @@ func getSmartStatus(temperature uint8, passed bool) string {
 	}
 }
 
-func temperatureFromAtaDeviceStatistics(stats smart.AtaDeviceStatistics) (uint8, bool) {
-	entry := findAtaDeviceStatisticsEntry(stats, 5, "Current Temperature")
-	if entry == nil || entry.Value == nil {
-		return 0, false
-	}
-	if *entry.Value > 255 {
-		return 0, false
-	}
-	return uint8(*entry.Value), true
-}
-
 // findAtaDeviceStatisticsEntry centralizes ATA devstat lookups so additional
 // metrics can be pulled from the same structure in the future.
-func findAtaDeviceStatisticsEntry(stats smart.AtaDeviceStatistics, pageNumber uint8, entryName string) *smart.AtaDeviceStatisticsEntry {
-	for pageIdx := range stats.Pages {
-		page := &stats.Pages[pageIdx]
-		if page.Number != pageNumber {
+func findAtaDeviceStatisticsValue(data *smart.SmartInfoForSata, ataDeviceStats *smart.AtaDeviceStatistics, entryNumber uint8, entryName string, minValue, maxValue int64) *int64 {
+	if len(ataDeviceStats.Pages) == 0 {
+		if len(data.AtaDeviceStatistics) == 0 {
+			return nil
+		}
+		if err := json.Unmarshal(data.AtaDeviceStatistics, ataDeviceStats); err != nil {
+			return nil
+		}
+	}
+	for pageIdx := range ataDeviceStats.Pages {
+		page := &ataDeviceStats.Pages[pageIdx]
+		if page.Number != entryNumber {
 			continue
 		}
 		for entryIdx := range page.Table {
@@ -937,7 +938,10 @@ func findAtaDeviceStatisticsEntry(stats smart.AtaDeviceStatistics, pageNumber ui
 			if !strings.EqualFold(entry.Name, entryName) {
 				continue
 			}
-			return entry
+			if entry.Value == nil || *entry.Value < minValue || *entry.Value > maxValue {
+				return nil
+			}
+			return entry.Value
 		}
 	}
 	return nil
@@ -1100,32 +1104,21 @@ func (sm *SmartManager) parseSmartForNvme(output []byte) (bool, int) {
 
 // detectSmartctl checks if smartctl is installed, returns an error if not
 func (sm *SmartManager) detectSmartctl() (string, error) {
-	isWindows := runtime.GOOS == "windows"
-
-	// Load embedded smartctl.exe for Windows amd64 builds.
-	if isWindows && runtime.GOARCH == "amd64" {
-		if path, err := ensureEmbeddedSmartctl(); err == nil {
-			return path, nil
+	if runtime.GOOS == "windows" {
+		// Load embedded smartctl.exe for Windows amd64 builds.
+		if runtime.GOARCH == "amd64" {
+			if path, err := ensureEmbeddedSmartctl(); err == nil {
+				return path, nil
+			}
 		}
-	}
-
-	if path, err := exec.LookPath("smartctl"); err == nil {
-		return path, nil
-	}
-	locations := []string{}
-	if isWindows {
-		locations = append(locations,
-			"C:\\Program Files\\smartmontools\\bin\\smartctl.exe",
-		)
-	} else {
-		locations = append(locations, "/opt/homebrew/bin/smartctl")
-	}
-	for _, location := range locations {
+		// Try to find smartctl in the default installation location
+		const location = "C:\\Program Files\\smartmontools\\bin\\smartctl.exe"
 		if _, err := os.Stat(location); err == nil {
 			return location, nil
 		}
 	}
-	return "", errors.New("smartctl not found")
+
+	return utils.LookPathHomebrew("smartctl")
 }
 
 // isNvmeControllerPath checks if the path matches an NVMe controller pattern

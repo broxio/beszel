@@ -45,12 +45,6 @@ export interface SystemInfo {
 	c: number
 	/** cpu model */
 	m: string
-	/** load average 1 minute */
-	l1?: number
-	/** load average 5 minutes */
-	l5?: number
-	/** load average 15 minutes */
-	l15?: number
 	/** load average */
 	la?: [number, number, number]
 	/** operating system */
@@ -94,13 +88,6 @@ export interface SystemStats {
 	cpub?: number[]
 	/** per-core cpu usage [CPU0..] (0-100 integers) */
 	cpus?: number[]
-	// TODO: remove these in future release in favor of la
-	/** load average 1 minute */
-	l1?: number
-	/** load average 5 minutes */
-	l5?: number
-	/** load average 15 minutes */
-	l15?: number
 	/** load average */
 	la?: [number, number, number]
 	/** total memory (gb) */
@@ -461,6 +448,7 @@ export interface ContainerRecord extends RecordModel {
 	system: string
 	name: string
 	image: string
+	ports: string
 	cpu: number
 	memory: number
 	net: number
@@ -731,4 +719,15 @@ export interface SystemdServiceDetails {
 	WantedBy: any[];
 	Wants: string[];
 	WantsMountsFor: any[];
+}
+
+export interface BeszelInfo {
+	key: string // public key
+	v: string // version
+	cu: boolean // check updates
+}
+
+export interface UpdateInfo {
+	v: string // new version
+	url: string // url to new version
 }

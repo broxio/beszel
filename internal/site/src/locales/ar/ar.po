@@ -8,7 +8,7 @@ msgstr ""
 "Language: ar\n"
 "Project-Id-Version: beszel\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2026-01-31 21:16\n"
+"PO-Revision-Date: 2026-03-27 19:17\n"
 "Last-Translator: \n"
 "Language-Team: Arabic\n"
 "Plural-Forms: nplurals=6; plural=(n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5);\n"
@@ -17,6 +17,12 @@ msgstr ""
 "X-Crowdin-Language: ar\n"
 "X-Crowdin-File: /main/internal/site/src/locales/en/en.po\n"
 "X-Crowdin-File-ID: 32\n"
+
+#. placeholder {0}: newVersion.v
+#: src/components/footer-repo-link.tsx
+msgctxt "New version available"
+msgid "{0} available"
+msgstr ""
 
 #. placeholder {0}: table.getFilteredSelectedRowModel().rows.length
 #. placeholder {1}: table.getFilteredRowModel().rows.length
@@ -59,7 +65,7 @@ msgid "1 hour"
 msgstr "1 ساعة"
 
 #. Load average
-#: src/components/charts/load-average-chart.tsx
+#: src/components/routes/system/charts/load-average-chart.tsx
 msgid "1 min"
 msgstr "دقيقة واحدة"
 
@@ -76,7 +82,7 @@ msgid "12 hours"
 msgstr "12 ساعة"
 
 #. Load average
-#: src/components/charts/load-average-chart.tsx
+#: src/components/routes/system/charts/load-average-chart.tsx
 msgid "15 min"
 msgstr "15 دقيقة"
 
@@ -89,7 +95,7 @@ msgid "30 days"
 msgstr "30 يومًا"
 
 #. Load average
-#: src/components/charts/load-average-chart.tsx
+#: src/components/routes/system/charts/load-average-chart.tsx
 msgid "5 min"
 msgstr "5 دقائق"
 
@@ -125,18 +131,13 @@ msgid "Active state"
 msgstr "الحالة النشطة"
 
 #: src/components/add-system.tsx
+#: src/components/add-system.tsx
+#: src/components/navbar.tsx
+#: src/components/navbar.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Add {foo}"
 msgstr "إضافة {foo}"
-
-#: src/components/add-system.tsx
-msgid "Add <0>System</0>"
-msgstr "إضافة <0>نظام</0>"
-
-#: src/components/add-system.tsx
-msgid "Add system"
-msgstr "إضافة نظام"
 
 #: src/components/routes/settings/notifications.tsx
 msgid "Add URL"
@@ -152,6 +153,7 @@ msgstr "تعديل عرض التخطيط الرئيسي"
 
 #: src/components/command-palette.tsx
 #: src/components/command-palette.tsx
+#: src/components/navbar.tsx
 msgid "Admin"
 msgstr "مسؤول"
 
@@ -181,6 +183,7 @@ msgstr "التنبيهات"
 #: src/components/command-palette.tsx
 #: src/components/containers-table/containers-table.tsx
 #: src/components/navbar.tsx
+#: src/components/navbar.tsx
 #: src/components/routes/containers.tsx
 msgid "All Containers"
 msgstr "جميع الحاويات"
@@ -206,7 +209,7 @@ msgstr "هل أنت متأكد؟"
 msgid "Automatic copy requires a secure context."
 msgstr "النسخ التلقائي يتطلب سياقًا آمنًا."
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/chart-card.tsx
 msgid "Average"
 msgstr "متوسط"
 
@@ -215,6 +218,7 @@ msgid "Average backend response time (ms)"
 msgstr ""
 
 #: src/components/routes/system.tsx
+#: src/components/routes/system/charts/cpu-charts.tsx
 msgid "Average CPU utilization of containers"
 msgstr "متوسط استخدام وحدة المعالجة المركزية للحاويات"
 
@@ -228,20 +232,20 @@ msgstr "المتوسط ينخفض أقل من <0>{value}{0}</0>"
 msgid "Average exceeds <0>{value}{0}</0>"
 msgstr "المتوسط يتجاوز <0>{value}{0}</0>"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/gpu-charts.tsx
 msgid "Average power consumption of GPUs"
 msgstr "متوسط ​​استهلاك طاقة وحدة معالجة الرسوميات"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/cpu-charts.tsx
 msgid "Average system-wide CPU utilization"
 msgstr "متوسط استخدام وحدة المعالجة المركزية على مستوى النظام"
 
 #. placeholder {0}: gpu.n
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/gpu-charts.tsx
 msgid "Average utilization of {0}"
 msgstr "متوسط ​​استخدام {0}"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/gpu-charts.tsx
 msgid "Average utilization of GPU engines"
 msgstr "متوسط استغلال محركات GPU"
 
@@ -258,7 +262,7 @@ msgstr ""
 msgid "Backups"
 msgstr "النسخ الاحتياطية"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/network-charts.tsx
 #: src/lib/alerts.ts
 msgid "Bandwidth"
 msgstr "عرض النطاق الترددي"
@@ -268,7 +272,7 @@ msgstr "عرض النطاق الترددي"
 msgid "Bat"
 msgstr "بطارية"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/sensor-charts.tsx
 #: src/lib/alerts.ts
 msgid "Battery"
 msgstr "البطارية"
@@ -318,7 +322,7 @@ msgstr "حالة التمهيد"
 msgid "Bytes (KB/s, MB/s, GB/s)"
 msgstr "بايت (كيلوبايت/ثانية، ميجابايت/ثانية، جيجابايت/ثانية)"
 
-#: src/components/charts/mem-chart.tsx
+#: src/components/routes/system/charts/memory-charts.tsx
 msgid "Cache / Buffers"
 msgstr "ذاكرة التخزين المؤقت / المخازن المؤقتة"
 
@@ -364,7 +368,7 @@ msgstr "تغيير وحدات عرض المقاييس."
 msgid "Change general application options."
 msgstr "تغيير خيارات التطبيق العامة."
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/sensor-charts.tsx
 msgid "Charge"
 msgstr "الشحن"
 
@@ -376,6 +380,10 @@ msgstr "قيد الشحن"
 #: src/components/routes/settings/general.tsx
 msgid "Chart options"
 msgstr "خيارات الرسم البياني"
+
+#: src/components/routes/system/info-bar.tsx
+msgid "Chart width"
+msgstr "عرض الرسم البياني"
 
 #: src/components/login/forgot-pass-form.tsx
 msgid "Check {email} for a reset link."
@@ -452,6 +460,9 @@ msgstr "الاتصال مقطوع"
 #: src/components/routes/haproxy-aggregate.tsx
 msgid "Connections"
 msgstr ""
+#: src/components/routes/system.tsx
+msgid "Containers"
+msgstr "الحاويات"
 
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/systems-table/systems-table-columns.tsx
@@ -508,6 +519,11 @@ msgstr "انسخ محتوى <0>docker-compose.yml</0> للوكيل أدناه، 
 msgid "Copy YAML"
 msgstr "نسخ YAML"
 
+#: src/components/routes/system.tsx
+msgctxt "Core system metrics"
+msgid "Core"
+msgstr ""
+
 #: src/components/containers-table/containers-table-columns.tsx
 #: src/components/systemd-table/systemd-table-columns.tsx
 #: src/components/systems-table/systems-table-columns.tsx
@@ -530,8 +546,8 @@ msgstr "وقت المعالج"
 msgid "CPU Time Breakdown"
 msgstr "تفصيل وقت المعالج"
 
-#: src/components/routes/system.tsx
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/cpu-charts.tsx
+#: src/components/routes/system/charts/cpu-charts.tsx
 #: src/components/routes/system/cpu-sheet.tsx
 #: src/lib/alerts.ts
 msgid "CPU Usage"
@@ -571,7 +587,7 @@ msgid "Current sessions across frontends and backends"
 msgstr ""
 
 #. Context: Battery state
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/sensor-charts.tsx
 msgid "Current state"
 msgstr "الحالة الحالية"
 
@@ -588,6 +604,11 @@ msgstr "الدورات"
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Daily"
 msgstr "يوميًا"
+
+#: src/components/routes/system/info-bar.tsx
+msgctxt "Default system layout option"
+msgid "Default"
+msgstr ""
 
 #: src/components/routes/settings/general.tsx
 msgid "Default time period"
@@ -625,11 +646,12 @@ msgstr "الجهاز"
 msgid "Discharging"
 msgstr "قيد التفريغ"
 
+#: src/components/routes/system.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Disk"
 msgstr "القرص"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/disk-charts.tsx
 msgid "Disk I/O"
 msgstr "إدخال/إخراج القرص"
 
@@ -637,25 +659,31 @@ msgstr "إدخال/إخراج القرص"
 msgid "Disk unit"
 msgstr "وحدة القرص"
 
-#: src/components/charts/disk-chart.tsx
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/disk-charts.tsx
+#: src/components/routes/system/charts/disk-charts.tsx
+#: src/components/routes/system/charts/extra-fs-charts.tsx
 #: src/lib/alerts.ts
 msgid "Disk Usage"
 msgstr "استخدام القرص"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/extra-fs-charts.tsx
 msgid "Disk usage of {extraFsName}"
 msgstr "استخدام القرص لـ {extraFsName}"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/info-bar.tsx
+msgctxt "Layout display options"
+msgid "Display"
+msgstr ""
+
+#: src/components/routes/system/charts/cpu-charts.tsx
 msgid "Docker CPU Usage"
 msgstr "استخدام المعالج للدوكر"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/memory-charts.tsx
 msgid "Docker Memory Usage"
 msgstr "استخدام الذاكرة للدوكر"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/network-charts.tsx
 msgid "Docker Network I/O"
 msgstr "إدخال/إخراج الشبكة للدوكر"
 
@@ -844,7 +872,7 @@ msgstr ""
 
 #: src/components/containers-table/containers-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
-#: src/components/routes/system.tsx
+#: src/components/routes/system/chart-card.tsx
 #: src/components/routes/system/smart-table.tsx
 #: src/components/systemd-table/systemd-table.tsx
 #: src/components/systems-table/systems-table.tsx
@@ -878,6 +906,7 @@ msgid "Frontends/Backends"
 msgstr ""
 
 #. Context: Battery state
+#: src/components/routes/system/info-bar.tsx
 #: src/lib/i18n.ts
 msgid "Full"
 msgstr "ممتلئة"
@@ -893,10 +922,14 @@ msgid "Global"
 msgstr "عالمي"
 
 #: src/components/routes/system.tsx
+msgid "GPU"
+msgstr "معالج الرسوميات"
+
+#: src/components/routes/system/charts/gpu-charts.tsx
 msgid "GPU Engines"
 msgstr "محركات GPU"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/gpu-charts.tsx
 msgid "GPU Power Draw"
 msgstr "استهلاك طاقة وحدة معالجة الرسوميات"
 
@@ -904,6 +937,7 @@ msgstr "استهلاك طاقة وحدة معالجة الرسوميات"
 msgid "GPU Usage"
 msgstr "استخدام وحدة معالجة الرسوميات"
 
+#: src/components/routes/system/info-bar.tsx
 #: src/components/systems-table/systems-table.tsx
 msgid "Grid"
 msgstr "شبكة"
@@ -1077,7 +1111,7 @@ msgstr "دورة الحياة"
 msgid "limit"
 msgstr "الحد"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/load-average-chart.tsx
 msgid "Load Average"
 msgstr "متوسط التحميل"
 
@@ -1106,6 +1140,7 @@ msgstr "حالة التحميل"
 msgid "Loading..."
 msgstr "جاري التحميل..."
 
+#: src/components/navbar.tsx
 #: src/components/navbar.tsx
 msgid "Log Out"
 msgstr "تسجيل الخروج"
@@ -1143,7 +1178,7 @@ msgid "Manual setup instructions"
 msgstr "تعليمات الإعداد اليدوي"
 
 #. Chart select field. Please try to keep this short.
-#: src/components/routes/system.tsx
+#: src/components/routes/system/chart-card.tsx
 msgid "Max 1 min"
 msgstr "الحد الأقصى دقيقة"
 
@@ -1169,14 +1204,16 @@ msgid "Memory pool allocation and usage statistics"
 msgstr ""
 
 #: src/components/routes/system.tsx
+#: src/components/routes/system/charts/memory-charts.tsx
 #: src/lib/alerts.ts
 msgid "Memory Usage"
 msgstr "استخدام الذاكرة"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/memory-charts.tsx
 msgid "Memory usage of docker containers"
 msgstr "استخدام الذاكرة لحاويات دوكر"
 
+#. Device model
 #: src/components/routes/system/smart-table.tsx
 msgid "Model"
 msgstr "الموديل"
@@ -1194,11 +1231,11 @@ msgstr "الاسم"
 msgid "Net"
 msgstr "الشبكة"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/network-charts.tsx
 msgid "Network traffic of docker containers"
 msgstr "حركة مرور الشبكة لحاويات الدوكر"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/network-charts.tsx
 #: src/components/routes/system/network-sheet.tsx
 #: src/components/routes/system/network-sheet.tsx
 #: src/components/routes/system/network-sheet.tsx
@@ -1417,13 +1454,18 @@ msgstr "يرجى تسجيل الدخول إلى حسابك"
 msgid "Port"
 msgstr "المنفذ"
 
+#: src/components/containers-table/containers-table-columns.tsx
+msgctxt "Container ports"
+msgid "Ports"
+msgstr ""
+
 #. Power On Time
 #: src/components/routes/system/smart-table.tsx
 msgid "Power On"
 msgstr "تشغيل الطاقة"
 
-#: src/components/routes/system.tsx
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/gpu-charts.tsx
+#: src/components/routes/system/charts/memory-charts.tsx
 msgid "Precise utilization at the recorded time"
 msgstr "الاستخدام الدقيق في الوقت المسجل"
 
@@ -1445,12 +1487,12 @@ msgid "Quiet Hours"
 msgstr "ساعات الهدوء"
 
 #. Disk read
-#: src/components/routes/system.tsx
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/disk-charts.tsx
+#: src/components/routes/system/charts/extra-fs-charts.tsx
 msgid "Read"
 msgstr "قراءة"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/network-charts.tsx
 msgid "Received"
 msgstr "تم الاستلام"
 
@@ -1528,6 +1570,10 @@ msgstr "تفاصيل S.M.A.R.T."
 msgid "S.M.A.R.T. Self-Test"
 msgstr "اختبار S.M.A.R.T. الذاتي"
 
+#: src/components/add-system.tsx
+msgid "Save {foo}"
+msgstr "حفظ {foo}"
+
 #: src/components/routes/settings/notifications.tsx
 msgid "Save address using enter key or comma. Leave blank to disable email notifications."
 msgstr "احفظ العنوان باستخدام مفتاح الإدخال أو الفاصلة. اتركه فارغًا لتعطيل إشعارات البريد الإشباكي."
@@ -1536,10 +1582,6 @@ msgstr "احفظ العنوان باستخدام مفتاح الإدخال أو 
 #: src/components/routes/settings/notifications.tsx
 msgid "Save Settings"
 msgstr "حفظ الإعدادات"
-
-#: src/components/add-system.tsx
-msgid "Save system"
-msgstr "احفظ النظام"
 
 #: src/components/routes/settings/tokens-fingerprints.tsx
 msgid "Saved in the database and does not expire until you disable it."
@@ -1592,7 +1634,7 @@ msgstr "أرسل pings صادرة دورية إلى خدمة مراقبة خار
 msgid "Send test heartbeat"
 msgstr "إرسال نبضة قلب اختبارية"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/network-charts.tsx
 msgid "Sent"
 msgstr "تم الإرسال"
 
@@ -1604,6 +1646,7 @@ msgstr "الرقم التسلسلي"
 msgid "Service Details"
 msgstr "تفاصيل الخدمة"
 
+#: src/components/routes/system.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Services"
 msgstr "الخدمات"
@@ -1625,8 +1668,10 @@ msgstr "قم بتعيين متغيرات البيئة التالية على مر
 #: src/components/command-palette.tsx
 #: src/components/command-palette.tsx
 #: src/components/navbar.tsx
+#: src/components/navbar.tsx
 #: src/components/routes/settings/layout.tsx
 #: src/components/routes/settings/layout.tsx
+#: src/components/routes/system/info-bar.tsx
 msgid "Settings"
 msgstr "الإعدادات"
 
@@ -1670,17 +1715,18 @@ msgstr "الحالة"
 msgid "Sub State"
 msgstr "الحالة الفرعية"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/memory-charts.tsx
 msgid "Swap space used by the system"
 msgstr "مساحة التبديل المستخدمة من قبل النظام"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/memory-charts.tsx
 msgid "Swap Usage"
 msgstr "استخدام التبديل"
 
 #: src/components/add-system.tsx
 #: src/components/alerts-history-columns.tsx
 #: src/components/containers-table/containers-table-columns.tsx
+#: src/components/navbar.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/settings/quiet-hours.tsx
@@ -1692,7 +1738,7 @@ msgstr "استخدام التبديل"
 msgid "System"
 msgstr "النظام"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/load-average-chart.tsx
 msgid "System load averages over time"
 msgstr "متوسط تحميل النظام مع مرور الوقت"
 
@@ -1713,6 +1759,11 @@ msgstr "يمكن إدارة الأنظمة في ملف <0>config.yml</0> داخ�
 msgid "Table"
 msgstr "جدول"
 
+#: src/components/routes/system/info-bar.tsx
+msgctxt "Tabs system layout option"
+msgid "Tabs"
+msgstr ""
+
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Tasks"
 msgstr "المهام"
@@ -1723,7 +1774,7 @@ msgstr "المهام"
 msgid "Temp"
 msgstr "درجة الحرارة"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/sensor-charts.tsx
 #: src/lib/alerts.ts
 msgid "Temperature"
 msgstr "درجة الحرارة"
@@ -1732,7 +1783,7 @@ msgstr "درجة الحرارة"
 msgid "Temperature unit"
 msgstr "وحدة درجة الحرارة"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/sensor-charts.tsx
 msgid "Temperatures of system sensors"
 msgstr "درجات حرارة مستشعرات النظام"
 
@@ -1764,11 +1815,11 @@ msgstr "لا يمكن التراجع عن هذا الإجراء. سيؤدي ذل
 msgid "This will permanently delete all selected records from the database."
 msgstr "سيؤدي هذا إلى حذف جميع السجلات المحددة من قاعدة البيانات بشكل دائم."
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/extra-fs-charts.tsx
 msgid "Throughput of {extraFsName}"
 msgstr "معدل نقل {extraFsName}"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/disk-charts.tsx
 msgid "Throughput of root filesystem"
 msgstr "معدل نقل نظام الملفات الجذر"
 
@@ -1779,11 +1830,6 @@ msgstr "تنسيق الوقت"
 #: src/components/routes/settings/notifications.tsx
 msgid "To email(s)"
 msgstr "إلى البريد الإشباكي"
-
-#: src/components/routes/system/info-bar.tsx
-#: src/components/routes/system/info-bar.tsx
-msgid "Toggle grid"
-msgstr "تبديل الشبكة"
 
 #: src/components/mode-toggle.tsx
 #: src/components/mode-toggle.tsx
@@ -1977,20 +2023,20 @@ msgstr "رفع"
 msgid "Uptime"
 msgstr "مدة التشغيل"
 
-#: src/components/routes/system.tsx
-#: src/components/routes/system.tsx
-#: src/components/routes/system.tsx
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/extra-fs-charts.tsx
+#: src/components/routes/system/charts/gpu-charts.tsx
+#: src/components/routes/system/charts/gpu-charts.tsx
+#: src/components/routes/system/charts/gpu-charts.tsx
 #: src/components/routes/system/cpu-sheet.tsx
 msgid "Usage"
 msgstr "الاستخدام"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/disk-charts.tsx
 msgid "Usage of root partition"
 msgstr "استخدام القسم الجذر"
 
-#: src/components/charts/mem-chart.tsx
-#: src/components/charts/swap-chart.tsx
+#: src/components/routes/system/charts/memory-charts.tsx
+#: src/components/routes/system/charts/memory-charts.tsx
 msgid "Used"
 msgstr "مستخدم"
 
@@ -2020,7 +2066,7 @@ msgstr "عرض أحدث 200 تنبيه."
 msgid "Visible Fields"
 msgstr "الأعمدة الظاهرة"
 
-#: src/components/routes/system.tsx
+#: src/components/routes/system/chart-card.tsx
 msgid "Waiting for enough records to display"
 msgstr "في انتظار وجود سجلات كافية للعرض"
 
@@ -2059,8 +2105,8 @@ msgid "Windows command"
 msgstr "أمر ويندوز"
 
 #. Disk write
-#: src/components/routes/system.tsx
-#: src/components/routes/system.tsx
+#: src/components/routes/system/charts/disk-charts.tsx
+#: src/components/routes/system/charts/extra-fs-charts.tsx
 msgid "Write"
 msgstr "كتابة"
 
