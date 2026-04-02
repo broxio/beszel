@@ -14,6 +14,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/henrygd/beszel/agent/utils"
 	"github.com/henrygd/beszel/internal/entities/system"
 )
 
@@ -91,8 +92,8 @@ type HAProxyManager struct {
 //   - HAPROXY_URL: HTTP stats URL (e.g., http://localhost:8404/stats;csv)
 //   - HAPROXY_FILTER: Comma-separated list of proxy names to monitor (optional)
 func NewHAProxyManager() (*HAProxyManager, error) {
-	socketPath, hasSocket := GetEnv("HAPROXY_SOCKET")
-	httpURL, hasURL := GetEnv("HAPROXY_URL")
+	socketPath, hasSocket := utils.GetEnv("HAPROXY_SOCKET")
+	httpURL, hasURL := utils.GetEnv("HAPROXY_URL")
 
 	if !hasSocket && !hasURL {
 		return nil, fmt.Errorf("HAProxy not configured (set HAPROXY_SOCKET or HAPROXY_URL)")
@@ -100,7 +101,7 @@ func NewHAProxyManager() (*HAProxyManager, error) {
 
 	// Default update period is 5 seconds, configurable via HAPROXY_UPDATE_INTERVAL
 	updatePeriod := 5 * time.Second
-	if intervalStr, exists := GetEnv("HAPROXY_UPDATE_INTERVAL"); exists {
+	if intervalStr, exists := utils.GetEnv("HAPROXY_UPDATE_INTERVAL"); exists {
 		if seconds, err := strconv.Atoi(intervalStr); err == nil && seconds > 0 {
 			updatePeriod = time.Duration(seconds) * time.Second
 			slog.Info("HAProxy update interval configured", "seconds", seconds)
@@ -118,7 +119,7 @@ func NewHAProxyManager() (*HAProxyManager, error) {
 	}
 
 	// Parse optional filter
-	if filterStr, exists := GetEnv("HAPROXY_FILTER"); exists {
+	if filterStr, exists := utils.GetEnv("HAPROXY_FILTER"); exists {
 		hm.filter = make(map[string]struct{})
 		for _, name := range strings.Split(filterStr, ",") {
 			name = strings.TrimSpace(name)
@@ -312,6 +313,7 @@ func (hm *HAProxyManager) calculateRates(stats []system.HAProxyStats) {
 
 	// Track counts per name:type to handle multiple servers with same proxy name
 	typeCounts := make(map[string]int)
+	activeKeys := make(map[string]struct{}, len(stats))
 
 	for i := range stats {
 		stat := &stats[i]
@@ -319,6 +321,7 @@ func (hm *HAProxyManager) calculateRates(stats []system.HAProxyStats) {
 		typeCounts[baseKey]++
 		// Use count to make key unique for multiple servers with same proxy name
 		key := baseKey + ":" + strconv.Itoa(typeCounts[baseKey])
+		activeKeys[key] = struct{}{}
 
 		prev, exists := hm.prevCounters[key]
 		if exists {
@@ -360,6 +363,13 @@ func (hm *HAProxyManager) calculateRates(stats []system.HAProxyStats) {
 			resp4xx:  stat.Resp4xx,
 			resp5xx:  stat.Resp5xx,
 			time:     now,
+		}
+	}
+
+	// Clean up stale entries for proxies that no longer exist
+	for key := range hm.prevCounters {
+		if _, active := activeKeys[key]; !active {
+			delete(hm.prevCounters, key)
 		}
 	}
 }
@@ -424,11 +434,23 @@ func (hm *HAProxyManager) parseInfo(reader io.Reader) (*system.HAProxyInfo, erro
 		case "Maxconn":
 			info.Maxconn, _ = strconv.ParseUint(value, 10, 64)
 		case "CurrConns":
-			info.CurrConns, _ = strconv.ParseUint(value, 10, 64)
+			if v, err := strconv.ParseUint(value, 10, 64); err == nil {
+				info.CurrConns = v
+			} else {
+				slog.Debug("HAProxy info parse error", "field", key, "value", value, "err", err)
+			}
 		case "CumConns":
-			info.CumConns, _ = strconv.ParseUint(value, 10, 64)
+			if v, err := strconv.ParseUint(value, 10, 64); err == nil {
+				info.CumConns = v
+			} else {
+				slog.Debug("HAProxy info parse error", "field", key, "value", value, "err", err)
+			}
 		case "CumReq":
-			info.CumReq, _ = strconv.ParseUint(value, 10, 64)
+			if v, err := strconv.ParseUint(value, 10, 64); err == nil {
+				info.CumReq = v
+			} else {
+				slog.Debug("HAProxy info parse error", "field", key, "value", value, "err", err)
+			}
 		case "MaxSslConns":
 			info.MaxSslConns, _ = strconv.ParseUint(value, 10, 64)
 		case "CurrSslConns":

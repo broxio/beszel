@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/henrygd/beszel/internal/entities/system"
 	"github.com/stretchr/testify/assert"
@@ -328,7 +329,7 @@ func TestGetStats(t *testing.T) {
 	hm := &HAProxyManager{
 		httpURL:    server.URL,
 		httpClient: server.Client(),
-		prevBytes:  make(map[string]*haproxyPrevBytes),
+		prevCounters: make(map[string]*haproxyPrevCounters),
 	}
 
 	// First call should fetch fresh stats
@@ -395,32 +396,272 @@ func TestNewHAProxyManagerWithFilter(t *testing.T) {
 func TestHAProxyStatsDataStructure(t *testing.T) {
 	// Test that the HAProxyStats structure has all required fields
 	stats := system.HAProxyStats{
-		Name:           "test_proxy",
-		Type:           "BACKEND",
-		Status:         "UP",
-		CurrentSess:    10,
-		MaxSess:        100,
-		SessionLimit:   1000,
-		TotalSess:      50000,
-		BytesIn:        1234567890,
-		BytesOut:       9876543210,
-		RequestRate:    100,
-		RequestTotal:   500000,
-		ResponseTime:   25,
-		ConnRate:       50,
-		ConnTotal:      100000,
-		Errors4xx:      150,
-		Errors5xx:      25,
-		HealthCheckOK:  1000,
+		Name:            "test_proxy",
+		Type:            "BACKEND",
+		Status:          "UP",
+		CurrentSess:     10,
+		MaxSess:         100,
+		SessionLimit:    1000,
+		TotalSess:       50000,
+		BytesIn:         1234567890,
+		BytesOut:        9876543210,
+		RequestRate:     100,
+		RequestTotal:    500000,
+		ResponseTime:    25,
+		Resp4xx:         150,
+		Resp5xx:         25,
 		HealthCheckFail: 5,
-		ActiveServers:  3,
-		BackupServers:  1,
+		ActiveServers:   3,
+		BackupServers:   1,
 	}
 
 	assert.Equal(t, "test_proxy", stats.Name)
 	assert.Equal(t, "BACKEND", stats.Type)
 	assert.Equal(t, uint64(10), stats.CurrentSess)
 	assert.Equal(t, uint64(3), stats.ActiveServers)
+	assert.Equal(t, uint64(150), stats.Resp4xx)
+	assert.Equal(t, uint64(25), stats.Resp5xx)
+}
+
+func TestParseInfo(t *testing.T) {
+	input := `Name: HAProxy
+Version: 2.9.6
+Release_date: 2024/02/15
+Nbthread: 4
+Maxconn: 4000
+CurrConns: 150
+CumConns: 5000000
+CumReq: 12000000
+MaxSslConns: 2000
+CurrSslConns: 75
+CumSslConns: 1000000
+ConnRate: 25
+MaxConnRate: 500
+SessRate: 30
+MaxSessRate: 600
+SslRate: 10
+MaxSslRate: 200
+Tasks: 50
+Run_queue: 3
+Idle_pct: 85
+node: haproxy-prod-1
+Uptime: 5d 3h 20m 15s
+Uptime_sec: 443415
+Memmax_MB: 512
+PoolAlloc_MB: 128
+PoolUsed_MB: 96
+TotalBytesOut: 9876543210
+BytesOutRate: 1234567
+Pid: 12345
+SslFrontendSessionReuse_pct: 42
+`
+
+	hm := &HAProxyManager{}
+	info, err := hm.parseInfo(strings.NewReader(input))
+	require.NoError(t, err)
+
+	assert.Equal(t, "2.9.6", info.Version)
+	assert.Equal(t, "haproxy-prod-1", info.Node)
+	assert.Equal(t, "5d 3h 20m 15s", info.Uptime)
+	assert.Equal(t, uint64(443415), info.UptimeSec)
+	assert.Equal(t, uint64(4), info.Nbthread)
+	assert.Equal(t, uint64(4000), info.Maxconn)
+	assert.Equal(t, uint64(150), info.CurrConns)
+	assert.Equal(t, uint64(5000000), info.CumConns)
+	assert.Equal(t, uint64(12000000), info.CumReq)
+	assert.Equal(t, uint64(75), info.CurrSslConns)
+	assert.Equal(t, uint64(25), info.ConnRate)
+	assert.Equal(t, uint64(85), info.IdlePct)
+	assert.Equal(t, uint64(512), info.MemMaxMB)
+	assert.Equal(t, uint64(128), info.PoolAllocMB)
+	assert.Equal(t, uint64(96), info.PoolUsedMB)
+	assert.Equal(t, uint64(9876543210), info.TotalBytesOut)
+	assert.Equal(t, uint64(12345), info.Pid)
+	assert.Equal(t, uint64(42), info.SslReusePct)
+}
+
+func TestParseInfoEmpty(t *testing.T) {
+	hm := &HAProxyManager{}
+	_, err := hm.parseInfo(strings.NewReader(""))
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "failed to parse")
+}
+
+func TestParsePools(t *testing.T) {
+	input := `Dumping pools usage. Use SIGQUIT to flush them.
+  - Pool ssl_sock_ct (128 bytes) : 260 allocated (33280 bytes), 260 used (~174 by thread caches), needed_avg 91, 0 failures, 6 users
+  - Pool connection (416 bytes) : 1020 allocated (424320 bytes), 1020 used (~512 by thread caches), needed_avg 300, 3 failures, 2 users
+Total: 2 pools, 457600 bytes allocated, 457600 used (~686 by thread caches).
+`
+
+	hm := &HAProxyManager{}
+	pools, summary, err := hm.parsePools(strings.NewReader(input))
+	require.NoError(t, err)
+
+	assert.Len(t, pools, 2)
+	assert.Equal(t, "ssl_sock_ct", pools[0].Name)
+	assert.Equal(t, uint64(128), pools[0].Size)
+	assert.Equal(t, uint64(33280), pools[0].Allocated)
+	assert.Equal(t, uint64(260), pools[0].Used)
+	assert.Equal(t, uint64(174), pools[0].InCache)
+	assert.Equal(t, uint64(0), pools[0].Failures)
+
+	assert.Equal(t, "connection", pools[1].Name)
+	assert.Equal(t, uint64(3), pools[1].Failures)
+
+	require.NotNil(t, summary)
+	assert.Equal(t, uint64(2), summary.TotalPools)
+	assert.Equal(t, uint64(457600), summary.TotalAllocated)
+	assert.Equal(t, uint64(457600), summary.TotalUsed)
+	assert.Equal(t, uint64(686), summary.InThreadCaches)
+}
+
+func TestParsePoolsEmpty(t *testing.T) {
+	hm := &HAProxyManager{}
+	_, _, err := hm.parsePools(strings.NewReader("no pools here\n"))
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "no pools found")
+}
+
+func TestParseActivity(t *testing.T) {
+	input := `ctxsw: 0 [100 200 300 400]
+tasksw: 0 [50 60 70 80]
+loops: 0 [1000 2000 3000 4000]
+avg_cpu_pct: 0 [25 30 35 40]
+avg_loop_us: 0 [100 150 200 250]
+accepted: 0 [500 600 700 800]
+poll_io: 0 [10 20 30 40]
+`
+
+	hm := &HAProxyManager{}
+	activities, err := hm.parseActivity(strings.NewReader(input))
+	require.NoError(t, err)
+
+	assert.Len(t, activities, 4)
+	assert.Equal(t, uint64(1), activities[0].ThreadID)
+	assert.Equal(t, uint64(100), activities[0].CtxSwitches)
+	assert.Equal(t, uint64(50), activities[0].TaskSwitches)
+	assert.Equal(t, uint64(1000), activities[0].Loops)
+	assert.Equal(t, uint64(25), activities[0].AvgCpuPct)
+	assert.Equal(t, uint64(100), activities[0].AvgLoopUs)
+	assert.Equal(t, uint64(500), activities[0].Accepted)
+	assert.Equal(t, uint64(10), activities[0].PollIO)
+
+	assert.Equal(t, uint64(4), activities[3].ThreadID)
+	assert.Equal(t, uint64(400), activities[3].CtxSwitches)
+}
+
+func TestParseActivityEmpty(t *testing.T) {
+	hm := &HAProxyManager{}
+	_, err := hm.parseActivity(strings.NewReader(""))
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "no activity data")
+}
+
+func TestParseServersState(t *testing.T) {
+	input := `1
+# be_id be_name srv_id srv_name srv_addr srv_op_state srv_admin_state srv_uweight srv_iweight srv_time_since_last_change srv_check_status
+3 api_back 1 api_server1 192.168.1.10:8080 2 0 1 1 86400 6
+3 api_back 2 api_server2 192.168.1.11:8080 2 0 1 1 43200 6
+`
+
+	hm := &HAProxyManager{}
+	servers, err := hm.parseServersState(strings.NewReader(input))
+	require.NoError(t, err)
+
+	assert.Len(t, servers, 2)
+	assert.Equal(t, "api_back", servers[0].Backend)
+	assert.Equal(t, "api_server1", servers[0].Server)
+	assert.Equal(t, "192.168.1.10", servers[0].Address)
+	assert.Equal(t, uint16(8080), servers[0].Port)
+	assert.Equal(t, uint8(2), servers[0].OpState)
+	assert.Equal(t, uint8(0), servers[0].AdminState)
+	assert.Equal(t, uint16(1), servers[0].Weight)
+	assert.Equal(t, uint64(86400), servers[0].LastChange)
+	assert.Equal(t, uint8(6), servers[0].CheckStatus)
+}
+
+func TestParseServersStateEmpty(t *testing.T) {
+	hm := &HAProxyManager{}
+	servers, err := hm.parseServersState(strings.NewReader("1\n# header line\n"))
+	require.NoError(t, err)
+	assert.Len(t, servers, 0)
+}
+
+func TestCalculateRatesBasic(t *testing.T) {
+	hm := &HAProxyManager{
+		prevCounters: make(map[string]*haproxyPrevCounters),
+	}
+
+	// First call — no previous data, rates should be 0
+	stats := []system.HAProxyStats{
+		{Name: "web", Type: "FRONTEND", BytesIn: 1000, BytesOut: 2000, Resp2xx: 100},
+	}
+	hm.calculateRates(stats)
+	assert.Equal(t, uint64(0), stats[0].BytesInRate)
+	assert.Equal(t, uint64(0), stats[0].BytesOutRate)
+
+	// Simulate time passing — manually set prev time in the past
+	for k, v := range hm.prevCounters {
+		v.time = v.time.Add(-5 * time.Second)
+		hm.prevCounters[k] = v
+	}
+
+	// Second call — should calculate rates
+	stats2 := []system.HAProxyStats{
+		{Name: "web", Type: "FRONTEND", BytesIn: 6000, BytesOut: 12000, Resp2xx: 600},
+	}
+	hm.calculateRates(stats2)
+	assert.InDelta(t, 1000, stats2[0].BytesInRate, 2)   // (6000-1000)/5
+	assert.InDelta(t, 2000, stats2[0].BytesOutRate, 2)   // (12000-2000)/5
+	assert.InDelta(t, 100, stats2[0].Resp2xxRate, 2)     // (600-100)/5
+}
+
+func TestCalculateRatesCounterWrap(t *testing.T) {
+	hm := &HAProxyManager{
+		prevCounters: make(map[string]*haproxyPrevCounters),
+	}
+
+	// Set initial counters
+	stats := []system.HAProxyStats{
+		{Name: "web", Type: "FRONTEND", BytesIn: 1000, BytesOut: 2000},
+	}
+	hm.calculateRates(stats)
+
+	// Simulate time passing
+	for k, v := range hm.prevCounters {
+		v.time = v.time.Add(-5 * time.Second)
+		hm.prevCounters[k] = v
+	}
+
+	// Counter wrap: new value < old value — rate should be 0 (not negative)
+	stats2 := []system.HAProxyStats{
+		{Name: "web", Type: "FRONTEND", BytesIn: 500, BytesOut: 800},
+	}
+	hm.calculateRates(stats2)
+	assert.Equal(t, uint64(0), stats2[0].BytesInRate)
+	assert.Equal(t, uint64(0), stats2[0].BytesOutRate)
+}
+
+func TestCalculateRatesCleanupStaleEntries(t *testing.T) {
+	hm := &HAProxyManager{
+		prevCounters: make(map[string]*haproxyPrevCounters),
+	}
+
+	// First call with two proxies
+	stats := []system.HAProxyStats{
+		{Name: "web", Type: "FRONTEND", BytesIn: 1000},
+		{Name: "api", Type: "FRONTEND", BytesIn: 2000},
+	}
+	hm.calculateRates(stats)
+	assert.Len(t, hm.prevCounters, 2)
+
+	// Second call with only one proxy — stale entry should be cleaned up
+	stats2 := []system.HAProxyStats{
+		{Name: "web", Type: "FRONTEND", BytesIn: 3000},
+	}
+	hm.calculateRates(stats2)
+	assert.Len(t, hm.prevCounters, 1)
 }
 
 func TestParseCSVMalformedLines(t *testing.T) {
