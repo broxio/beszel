@@ -15,7 +15,7 @@ import {
 	type GroupAggregates,
 	type PreGroupType,
 } from "@/lib/haproxy-aggregate"
-import type { SystemRecord, SystemStats, SystemStatsRecord } from "@/types"
+import type { SystemRecord, SystemStats } from "@/types"
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { FooterRepoLink } from "@/components/footer-repo-link"
 import { Button } from "@/components/ui/button"
@@ -73,15 +73,22 @@ export default memo(function HAProxyAggregatePage() {
 	const trafficHistoryRef = useRef<TrafficHistory>(new Map())
 	const [trafficHistory, setTrafficHistory] = useState<TrafficHistory>(new Map())
 
-	// Initialize systems on mount
+	// Initialize systems — subscribe to store so we pick up async loads (e.g. full page refresh)
 	useEffect(() => {
-		const allSystems = $systems.get()
-		const filtered = filterHAProxySystems(allSystems)
-		setHaproxySystems(filtered)
-		systemsRef.current = filtered
+		const update = (allSystems: SystemRecord[]) => {
+			const filtered = filterHAProxySystems(allSystems)
+			if (filtered.length > 0 || systemsRef.current.length === 0) {
+				setHaproxySystems(filtered)
+				systemsRef.current = filtered
+			}
+		}
+		update($systems.get())
+		return $systems.subscribe(update)
 	}, [])
 
-	// Fetch stats for all systems in a single batched request
+	// Fetch latest HAProxy stats via lightweight API endpoint.
+	// This returns only HAProxy fields (hap, hapi) instead of the full SystemStats
+	// blob which includes CPU, memory, disk, GPU, temperatures, etc.
 	const fetchStats = async () => {
 		const systems = systemsRef.current
 		if (systems.length === 0 || fetchingRef.current || !mountedRef.current) return
@@ -89,28 +96,18 @@ export default memo(function HAProxyAggregatePage() {
 		fetchingRef.current = true
 
 		try {
-			// Build OR filter for all system IDs to fetch in one request
-			const systemIds = systems.map((s) => s.id)
+			const ids = systems.map((s) => s.id).join(",")
+			const response = await pb.send<{ system: string; hap: SystemStats["hap"]; hapi: SystemStats["hapi"] }[]>(
+				"/api/beszel/haproxy/stats",
+				{ method: "GET", query: { ids } }
+			)
 
-			// Fetch latest stats for all systems in one query
-			// Use a large page size and sort by created desc, then dedupe client-side
-			const filter = systemIds.map((id) => `system="${id}"`).join("||")
-
-			const records = await pb.collection<SystemStatsRecord>("system_stats").getList(1, systemIds.length * 2, {
-				filter,
-				sort: "-created",
-				fields: "system,stats,created",
-			})
-
-			// Dedupe to get only the latest record per system
 			const newStatsMap = new Map<string, SystemStats>()
-			const seen = new Set<string>()
-
-			for (const record of records.items) {
-				if (!seen.has(record.system) && record.stats) {
-					newStatsMap.set(record.system, record.stats)
-					seen.add(record.system)
-				}
+			for (const item of response) {
+				newStatsMap.set(item.system, {
+					hap: item.hap,
+					hapi: item.hapi,
+				} as SystemStats)
 			}
 
 			if (mountedRef.current) {

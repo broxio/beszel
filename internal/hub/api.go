@@ -2,6 +2,7 @@ package hub
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"strings"
 	"time"
@@ -10,6 +11,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/henrygd/beszel"
 	"github.com/henrygd/beszel/internal/alerts"
+	"github.com/henrygd/beszel/internal/entities/system"
 	"github.com/henrygd/beszel/internal/ghupdate"
 	"github.com/henrygd/beszel/internal/hub/config"
 	"github.com/henrygd/beszel/internal/hub/systems"
@@ -123,6 +125,8 @@ func (h *Hub) registerApiRoutes(se *core.ServeEvent) error {
 	apiAuth.POST("/smart/refresh", h.refreshSmartData).BindFunc(excludeReadOnlyRole)
 	// get systemd service details
 	apiAuth.GET("/systemd/info", h.getSystemdInfo)
+	// HAProxy aggregate: lightweight endpoint returning only HAProxy fields from latest stats
+	apiAuth.GET("/haproxy/stats", h.getHAProxyStats)
 	// /containers routes
 	if enabled, _ := GetEnv("CONTAINER_DETAILS"); enabled != "false" {
 		// get container logs
@@ -376,4 +380,71 @@ func (h *Hub) refreshSmartData(e *core.RequestEvent) error {
 	}
 
 	return e.JSON(http.StatusOK, map[string]string{"status": "ok"})
+}
+
+// haproxyStatsResponse is a lightweight response containing only HAProxy fields
+type haproxyStatsResponse struct {
+	System string                    `json:"system"`
+	HAP    []system.HAProxyStats     `json:"hap,omitempty"`
+	HAPI   *system.HAProxyInfo       `json:"hapi,omitempty"`
+}
+
+// getHAProxyStats returns only HAProxy fields from the latest system_stats for
+// systems matching ?ids=id1,id2,... — avoids sending full stats blobs (CPU, memory,
+// disk, GPU, etc.) that the aggregate page doesn't need.
+func (h *Hub) getHAProxyStats(e *core.RequestEvent) error {
+	idsParam := e.Request.URL.Query().Get("ids")
+	if idsParam == "" {
+		return e.JSON(http.StatusBadRequest, map[string]string{"error": "ids parameter required"})
+	}
+
+	ids := strings.Split(idsParam, ",")
+	if len(ids) > 200 {
+		ids = ids[:200]
+	}
+
+	results := make([]haproxyStatsResponse, 0, len(ids))
+
+	for _, id := range ids {
+		id = strings.TrimSpace(id)
+		if id == "" {
+			continue
+		}
+
+		// Get latest system_stats record for this system
+		records, err := h.FindRecordsByFilter(
+			"system_stats",
+			"system = {:id}",
+			"-created",
+			1,
+			0,
+			dbx.Params{"id": id},
+		)
+		if err != nil || len(records) == 0 {
+			continue
+		}
+
+		// Parse only the stats JSON to extract HAProxy fields
+		statsRaw := records[0].GetString("stats")
+		if statsRaw == "" {
+			continue
+		}
+
+		var stats system.Stats
+		if err := json.Unmarshal([]byte(statsRaw), &stats); err != nil {
+			continue
+		}
+
+		if len(stats.HAProxy) == 0 {
+			continue
+		}
+
+		results = append(results, haproxyStatsResponse{
+			System: id,
+			HAP:    stats.HAProxy,
+			HAPI:   stats.HAProxyInfo,
+		})
+	}
+
+	return e.JSON(http.StatusOK, results)
 }
