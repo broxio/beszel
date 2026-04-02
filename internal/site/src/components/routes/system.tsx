@@ -25,7 +25,7 @@ import { GpuPowerChart, GpuDetailCharts } from "./system/charts/gpu-charts"
 import { ExtraFsCharts } from "./system/charts/extra-fs-charts"
 import { LazyContainersTable, LazySmartTable, LazySystemdTable } from "./system/lazy-tables"
 import { LoadAverageChart } from "./system/charts/load-average-chart"
-import { ContainerIcon, CpuIcon, HardDriveIcon, TerminalSquareIcon } from "lucide-react"
+import { ContainerIcon, CpuIcon, HardDriveIcon, NetworkIcon, TerminalSquareIcon } from "lucide-react"
 import { GpuIcon } from "../ui/icons"
 import SystemdTable from "../systemd-table/systemd-table"
 import ContainersTable from "../containers-table/containers-table"
@@ -73,15 +73,15 @@ export default memo(function SystemDetail({ id }: { id: string }) {
 	const hasContainersTable = hasContainers && compareSemVer(chartData.agentVersion, SEMVER_0_14_0) >= 0
 	const hasSystemd = system.info.sv
 	const hasGpu = hasGpuData || hasGpuPowerData
+	const hasHAProxyData = (systemStats.at(-1)?.stats?.hap?.length ?? 0) > 0
 
 	// keep tabsRef in sync for keyboard navigation
 	const tabs = ["core", "disk"]
 	if (hasGpu) tabs.push("gpu")
+	if (hasHAProxyData) tabs.push("haproxy")
 	if (hasContainers) tabs.push("containers")
 	if (hasSystemd) tabs.push("services")
 	tabsRef.current = tabs
-
-	const hasHAProxyData = (systemStats.at(-1)?.stats?.hap?.length ?? 0) > 0
 
 	// shared chart props
 	const coreProps = { chartData, grid, dataEmpty, showMax, isLongerChart, maxValues }
@@ -292,6 +292,12 @@ export default memo(function SystemDetail({ id }: { id: string }) {
 							<Trans>GPU</Trans>
 						</TabsTrigger>
 					)}
+					{hasHAProxyData && (
+						<TabsTrigger value="haproxy" className="w-full flex items-center gap-2">
+							<NetworkIcon className="size-3.5" />
+							<Trans>HAProxy</Trans>
+						</TabsTrigger>
+					)}
 					{hasContainers && (
 						<TabsTrigger value="containers" className="w-full flex items-center gap-2">
 							<ContainerIcon className="size-3.5" />
@@ -343,6 +349,122 @@ export default memo(function SystemDetail({ id }: { id: string }) {
 								lastGpus={lastGpus as Record<string, GPUData>}
 								hasGpuEnginesData={hasGpuEnginesData}
 							/>
+						)}
+					</TabsContent>
+				)}
+
+				{hasHAProxyData && (
+					<TabsContent value="haproxy" forceMount className={activeTab === "haproxy" ? "contents" : "hidden"}>
+						{mountedTabs.has("haproxy") && (
+							<>
+								{/* HAProxy Info Panel */}
+								{systemStats.at(-1)?.stats?.hapi && (
+									<Card className="p-4">
+										<CardHeader className="pb-4 pt-0 px-0">
+											<CardTitle className="text-xl sm:text-2xl">{t`HAProxy Process Info`}</CardTitle>
+											<CardDescription>{t`HAProxy process statistics and runtime information`}</CardDescription>
+										</CardHeader>
+										<HAProxyInfoPanel info={systemStats.at(-1)?.stats?.hapi!} />
+									</Card>
+								)}
+
+								{/* HAProxy Charts */}
+								<div className="grid xl:grid-cols-2 gap-4">
+									<ChartCard
+										empty={dataEmpty}
+										grid={grid}
+										title={t`HAProxy Sessions`}
+										description={t`Current sessions across frontends and backends`}
+									>
+										<HAProxyChart chartData={chartData} chartType="sessions" />
+									</ChartCard>
+									<ChartCard
+										empty={dataEmpty}
+										grid={grid}
+										title={t`HAProxy Traffic`}
+										description={t`Total bytes transferred (in + out)`}
+									>
+										<HAProxyChart chartData={chartData} chartType="traffic" />
+									</ChartCard>
+									<ChartCard
+										empty={dataEmpty}
+										grid={grid}
+										title={t`HAProxy Request Rate`}
+										description={t`HTTP requests per second`}
+									>
+										<HAProxyChart chartData={chartData} chartType="requests" />
+									</ChartCard>
+									<ChartCard
+										empty={dataEmpty}
+										grid={grid}
+										title={t`HAProxy Response Time`}
+										description={t`Average backend response time (ms)`}
+									>
+										<HAProxyChart chartData={chartData} chartType="response_time" />
+									</ChartCard>
+									<ChartCard
+										empty={dataEmpty}
+										grid={grid}
+										title={t`HAProxy Error Rate`}
+										description={t`HTTP 4xx and 5xx errors per second`}
+									>
+										<HAProxyChart chartData={chartData} chartType="errors" />
+									</ChartCard>
+									<ChartCard
+										empty={dataEmpty}
+										grid={grid}
+										title={t`HAProxy HTTP Responses`}
+										description={t`HTTP response codes per second (1xx-5xx)`}
+									>
+										<HAProxyResponsesChart chartData={chartData} />
+									</ChartCard>
+								</div>
+
+								{/* HAProxy Status Table */}
+								<Card className="p-4">
+									<CardHeader className="pb-4 pt-0 px-0">
+										<CardTitle className="text-xl sm:text-2xl">{t`HAProxy Status`}</CardTitle>
+										<CardDescription>{t`Current status of all HAProxy frontends, backends, and servers`}</CardDescription>
+									</CardHeader>
+									<HAProxyTable stats={systemStats.at(-1)?.stats?.hap ?? []} />
+								</Card>
+
+								{/* HAProxy Memory Pools */}
+								{(systemStats.at(-1)?.stats?.hpp?.length ?? 0) > 0 && (
+									<Card className="p-4">
+										<CardHeader className="pb-4 pt-0 px-0">
+											<CardTitle className="text-xl sm:text-2xl">{t`HAProxy Memory Pools`}</CardTitle>
+											<CardDescription>{t`Memory pool allocation and usage statistics`}</CardDescription>
+										</CardHeader>
+										<HAProxyPools
+											pools={systemStats.at(-1)?.stats?.hpp ?? []}
+											summary={systemStats.at(-1)?.stats?.hpps}
+										/>
+									</Card>
+								)}
+
+								{/* HAProxy Thread Activity */}
+								{(systemStats.at(-1)?.stats?.hpa?.length ?? 0) > 0 && (
+									<Card className="p-4">
+										<CardHeader className="pb-4 pt-0 px-0">
+											<CardTitle className="text-xl sm:text-2xl">{t`HAProxy Thread Activity`}</CardTitle>
+											<CardDescription>{t`Per-thread CPU usage and activity statistics`}</CardDescription>
+										</CardHeader>
+										<HAProxyActivity activity={systemStats.at(-1)?.stats?.hpa ?? []} />
+									</Card>
+								)}
+
+								{/* HAProxy Server States */}
+								{(systemStats.at(-1)?.stats?.hpsv?.length ?? 0) > 0 && (
+									<Card className="p-4">
+										<CardHeader className="pb-4 pt-0 px-0">
+											<CardTitle className="text-xl sm:text-2xl">{t`HAProxy Server States`}</CardTitle>
+											<CardDescription>{t`Detailed server state and configuration`}</CardDescription>
+										</CardHeader>
+										<HAProxyServers servers={systemStats.at(-1)?.stats?.hpsv ?? []} />
+									</Card>
+								)}
+							</>
 						)}
 					</TabsContent>
 				)}
