@@ -696,23 +696,27 @@ const TrafficOverviewCard = memo(function TrafficOverviewCard({
 })
 
 // Large sparkline component that fills container (memoized)
+// Always renders at full HISTORY_LENGTH width so the graph doesn't
+// compress/stretch as data accumulates — new data enters from the right.
 const LargeSparkline = memo(function LargeSparkline({ data, color }: { data: number[]; color: string }) {
-	// Memoize SVG path calculations
-	// Uses 0 as baseline so the graph shows actual traffic level
 	const { linePath, areaPath } = useMemo(() => {
 		if (data.length < 2) return { linePath: null, areaPath: null }
 
 		const max = Math.max(...data)
 		if (max === 0) return { linePath: null, areaPath: null }
 
+		// Position points relative to HISTORY_LENGTH so the graph is always
+		// the same width. Data grows from right to left as it fills up.
+		const offset = HISTORY_LENGTH - data.length
 		const points = data.map((value, index) => {
-			const x = (index / (data.length - 1)) * 100
+			const x = ((index + offset) / (HISTORY_LENGTH - 1)) * 100
 			const y = 100 - (value / max) * 90 - 5
 			return { x, y }
 		})
 
 		const line = `M ${points.map((p) => `${p.x},${p.y}`).join(" L ")}`
-		const area = `${line} L 100,100 L 0,100 Z`
+		const firstX = points[0].x
+		const area = `${line} L 100,100 L ${firstX},100 Z`
 
 		return { linePath: line, areaPath: area }
 	}, [data])
@@ -974,16 +978,17 @@ interface SparklineProps {
 }
 
 const Sparkline = memo(function Sparkline({ data, color = "#3b82f6", height = 24, width = 80 }: SparklineProps) {
-	// Memoize SVG path calculation
-	// Uses 0 as baseline so the graph shows actual traffic level, not just noise
+	// Uses 0 as baseline and fixed HISTORY_LENGTH width so the graph
+	// doesn't compress as data fills up — new data enters from the right.
 	const pathD = useMemo(() => {
 		if (data.length < 2) return null
 
 		const max = Math.max(...data)
 		if (max === 0) return null
 
+		const offset = HISTORY_LENGTH - data.length
 		const points = data.map((value, index) => {
-			const x = (index / (data.length - 1)) * width
+			const x = ((index + offset) / (HISTORY_LENGTH - 1)) * width
 			const y = height - (value / max) * (height - 4) - 2
 			return `${x},${y}`
 		})
