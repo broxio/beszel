@@ -32,8 +32,8 @@ const RESPONSE_COLORS = {
 	"1xx": "#6b7280", // gray
 }
 
-const POLL_INTERVAL = 10000 // 10 seconds
-const HISTORY_LENGTH = 30 // Keep last 30 data points (5 minutes at 10s intervals)
+const POLL_INTERVAL = 5000 // 5 seconds (matches default agent update interval)
+const HISTORY_LENGTH = 60 // Keep last 60 data points (5 minutes at 5s intervals)
 
 // Traffic history data point
 interface TrafficDataPoint {
@@ -698,16 +698,16 @@ const TrafficOverviewCard = memo(function TrafficOverviewCard({
 // Large sparkline component that fills container (memoized)
 const LargeSparkline = memo(function LargeSparkline({ data, color }: { data: number[]; color: string }) {
 	// Memoize SVG path calculations
+	// Uses 0 as baseline so the graph shows actual traffic level
 	const { linePath, areaPath } = useMemo(() => {
 		if (data.length < 2) return { linePath: null, areaPath: null }
 
-		const min = Math.min(...data)
 		const max = Math.max(...data)
-		const range = max - min || 1
+		if (max === 0) return { linePath: null, areaPath: null }
 
 		const points = data.map((value, index) => {
 			const x = (index / (data.length - 1)) * 100
-			const y = 100 - ((value - min) / range) * 90 - 5
+			const y = 100 - (value / max) * 90 - 5
 			return { x, y }
 		})
 
@@ -975,16 +975,16 @@ interface SparklineProps {
 
 const Sparkline = memo(function Sparkline({ data, color = "#3b82f6", height = 24, width = 80 }: SparklineProps) {
 	// Memoize SVG path calculation
+	// Uses 0 as baseline so the graph shows actual traffic level, not just noise
 	const pathD = useMemo(() => {
 		if (data.length < 2) return null
 
-		const min = Math.min(...data)
 		const max = Math.max(...data)
-		const range = max - min || 1
+		if (max === 0) return null
 
 		const points = data.map((value, index) => {
 			const x = (index / (data.length - 1)) * width
-			const y = height - ((value - min) / range) * (height - 4) - 2
+			const y = height - (value / max) * (height - 4) - 2
 			return `${x},${y}`
 		})
 
