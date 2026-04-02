@@ -699,18 +699,23 @@ const TrafficOverviewCard = memo(function TrafficOverviewCard({
 // Always renders at full HISTORY_LENGTH width so the graph doesn't
 // compress/stretch as data accumulates — new data enters from the right.
 const LargeSparkline = memo(function LargeSparkline({ data, color }: { data: number[]; color: string }) {
-	const { linePath, areaPath } = useMemo(() => {
-		if (data.length < 2) return { linePath: null, areaPath: null }
+	const { linePath, areaPath, lastPoint } = useMemo(() => {
+		if (data.length < 2) return { linePath: null, areaPath: null, lastPoint: null }
 
 		const max = Math.max(...data)
-		if (max === 0) return { linePath: null, areaPath: null }
+		if (max === 0) return { linePath: null, areaPath: null, lastPoint: null }
 
-		// Position points relative to HISTORY_LENGTH so the graph is always
-		// the same width. Data grows from right to left as it fills up.
+		// Adaptive baseline: use max(0, min - range) so small variations
+		// are visible while still showing overall traffic level
+		const min = Math.min(...data)
+		const range = max - min
+		const baseline = Math.max(0, min - range)
+		const scale = max - baseline || 1
+
 		const offset = HISTORY_LENGTH - data.length
 		const points = data.map((value, index) => {
 			const x = ((index + offset) / (HISTORY_LENGTH - 1)) * 100
-			const y = 100 - (value / max) * 90 - 5
+			const y = 100 - ((value - baseline) / scale) * 90 - 5
 			return { x, y }
 		})
 
@@ -718,7 +723,7 @@ const LargeSparkline = memo(function LargeSparkline({ data, color }: { data: num
 		const firstX = points[0].x
 		const area = `${line} L 100,100 L ${firstX},100 Z`
 
-		return { linePath: line, areaPath: area }
+		return { linePath: line, areaPath: area, lastPoint: points[points.length - 1] }
 	}, [data])
 
 	if (!linePath) {
@@ -743,6 +748,15 @@ const LargeSparkline = memo(function LargeSparkline({ data, color }: { data: num
 				strokeLinejoin="round"
 				vectorEffect="non-scaling-stroke"
 			/>
+			{/* Pulsing dot at latest data point */}
+			{lastPoint && (
+				<>
+					<circle cx={lastPoint.x} cy={lastPoint.y} r={3} fill={color} vectorEffect="non-scaling-stroke">
+						<animate attributeName="r" values="3;5;3" dur="2s" repeatCount="indefinite" />
+						<animate attributeName="opacity" values="1;0.5;1" dur="2s" repeatCount="indefinite" />
+					</circle>
+				</>
+			)}
 		</svg>
 	)
 })
@@ -978,22 +992,30 @@ interface SparklineProps {
 }
 
 const Sparkline = memo(function Sparkline({ data, color = "#3b82f6", height = 24, width = 80 }: SparklineProps) {
-	// Uses 0 as baseline and fixed HISTORY_LENGTH width so the graph
-	// doesn't compress as data fills up — new data enters from the right.
-	const pathD = useMemo(() => {
-		if (data.length < 2) return null
+	// Adaptive baseline with fixed HISTORY_LENGTH width so small changes
+	// are visible and the graph doesn't compress as data fills up.
+	const { pathD, lastPoint } = useMemo(() => {
+		if (data.length < 2) return { pathD: null, lastPoint: null }
 
 		const max = Math.max(...data)
-		if (max === 0) return null
+		if (max === 0) return { pathD: null, lastPoint: null }
+
+		const min = Math.min(...data)
+		const range = max - min
+		const baseline = Math.max(0, min - range)
+		const scale = max - baseline || 1
 
 		const offset = HISTORY_LENGTH - data.length
 		const points = data.map((value, index) => {
 			const x = ((index + offset) / (HISTORY_LENGTH - 1)) * width
-			const y = height - (value / max) * (height - 4) - 2
-			return `${x},${y}`
+			const y = height - ((value - baseline) / scale) * (height - 4) - 2
+			return { x, y }
 		})
 
-		return `M ${points.join(" L ")}`
+		return {
+			pathD: `M ${points.map((p) => `${p.x},${p.y}`).join(" L ")}`,
+			lastPoint: points[points.length - 1],
+		}
 	}, [data, width, height])
 
 	if (!pathD) {
@@ -1017,6 +1039,12 @@ const Sparkline = memo(function Sparkline({ data, color = "#3b82f6", height = 24
 				strokeLinecap="round"
 				strokeLinejoin="round"
 			/>
+			{lastPoint && (
+				<circle cx={lastPoint.x} cy={lastPoint.y} r={2} fill={color}>
+					<animate attributeName="r" values="2;3.5;2" dur="2s" repeatCount="indefinite" />
+					<animate attributeName="opacity" values="1;0.5;1" dur="2s" repeatCount="indefinite" />
+				</circle>
+			)}
 		</svg>
 	)
 })
