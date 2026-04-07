@@ -8,7 +8,7 @@ msgstr ""
 "Language: uk\n"
 "Project-Id-Version: beszel\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2026-03-27 19:17\n"
+"PO-Revision-Date: 2026-04-05 18:27\n"
 "Last-Translator: \n"
 "Language-Team: Ukrainian\n"
 "Plural-Forms: nplurals=4; plural=((n%10==1 && n%100!=11) ? 0 : ((n%10 >= 2 && n%10 <=4 && (n%100 < 12 || n%100 > 14)) ? 1 : ((n%10 == 0 || (n%10 >= 5 && n%10 <=9)) || (n%100 >= 11 && n%100 <= 14)) ? 2 : 3));\n"
@@ -22,7 +22,7 @@ msgstr ""
 #: src/components/footer-repo-link.tsx
 msgctxt "New version available"
 msgid "{0} available"
-msgstr ""
+msgstr "{0} доступно"
 
 #. placeholder {0}: table.getFilteredSelectedRowModel().rows.length
 #. placeholder {1}: table.getFilteredRowModel().rows.length
@@ -232,9 +232,18 @@ msgstr "Середнє опускається нижче <0>{value}{0}</0>"
 msgid "Average exceeds <0>{value}{0}</0>"
 msgstr "Середнє перевищує <0>{value}{0}</0>"
 
+#: src/components/routes/system/disk-io-sheet.tsx
+msgid "Average number of I/O operations waiting to be serviced"
+msgstr "Середня кількість операцій вводу-виводу, що очікують на обслуговування"
+
 #: src/components/routes/system/charts/gpu-charts.tsx
 msgid "Average power consumption of GPUs"
 msgstr "Середнє енергоспоживання GPUs"
+
+#: src/components/routes/system/disk-io-sheet.tsx
+msgctxt "Disk I/O average operation time (iostat await)"
+msgid "Average queue to completion time per operation"
+msgstr "Середній час від черги до завершення на одну операцію"
 
 #: src/components/routes/system/charts/cpu-charts.tsx
 msgid "Average system-wide CPU utilization"
@@ -270,7 +279,7 @@ msgstr "Пропускна здатність"
 #. Battery label in systems table header
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Bat"
-msgstr ""
+msgstr "Батарея"
 
 #: src/components/routes/system/charts/sensor-charts.tsx
 #: src/lib/alerts.ts
@@ -490,6 +499,11 @@ msgctxt "Environment variables"
 msgid "Copy env"
 msgstr "Копіювати env"
 
+#: src/components/alerts/alerts-sheet.tsx
+msgctxt "Copy alerts from another system"
+msgid "Copy from"
+msgstr "Копіювати з"
+
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Copy host"
 msgstr "Копіювати хост"
@@ -522,7 +536,7 @@ msgstr "Копіювати YAML"
 #: src/components/routes/system.tsx
 msgctxt "Core system metrics"
 msgid "Core"
-msgstr ""
+msgstr "Ядро"
 
 #: src/components/containers-table/containers-table-columns.tsx
 #: src/components/systemd-table/systemd-table-columns.tsx
@@ -608,7 +622,7 @@ msgstr "Щодня"
 #: src/components/routes/system/info-bar.tsx
 msgctxt "Default system layout option"
 msgid "Default"
-msgstr ""
+msgstr "За замовчуванням"
 
 #: src/components/routes/settings/general.tsx
 msgid "Default time period"
@@ -661,19 +675,18 @@ msgstr "Одиниця виміру диска"
 
 #: src/components/routes/system/charts/disk-charts.tsx
 #: src/components/routes/system/charts/disk-charts.tsx
-#: src/components/routes/system/charts/extra-fs-charts.tsx
 #: src/lib/alerts.ts
 msgid "Disk Usage"
 msgstr "Використання диска"
 
-#: src/components/routes/system/charts/extra-fs-charts.tsx
+#: src/components/routes/system/charts/disk-charts.tsx
 msgid "Disk usage of {extraFsName}"
 msgstr "Використання диска {extraFsName}"
 
 #: src/components/routes/system/info-bar.tsx
 msgctxt "Layout display options"
 msgid "Display"
-msgstr ""
+msgstr "Відображення"
 
 #: src/components/routes/system/charts/cpu-charts.tsx
 msgid "Docker CPU Usage"
@@ -1056,6 +1069,21 @@ msgstr "HTTP-метод"
 msgid "HTTP method: POST, GET, or HEAD (default: POST)"
 msgstr "HTTP-метод: POST, GET або HEAD (за замовчуванням: POST)"
 
+#: src/components/routes/system/disk-io-sheet.tsx
+msgctxt "Disk I/O average operation time (iostat await)"
+msgid "I/O Await"
+msgstr "Очікування вводу-виводу"
+
+#: src/components/routes/system/disk-io-sheet.tsx
+msgctxt "Disk I/O total time spent on read/write"
+msgid "I/O Time"
+msgstr "Час вводу-виводу"
+
+#: src/components/routes/system/charts/disk-charts.tsx
+msgctxt "Percent of time the disk is busy with I/O"
+msgid "I/O Utilization"
+msgstr "Використання вводу-виводу"
+
 #. Context: Battery state
 #: src/lib/i18n.ts
 msgid "Idle"
@@ -1404,6 +1432,9 @@ msgstr "Середнє використання на ядро"
 #: src/components/routes/system.tsx
 msgid "Per-thread CPU usage and activity statistics"
 msgstr ""
+#: src/components/routes/system/charts/disk-charts.tsx
+msgid "Percent of time the disk is busy with I/O"
+msgstr "Відсоток часу, протягом якого диск зайнятий вводом-виводом"
 
 #: src/components/routes/system/cpu-sheet.tsx
 msgid "Percentage of time spent in each state"
@@ -1457,7 +1488,7 @@ msgstr "Порт"
 #: src/components/containers-table/containers-table-columns.tsx
 msgctxt "Container ports"
 msgid "Ports"
-msgstr ""
+msgstr "Порти"
 
 #. Power On Time
 #: src/components/routes/system/smart-table.tsx
@@ -1482,13 +1513,20 @@ msgstr "Процес запущено"
 msgid "Public Key"
 msgstr "Ключ"
 
+#: src/components/routes/system/disk-io-sheet.tsx
+msgctxt "Disk I/O average queue depth"
+msgid "Queue Depth"
+msgstr "Глибина черги"
+
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Quiet Hours"
 msgstr "Тихі години"
 
 #. Disk read
 #: src/components/routes/system/charts/disk-charts.tsx
-#: src/components/routes/system/charts/extra-fs-charts.tsx
+#: src/components/routes/system/disk-io-sheet.tsx
+#: src/components/routes/system/disk-io-sheet.tsx
+#: src/components/routes/system/disk-io-sheet.tsx
 msgid "Read"
 msgstr "Читання"
 
@@ -1764,7 +1802,7 @@ msgstr "Таблиця"
 #: src/components/routes/system/info-bar.tsx
 msgctxt "Tabs system layout option"
 msgid "Tabs"
-msgstr ""
+msgstr "Вкладки"
 
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Tasks"
@@ -1817,7 +1855,7 @@ msgstr "Цю дію не можна скасувати. Це назавжди в
 msgid "This will permanently delete all selected records from the database."
 msgstr "Це назавжди видалить усі вибрані записи з бази даних."
 
-#: src/components/routes/system/charts/extra-fs-charts.tsx
+#: src/components/routes/system/charts/disk-charts.tsx
 msgid "Throughput of {extraFsName}"
 msgstr "Пропускна здатність {extraFsName}"
 
@@ -1884,6 +1922,9 @@ msgstr ""
 
 #: src/components/routes/haproxy-aggregate.tsx
 msgid "Total Sessions"
+#: src/components/routes/system/disk-io-sheet.tsx
+msgctxt "Disk I/O"
+msgid "Total time spent on read/write (can exceed 100%)"
 msgstr ""
 
 #. placeholder {0}: data.length
@@ -2025,7 +2066,7 @@ msgstr "Відвантажити"
 msgid "Uptime"
 msgstr "Час роботи"
 
-#: src/components/routes/system/charts/extra-fs-charts.tsx
+#: src/components/routes/system/charts/disk-charts.tsx
 #: src/components/routes/system/charts/gpu-charts.tsx
 #: src/components/routes/system/charts/gpu-charts.tsx
 #: src/components/routes/system/charts/gpu-charts.tsx
@@ -2047,6 +2088,11 @@ msgstr "Використано"
 msgid "Users"
 msgstr "Користувачі"
 
+#: src/components/routes/system/charts/disk-charts.tsx
+msgctxt "Disk I/O utilization"
+msgid "Utilization"
+msgstr "Використання"
+
 #: src/components/alerts-history-columns.tsx
 msgid "Value"
 msgstr "Значення"
@@ -2056,6 +2102,7 @@ msgid "View"
 msgstr "Вигляд"
 
 #: src/components/routes/system/cpu-sheet.tsx
+#: src/components/routes/system/disk-io-sheet.tsx
 #: src/components/routes/system/network-sheet.tsx
 msgid "View more"
 msgstr "Переглянути більше"
@@ -2108,7 +2155,9 @@ msgstr "Команда Windows"
 
 #. Disk write
 #: src/components/routes/system/charts/disk-charts.tsx
-#: src/components/routes/system/charts/extra-fs-charts.tsx
+#: src/components/routes/system/disk-io-sheet.tsx
+#: src/components/routes/system/disk-io-sheet.tsx
+#: src/components/routes/system/disk-io-sheet.tsx
 msgid "Write"
 msgstr "Запис"
 

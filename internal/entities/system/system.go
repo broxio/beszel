@@ -48,12 +48,14 @@ type Stats struct {
 	MaxDiskIO         [2]uint64            `json:"diom,omitzero" cbor:"-"`                      // [max read bytes, max write bytes]
 	CpuBreakdown      []float64            `json:"cpub,omitempty" cbor:"33,keyasint,omitempty"` // [user, system, iowait, steal, idle]
 	CpuCoresUsage     Uint8Slice           `json:"cpus,omitempty" cbor:"34,keyasint,omitempty"` // per-core busy usage [CPU0..]
-	HAProxy            []HAProxyStats        `json:"hap,omitempty" cbor:"35,keyasint,omitempty"`  // hap: HAProxy frontend/backend stats (from "show stat")
-	HAProxyInfo        *HAProxyInfo          `json:"hapi,omitempty" cbor:"36,keyasint,omitempty"` // hapi: HAProxy process info (from "show info")
-	HAProxyPools       []HAProxyPool         `json:"hpp,omitempty" cbor:"37,keyasint,omitempty"`  // hpp: HAProxy memory pools (from "show pools")
-	HAProxyPoolSummary *HAProxyPoolSummary   `json:"hpps,omitempty" cbor:"38,keyasint,omitempty"` // hpps: HAProxy pool summary totals
-	HAProxyActivity    []HAProxyActivity     `json:"hpa,omitempty" cbor:"39,keyasint,omitempty"`  // hpa: HAProxy per-thread activity (from "show activity")
-	HAProxyServers     []HAProxyServerState  `json:"hpsv,omitempty" cbor:"40,keyasint,omitempty"` // hpsv: HAProxy server states (from "show servers state")
+	DiskIoStats       [6]float64           `json:"dios,omitzero" cbor:"35,keyasint,omitzero"`   // [read time %, write time %, io utilization %, r_await ms, w_await ms, weighted io %]
+	MaxDiskIoStats    [6]float64           `json:"diosm,omitzero" cbor:"-"`                     // max values for DiskIoStats
+	HAProxy            []HAProxyStats        `json:"hap,omitempty" cbor:"50,keyasint,omitempty"`  // hap: HAProxy frontend/backend stats (from "show stat")
+	HAProxyInfo        *HAProxyInfo          `json:"hapi,omitempty" cbor:"51,keyasint,omitempty"` // hapi: HAProxy process info (from "show info")
+	HAProxyPools       []HAProxyPool         `json:"hpp,omitempty" cbor:"52,keyasint,omitempty"`  // hpp: HAProxy memory pools (from "show pools")
+	HAProxyPoolSummary *HAProxyPoolSummary   `json:"hpps,omitempty" cbor:"53,keyasint,omitempty"` // hpps: HAProxy pool summary totals
+	HAProxyActivity    []HAProxyActivity     `json:"hpa,omitempty" cbor:"54,keyasint,omitempty"`  // hpa: HAProxy per-thread activity (from "show activity")
+	HAProxyServers     []HAProxyServerState  `json:"hpsv,omitempty" cbor:"55,keyasint,omitempty"` // hpsv: HAProxy server states (from "show servers state")
 }
 
 // Uint8Slice wraps []uint8 to customize JSON encoding while keeping CBOR efficient.
@@ -99,10 +101,12 @@ type FsStats struct {
 	MaxDiskReadPS  float64   `json:"rm,omitempty" cbor:"-"`
 	MaxDiskWritePS float64   `json:"wm,omitempty" cbor:"-"`
 	// TODO: remove DiskReadPs and DiskWritePs in future release in favor of DiskReadBytes and DiskWriteBytes
-	DiskReadBytes     uint64 `json:"rb" cbor:"6,keyasint,omitempty"`
-	DiskWriteBytes    uint64 `json:"wb" cbor:"7,keyasint,omitempty"`
-	MaxDiskReadBytes  uint64 `json:"rbm,omitempty" cbor:"-"`
-	MaxDiskWriteBytes uint64 `json:"wbm,omitempty" cbor:"-"`
+	DiskReadBytes     uint64     `json:"rb" cbor:"6,keyasint,omitempty"`
+	DiskWriteBytes    uint64     `json:"wb" cbor:"7,keyasint,omitempty"`
+	MaxDiskReadBytes  uint64     `json:"rbm,omitempty" cbor:"-"`
+	MaxDiskWriteBytes uint64     `json:"wbm,omitempty" cbor:"-"`
+	DiskIoStats       [6]float64 `json:"dios,omitzero" cbor:"8,keyasint,omitzero"` // [read time %, write time %, io utilization %, r_await ms, w_await ms, weighted io %]
+	MaxDiskIoStats    [6]float64 `json:"diosm,omitzero" cbor:"-"`                  // max values for DiskIoStats
 }
 
 type NetIoStats struct {

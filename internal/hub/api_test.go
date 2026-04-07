@@ -45,6 +45,12 @@ func TestApiRoutesAuthentication(t *testing.T) {
 	readOnlyUser, err := beszelTests.CreateUserWithRole(hub, "readonly@example.com", "password123", "readonly")
 	require.NoError(t, err, "Failed to create readonly user")
 	readOnlyUserToken, err := readOnlyUser.NewAuthToken()
+	require.NoError(t, err, "Failed to create readonly user auth token")
+
+	superuser, err := beszelTests.CreateSuperuser(hub, "superuser@example.com", "password123")
+	require.NoError(t, err, "Failed to create superuser")
+	superuserToken, err := superuser.NewAuthToken()
+	require.NoError(t, err, "Failed to create superuser auth token")
 
 	// Create test system
 	system, err := beszelTests.CreateRecord(hub, "systems", map[string]any{
@@ -196,6 +202,19 @@ func TestApiRoutesAuthentication(t *testing.T) {
 			ExpectedStatus:  200,
 			ExpectedContent: []string{"\"permanent\":true", "permanent-token-123"},
 			TestAppFactory:  testAppFactory,
+		},
+		{
+			Name:   "GET /universal-token - superuser should fail",
+			Method: http.MethodGet,
+			URL:    "/api/beszel/universal-token",
+			Headers: map[string]string{
+				"Authorization": superuserToken,
+			},
+			ExpectedStatus:  403,
+			ExpectedContent: []string{"Superusers cannot use universal tokens"},
+			TestAppFactory: func(t testing.TB) *pbTests.TestApp {
+				return hub.TestApp
+			},
 		},
 		{
 			Name:   "GET /universal-token - with readonly auth should fail",
@@ -611,13 +630,17 @@ func TestApiRoutesAuthentication(t *testing.T) {
 				"systems": []string{system.Id},
 			}),
 		},
-		{
-			Name:           "GET /update - shouldn't exist without CHECK_UPDATES env var",
-			Method:         http.MethodGet,
-			URL:            "/api/beszel/update",
-			ExpectedStatus: 502,
-			TestAppFactory: testAppFactory,
-		},
+		// this works but diff behavior on prod vs dev.
+		// dev returns 502; prod returns 200 with static html page 404
+		// TODO: align dev and prod behavior and re-enable this test
+		// {
+		// 	Name:               "GET /update - shouldn't exist without CHECK_UPDATES env var",
+		// 	Method:             http.MethodGet,
+		// 	URL:                "/api/beszel/update",
+		// 	NotExpectedContent: []string{"v:", "\"v\":"},
+		// 	ExpectedStatus: 502,
+		// 	TestAppFactory: testAppFactory,
+		// },
 	}
 
 	for _, scenario := range scenarios {

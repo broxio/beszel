@@ -8,7 +8,7 @@ msgstr ""
 "Language: he\n"
 "Project-Id-Version: beszel\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2026-03-27 19:17\n"
+"PO-Revision-Date: 2026-04-05 18:27\n"
 "Last-Translator: \n"
 "Language-Team: Hebrew\n"
 "Plural-Forms: nplurals=4; plural=n%100==1 ? 0 : n%100==2 ? 1 : n%100==3 || n%100==4 ? 2 : 3;\n"
@@ -22,7 +22,7 @@ msgstr ""
 #: src/components/footer-repo-link.tsx
 msgctxt "New version available"
 msgid "{0} available"
-msgstr ""
+msgstr "{0} זמין"
 
 #. placeholder {0}: table.getFilteredSelectedRowModel().rows.length
 #. placeholder {1}: table.getFilteredRowModel().rows.length
@@ -232,9 +232,18 @@ msgstr "הממוצע יורד מתחת ל-<0>{value}{0}</0>"
 msgid "Average exceeds <0>{value}{0}</0>"
 msgstr "הממוצע עולה על <0>{value}{0}</0>"
 
+#: src/components/routes/system/disk-io-sheet.tsx
+msgid "Average number of I/O operations waiting to be serviced"
+msgstr "מספר ממוצע של פעולות קלט/פלט הממתינות לטיפול"
+
 #: src/components/routes/system/charts/gpu-charts.tsx
 msgid "Average power consumption of GPUs"
 msgstr "צריכת חשמל ממוצעת של GPUs"
+
+#: src/components/routes/system/disk-io-sheet.tsx
+msgctxt "Disk I/O average operation time (iostat await)"
+msgid "Average queue to completion time per operation"
+msgstr "זמן ממוצע מהתור ועד להשלמה לכל פעולה"
 
 #: src/components/routes/system/charts/cpu-charts.tsx
 msgid "Average system-wide CPU utilization"
@@ -490,6 +499,11 @@ msgctxt "Environment variables"
 msgid "Copy env"
 msgstr "העתק env"
 
+#: src/components/alerts/alerts-sheet.tsx
+msgctxt "Copy alerts from another system"
+msgid "Copy from"
+msgstr "העתק מ-"
+
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Copy host"
 msgstr "העתק מארח"
@@ -522,13 +536,13 @@ msgstr "העתק YAML"
 #: src/components/routes/system.tsx
 msgctxt "Core system metrics"
 msgid "Core"
-msgstr ""
+msgstr "ליבה"
 
 #: src/components/containers-table/containers-table-columns.tsx
 #: src/components/systemd-table/systemd-table-columns.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "CPU"
-msgstr "CPU"
+msgstr ""
 
 #: src/components/routes/system/cpu-sheet.tsx
 msgid "CPU Cores"
@@ -608,7 +622,7 @@ msgstr "יומי"
 #: src/components/routes/system/info-bar.tsx
 msgctxt "Default system layout option"
 msgid "Default"
-msgstr ""
+msgstr "ברירת מחדל"
 
 #: src/components/routes/settings/general.tsx
 msgid "Default time period"
@@ -661,19 +675,18 @@ msgstr "יחידת דיסק"
 
 #: src/components/routes/system/charts/disk-charts.tsx
 #: src/components/routes/system/charts/disk-charts.tsx
-#: src/components/routes/system/charts/extra-fs-charts.tsx
 #: src/lib/alerts.ts
 msgid "Disk Usage"
 msgstr "שימוש בדיסק"
 
-#: src/components/routes/system/charts/extra-fs-charts.tsx
+#: src/components/routes/system/charts/disk-charts.tsx
 msgid "Disk usage of {extraFsName}"
 msgstr "שימוש בדיסק של {extraFsName}"
 
 #: src/components/routes/system/info-bar.tsx
 msgctxt "Layout display options"
 msgid "Display"
-msgstr ""
+msgstr "תצוגה"
 
 #: src/components/routes/system/charts/cpu-charts.tsx
 msgid "Docker CPU Usage"
@@ -1056,6 +1069,21 @@ msgstr "שיטת HTTP"
 msgid "HTTP method: POST, GET, or HEAD (default: POST)"
 msgstr "שיטת HTTP: POST, GET, או HEAD (ברירת מחדל: POST)"
 
+#: src/components/routes/system/disk-io-sheet.tsx
+msgctxt "Disk I/O average operation time (iostat await)"
+msgid "I/O Await"
+msgstr "המתנת קלט/פלט"
+
+#: src/components/routes/system/disk-io-sheet.tsx
+msgctxt "Disk I/O total time spent on read/write"
+msgid "I/O Time"
+msgstr "זמן קלט/פלט"
+
+#: src/components/routes/system/charts/disk-charts.tsx
+msgctxt "Percent of time the disk is busy with I/O"
+msgid "I/O Utilization"
+msgstr "ניצול קלט/פלט"
+
 #. Context: Battery state
 #: src/lib/i18n.ts
 msgid "Idle"
@@ -1404,6 +1432,9 @@ msgstr "ניצול ממוצע לליבה"
 #: src/components/routes/system.tsx
 msgid "Per-thread CPU usage and activity statistics"
 msgstr ""
+#: src/components/routes/system/charts/disk-charts.tsx
+msgid "Percent of time the disk is busy with I/O"
+msgstr "אחוז הזמן שבו הדיסק עסוק בפעולות קלט/פלט"
 
 #: src/components/routes/system/cpu-sheet.tsx
 msgid "Percentage of time spent in each state"
@@ -1457,7 +1488,7 @@ msgstr "פורט"
 #: src/components/containers-table/containers-table-columns.tsx
 msgctxt "Container ports"
 msgid "Ports"
-msgstr ""
+msgstr "פורטים"
 
 #. Power On Time
 #: src/components/routes/system/smart-table.tsx
@@ -1482,13 +1513,20 @@ msgstr "תהליך התחיל"
 msgid "Public Key"
 msgstr "מפתח ציבורי"
 
+#: src/components/routes/system/disk-io-sheet.tsx
+msgctxt "Disk I/O average queue depth"
+msgid "Queue Depth"
+msgstr "עומק תור"
+
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Quiet Hours"
 msgstr "שעות שקט"
 
 #. Disk read
 #: src/components/routes/system/charts/disk-charts.tsx
-#: src/components/routes/system/charts/extra-fs-charts.tsx
+#: src/components/routes/system/disk-io-sheet.tsx
+#: src/components/routes/system/disk-io-sheet.tsx
+#: src/components/routes/system/disk-io-sheet.tsx
 msgid "Read"
 msgstr "קריאה"
 
@@ -1762,7 +1800,7 @@ msgstr "טבלה"
 #: src/components/routes/system/info-bar.tsx
 msgctxt "Tabs system layout option"
 msgid "Tabs"
-msgstr ""
+msgstr "לשוניות"
 
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Tasks"
@@ -1815,7 +1853,7 @@ msgstr "פעולה זו לא ניתנת לביטול. פעולה זו תמחק �
 msgid "This will permanently delete all selected records from the database."
 msgstr "פעולה זו תמחק לצמיתות את כל הרשומות שנבחרו ממסד הנתונים."
 
-#: src/components/routes/system/charts/extra-fs-charts.tsx
+#: src/components/routes/system/charts/disk-charts.tsx
 msgid "Throughput of {extraFsName}"
 msgstr "תפוקה של {extraFsName}"
 
@@ -1839,7 +1877,7 @@ msgstr "החלף ערכת נושא"
 #: src/components/add-system.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
 msgid "Token"
-msgstr "Token"
+msgstr ""
 
 #: src/components/command-palette.tsx
 #: src/components/routes/settings/layout.tsx
@@ -1882,6 +1920,9 @@ msgstr ""
 
 #: src/components/routes/haproxy-aggregate.tsx
 msgid "Total Sessions"
+#: src/components/routes/system/disk-io-sheet.tsx
+msgctxt "Disk I/O"
+msgid "Total time spent on read/write (can exceed 100%)"
 msgstr ""
 
 #. placeholder {0}: data.length
@@ -2023,7 +2064,7 @@ msgstr "העלאה"
 msgid "Uptime"
 msgstr "זמן פעילות"
 
-#: src/components/routes/system/charts/extra-fs-charts.tsx
+#: src/components/routes/system/charts/disk-charts.tsx
 #: src/components/routes/system/charts/gpu-charts.tsx
 #: src/components/routes/system/charts/gpu-charts.tsx
 #: src/components/routes/system/charts/gpu-charts.tsx
@@ -2045,6 +2086,11 @@ msgstr "בשימוש"
 msgid "Users"
 msgstr "משתמשים"
 
+#: src/components/routes/system/charts/disk-charts.tsx
+msgctxt "Disk I/O utilization"
+msgid "Utilization"
+msgstr "ניצולת"
+
 #: src/components/alerts-history-columns.tsx
 msgid "Value"
 msgstr "ערך"
@@ -2054,6 +2100,7 @@ msgid "View"
 msgstr "צפה"
 
 #: src/components/routes/system/cpu-sheet.tsx
+#: src/components/routes/system/disk-io-sheet.tsx
 #: src/components/routes/system/network-sheet.tsx
 msgid "View more"
 msgstr "צפה בעוד"
@@ -2106,7 +2153,9 @@ msgstr "פקודת Windows"
 
 #. Disk write
 #: src/components/routes/system/charts/disk-charts.tsx
-#: src/components/routes/system/charts/extra-fs-charts.tsx
+#: src/components/routes/system/disk-io-sheet.tsx
+#: src/components/routes/system/disk-io-sheet.tsx
+#: src/components/routes/system/disk-io-sheet.tsx
 msgid "Write"
 msgstr "כתיבה"
 
