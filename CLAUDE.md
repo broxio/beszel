@@ -143,14 +143,41 @@ Same convention as HAProxy:
 
 Pair grouping strips trailing `-<n>` suffix (`lvs-web-1` + `lvs-web-2` → group `lvs-web`).
 
+#### Opt-in model (different from HAProxy)
+HAProxy requires explicit configuration (`HAPROXY_SOCKET` or `HAPROXY_URL`) because the agent can't discover where the admin socket lives. IPVS is the opposite: the kernel exposes everything directly, so the agent **auto-enables on any Linux host with the `ip_vs` module loaded**. No env vars to set. The hostname pattern (`lvs-*`) is the operator-facing opt-in — it controls *visibility* on the `/lvs` aggregate page, not whether the agent collects.
+
+Trade-off: a Kubernetes node running kube-proxy in IPVS mode will also load the module and report data. The UI's hostname filter is the safety net — k8s nodes named `worker-*` won't appear on `/lvs` regardless of what they ship. Payload bloat is negligible (a few hundred bytes per stats push). If this becomes a real problem, add a `strings.HasPrefix(hostname, "lvs-")` gate in `NewIPVSManager`.
+
+### Required Linux capability
+The netlink call into the `ip_vs` family requires **`CAP_NET_ADMIN`**. `os.Stat("/proc/net/ip_vs")` works without it (file is world-readable, so the availability check passes), but `GetServices()` returns `EPERM`. The agent logs the failure at DEBUG level only — silent failure in default ops logs is the typical symptom.
+
+**Fix is baked into the packaged systemd unit** (`supplemental/debian/beszel-agent.service`):
+```
+AmbientCapabilities=CAP_NET_ADMIN
+CapabilityBoundingSet=CAP_NET_ADMIN
+```
+
+For hosts already running an older packaged unit, drop-in override (survives package upgrade):
+```bash
+sudo mkdir -p /etc/systemd/system/beszel-agent.service.d
+sudo tee /etc/systemd/system/beszel-agent.service.d/ipvs.conf <<'EOF'
+[Service]
+AmbientCapabilities=CAP_NET_ADMIN
+CapabilityBoundingSet=CAP_NET_ADMIN
+EOF
+sudo systemctl daemon-reload && sudo systemctl restart beszel-agent
+```
+
 ### File Structure
 - `agent/ipvs.go` — manager skeleton (cross-platform surface)
-- `agent/ipvs_linux.go` — netlink collection, VIP-bound role detection, protocol/mode decoding
+- `agent/ipvs_linux.go` — netlink collection, VIP-bound role detection, protocol/mode decoding, keepalived override-file reader
 - `agent/ipvs_stub.go` — no-op for non-Linux builds
 - `internal/entities/system/system.go` — `IPVSStats`, `IPVSService`, `IPVSDest` types (CBOR keys 60+)
 - `internal/hub/api.go` — `getIPVSStats` handler at `/api/beszel/ipvs/stats`
 - `internal/site/src/lib/ipvs-aggregate.ts` — zone/pair classifiers + group aggregation
-- `internal/site/src/components/routes/lvs-aggregate.tsx` — `/lvs` route page
+- `internal/site/src/components/routes/lvs-aggregate.tsx` — `/lvs` aggregate route page
+- `internal/site/src/components/charts/ipvs-panel.tsx` — per-system IPVS panel (used by `/system/<id>`)
+- `supplemental/debian/beszel-agent.service` — systemd unit with `AmbientCapabilities=CAP_NET_ADMIN`
 
 ### Data Flow
 1. Agent's `IPVSManager.fetch()` calls `moby/ipvs` netlink → list services + destinations + kernel rates
@@ -160,6 +187,51 @@ Pair grouping strips trailing `-<n>` suffix (`lvs-web-1` + `lvs-web-2` → group
 5. UI polls `/api/beszel/ipvs/stats?ids=...` every 5s for compact payload (avoids full SystemStats blob)
 6. Per-group aggregation sums service-level stats only; sparklines accumulate client-side (rolling 5-min window)
 
+### UI status states (per-host badge on `/lvs`)
+Computed in `deriveHostStatus(systemStatus, ipvs)`:
+- **active** (green) — agent reporting IPVS data, all configured VIPs bound locally → keepalived master
+- **standby** (gray) — agent reporting IPVS data, none of the configured VIPs bound locally → keepalived backup
+- **unknown** (yellow) — agent reporting IPVS data but partial VIP bind, OR `classifyRole` couldn't enumerate local addresses
+- **no-data** (orange) — system status is `up` but no IPVS field in stats. Hover tooltip explains likely causes (CAP_NET_ADMIN missing, ip_vs module not loaded, agent older than mp.1)
+- **down** (red) — system status is `down`/`pending`/`paused` — host isn't reporting at all
+
+The `no-data` orange badge is the most common deploy-time issue; surfacing it inline saves a debug round-trip.
+
 ### Configuration
 - `IPVS_UPDATE_INTERVAL=10s` — override agent collection period (default 5s)
-- Hostname pattern is convention; rename hosts to `lvs-*` to opt-in
+- Hostname pattern is convention only — rename hosts to `lvs-*` to surface them on the aggregate page
+
+### Troubleshooting
+Enable debug logging temporarily and inspect the IPVS init line:
+```bash
+echo 'LOG_LEVEL=debug' | sudo tee -a /etc/beszel-agent.conf
+sudo systemctl restart beszel-agent
+sleep 3
+sudo journalctl -u beszel-agent -n 50 --no-pager | grep -iE 'ipvs'
+# clean up:
+sudo sed -i '/^LOG_LEVEL=debug$/d' /etc/beszel-agent.conf && sudo systemctl restart beszel-agent
+```
+
+Expected outcomes:
+| Log line | Meaning | Fix |
+|---|---|---|
+| `INFO IPVS monitoring enabled` then `DEBUG IPVS role=... services=N` | Working | — |
+| `DEBUG IPVS err="ipvs services: operation not permitted"` | Missing `CAP_NET_ADMIN` | Apply drop-in or upgrade agent package to mp.3+ |
+| `DEBUG IPVS err="IPVS kernel module not loaded (/proc/net/ip_vs missing)"` | Module not loaded | `sudo modprobe ip_vs ip_vs_rr` (or whichever scheduler keepalived uses) |
+| No IPVS line at all in debug | Agent older than mp.1 | Upgrade agent binary |
+
+Hub-side check that the data is reaching the hub:
+```bash
+curl -s "https://hub.example/api/beszel/ipvs/stats?ids=<system_id>" -H "Authorization: $TOKEN" | jq
+# expect: [{"system":"<id>","ipvs":{"r":"active",...}}]
+# empty []  → agent isn't shipping the field (check agent-side log table above)
+# 404       → hub binary doesn't have the endpoint (upgrade hub to mp.1+)
+```
+
+### Version history
+| Tag | What it added |
+|---|---|
+| `v0.18.7-mp.1` | Initial LVS monitoring: agent + hub endpoint + `/lvs` aggregate page, alongside the merged-in HAProxy feature |
+| `v0.18.7-mp.2` | Pure version bump to disambiguate "did the new binary actually deploy?" during prod rollout |
+| `v0.18.7-mp.3` | `CAP_NET_ADMIN` baked into packaged systemd unit (the prod-blocker fix) |
+| `v0.18.7-mp.4` | Per-host status badges on `/lvs` with no-data diagnostic tooltip; new IPVS panel on `/system/<id>` |
