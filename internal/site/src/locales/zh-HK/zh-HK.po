@@ -56,6 +56,10 @@ msgstr "{count, plural, one {{countString} 小時} other {{countString} 小時}}
 msgid "{count, plural, one {{countString} minute} few {{countString} minutes} many {{countString} minutes} other {{countString} minutes}}"
 msgstr "{count, plural, one {{countString} 分鐘} few {{countString} 分鐘} many {{countString} 分鐘} other {{countString} 分鐘}}"
 
+#: src/components/charts/ipvs-panel.tsx
+msgid "{drainedTotal} drained real server(s)"
+msgstr ""
+
 #: src/components/routes/system/info-bar.tsx
 msgid "{threads, plural, one {# thread} other {# threads}}"
 msgstr "{threads, plural, one {# 執行緒} other {# 執行緒}}"
@@ -118,6 +122,7 @@ msgid "Actions"
 msgstr "操作"
 
 #: src/components/alerts-history-columns.tsx
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/lvs-aggregate.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/settings/heartbeat.tsx
@@ -132,6 +137,10 @@ msgstr ""
 #: src/components/active-alerts.tsx
 msgid "Active Alerts"
 msgstr "活動警報"
+
+#: src/components/charts/ipvs-panel.tsx
+msgid "Active conns"
+msgstr ""
 
 #: src/components/routes/haproxy-aggregate.tsx
 msgid "active servers"
@@ -479,6 +488,7 @@ msgstr "確認密碼"
 msgid "Conflicts"
 msgstr "衝突"
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/lvs-aggregate.tsx
 #: src/components/routes/lvs-aggregate.tsx
 msgid "Conn rate"
@@ -566,6 +576,7 @@ msgctxt "Core system metrics"
 msgid "Core"
 msgstr "核心"
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/lvs-aggregate.tsx
 msgid "CPS"
 msgstr ""
@@ -1160,11 +1171,13 @@ msgctxt "Docker image"
 msgid "Image"
 msgstr "鏡像"
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/lvs-aggregate.tsx
 msgid "In"
 msgstr ""
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/lvs-aggregate.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Inactive"
@@ -1257,6 +1270,15 @@ msgstr "日誌"
 msgid "Looking instead for where to create alerts? Click the bell <0/> icons in the systems table."
 msgstr "在尋找創建警報的位置嗎？點擊系統表中的鈴鐺<0/>。"
 
+#: src/components/routes/system.tsx
+msgid "LVS"
+msgstr ""
+
+#: src/components/routes/system.tsx
+#: src/components/routes/system.tsx
+msgid "LVS / IPVS"
+msgstr ""
+
 #: src/components/navbar.tsx
 #: src/components/navbar.tsx
 #: src/components/routes/lvs-aggregate.tsx
@@ -1317,6 +1339,7 @@ msgstr "記憶體使用"
 msgid "Memory usage of docker containers"
 msgstr "Docker 容器的記憶體使用量"
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/lvs-aggregate.tsx
 msgid "Mode"
 msgstr ""
@@ -1361,6 +1384,10 @@ msgstr "網路單位"
 msgid "No"
 msgstr "否"
 
+#: src/components/routes/lvs-aggregate.tsx
+msgid "no data"
+msgstr ""
+
 #: src/components/routes/haproxy-aggregate.tsx
 msgid "No data"
 msgstr ""
@@ -1402,6 +1429,10 @@ msgstr ""
 
 #: src/components/routes/lvs-aggregate.tsx
 msgid "No systems matching the \"lvs-*\" pattern were found."
+msgstr ""
+
+#: src/components/charts/ipvs-panel.tsx
+msgid "No virtual services configured."
 msgstr ""
 
 #: src/components/routes/lvs-aggregate.tsx
@@ -1455,6 +1486,7 @@ msgstr "或繼續使用"
 msgid "Other"
 msgstr "其他"
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/lvs-aggregate.tsx
 msgid "Out"
@@ -1625,6 +1657,7 @@ msgstr "靜音時段"
 msgid "Read"
 msgstr "讀取"
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/lvs-aggregate.tsx
 msgid "Reals"
 msgstr ""
@@ -1724,6 +1757,7 @@ msgstr "儲存設定"
 msgid "Saved in the database and does not expire until you disable it."
 msgstr "儲存在資料庫中，在您停用之前不會過期。"
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/lvs-aggregate.tsx
 msgid "Sched"
 msgstr ""
@@ -2046,6 +2080,7 @@ msgstr "總計: {0}"
 msgid "Traffic"
 msgstr ""
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/lvs-aggregate.tsx
@@ -2053,6 +2088,7 @@ msgstr ""
 msgid "Traffic In"
 msgstr ""
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/lvs-aggregate.tsx
@@ -2226,10 +2262,17 @@ msgstr "查看更多"
 msgid "View your 200 most recent alerts."
 msgstr "檢視最近 200 則警報。"
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/lvs-aggregate.tsx
 msgid "VIPs"
 msgstr ""
 
+#: src/components/routes/system.tsx
+#: src/components/routes/system.tsx
+msgid "Virtual server role, VIPs, and per-service stats"
+msgstr ""
+
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/lvs-aggregate.tsx
 msgid "Virtual Service"
 msgstr ""

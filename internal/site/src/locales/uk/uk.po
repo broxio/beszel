@@ -56,6 +56,10 @@ msgstr "{count, plural, one {{countString} година} few {{countString} го
 msgid "{count, plural, one {{countString} minute} few {{countString} minutes} many {{countString} minutes} other {{countString} minutes}}"
 msgstr "{count, plural, one {{countString} хвилина} few {{countString} хвилини} many {{countString} хвилин} other {{countString} хвилини}}"
 
+#: src/components/charts/ipvs-panel.tsx
+msgid "{drainedTotal} drained real server(s)"
+msgstr ""
+
 #: src/components/routes/system/info-bar.tsx
 msgid "{threads, plural, one {# thread} other {# threads}}"
 msgstr "{threads, plural, one {# потік} few {# потоки} many {# потоків} other {# потоків}}"
@@ -118,6 +122,7 @@ msgid "Actions"
 msgstr "Дії"
 
 #: src/components/alerts-history-columns.tsx
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/lvs-aggregate.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/settings/heartbeat.tsx
@@ -132,6 +137,10 @@ msgstr ""
 #: src/components/active-alerts.tsx
 msgid "Active Alerts"
 msgstr "Активні сповіщення"
+
+#: src/components/charts/ipvs-panel.tsx
+msgid "Active conns"
+msgstr ""
 
 #: src/components/routes/haproxy-aggregate.tsx
 msgid "active servers"
@@ -479,6 +488,7 @@ msgstr "Підтвердьте пароль"
 msgid "Conflicts"
 msgstr "Конфлікти"
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/lvs-aggregate.tsx
 #: src/components/routes/lvs-aggregate.tsx
 msgid "Conn rate"
@@ -566,6 +576,7 @@ msgctxt "Core system metrics"
 msgid "Core"
 msgstr "Ядро"
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/lvs-aggregate.tsx
 msgid "CPS"
 msgstr ""
@@ -1160,11 +1171,13 @@ msgctxt "Docker image"
 msgid "Image"
 msgstr "Образ"
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/lvs-aggregate.tsx
 msgid "In"
 msgstr ""
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/lvs-aggregate.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Inactive"
@@ -1257,6 +1270,15 @@ msgstr "Журнали"
 msgid "Looking instead for where to create alerts? Click the bell <0/> icons in the systems table."
 msgstr "Шукаєте, де створити сповіщення? Натисніть на іконки дзвінка <0/> в таблиці систем."
 
+#: src/components/routes/system.tsx
+msgid "LVS"
+msgstr ""
+
+#: src/components/routes/system.tsx
+#: src/components/routes/system.tsx
+msgid "LVS / IPVS"
+msgstr ""
+
 #: src/components/navbar.tsx
 #: src/components/navbar.tsx
 #: src/components/routes/lvs-aggregate.tsx
@@ -1317,6 +1339,7 @@ msgstr "Використання пам'яті"
 msgid "Memory usage of docker containers"
 msgstr "Використання пам'яті контейнерами Docker"
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/lvs-aggregate.tsx
 msgid "Mode"
 msgstr ""
@@ -1361,6 +1384,10 @@ msgstr "Одиниця виміру мережі"
 msgid "No"
 msgstr "Ні"
 
+#: src/components/routes/lvs-aggregate.tsx
+msgid "no data"
+msgstr ""
+
 #: src/components/routes/haproxy-aggregate.tsx
 msgid "No data"
 msgstr ""
@@ -1402,6 +1429,10 @@ msgstr ""
 
 #: src/components/routes/lvs-aggregate.tsx
 msgid "No systems matching the \"lvs-*\" pattern were found."
+msgstr ""
+
+#: src/components/charts/ipvs-panel.tsx
+msgid "No virtual services configured."
 msgstr ""
 
 #: src/components/routes/lvs-aggregate.tsx
@@ -1455,6 +1486,7 @@ msgstr "Або продовжити з"
 msgid "Other"
 msgstr "Інше"
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/lvs-aggregate.tsx
 msgid "Out"
@@ -1625,6 +1657,7 @@ msgstr "Тихі години"
 msgid "Read"
 msgstr "Читання"
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/lvs-aggregate.tsx
 msgid "Reals"
 msgstr ""
@@ -1724,6 +1757,7 @@ msgstr "Зберегти налаштування"
 msgid "Saved in the database and does not expire until you disable it."
 msgstr "Збережено в базі даних і не закінчується, поки ви його не вимкнете."
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/lvs-aggregate.tsx
 msgid "Sched"
 msgstr ""
@@ -2046,6 +2080,7 @@ msgstr "Всього: {0}"
 msgid "Traffic"
 msgstr ""
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/lvs-aggregate.tsx
@@ -2053,6 +2088,7 @@ msgstr ""
 msgid "Traffic In"
 msgstr ""
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/lvs-aggregate.tsx
@@ -2226,10 +2262,17 @@ msgstr "Переглянути більше"
 msgid "View your 200 most recent alerts."
 msgstr "Переглянути 200 останніх сповіщень."
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/lvs-aggregate.tsx
 msgid "VIPs"
 msgstr ""
 
+#: src/components/routes/system.tsx
+#: src/components/routes/system.tsx
+msgid "Virtual server role, VIPs, and per-service stats"
+msgstr ""
+
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/lvs-aggregate.tsx
 msgid "Virtual Service"
 msgstr ""

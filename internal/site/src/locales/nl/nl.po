@@ -56,6 +56,10 @@ msgstr "{count, plural, one {{countString} uur} other {{countString} uren}}"
 msgid "{count, plural, one {{countString} minute} few {{countString} minutes} many {{countString} minutes} other {{countString} minutes}}"
 msgstr "{count, plural, one {{countString} minuut} other {{countString} minuten}}"
 
+#: src/components/charts/ipvs-panel.tsx
+msgid "{drainedTotal} drained real server(s)"
+msgstr ""
+
 #: src/components/routes/system/info-bar.tsx
 msgid "{threads, plural, one {# thread} other {# threads}}"
 msgstr ""
@@ -118,6 +122,7 @@ msgid "Actions"
 msgstr "Acties"
 
 #: src/components/alerts-history-columns.tsx
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/lvs-aggregate.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/settings/heartbeat.tsx
@@ -132,6 +137,10 @@ msgstr ""
 #: src/components/active-alerts.tsx
 msgid "Active Alerts"
 msgstr "Actieve waarschuwingen"
+
+#: src/components/charts/ipvs-panel.tsx
+msgid "Active conns"
+msgstr ""
 
 #: src/components/routes/haproxy-aggregate.tsx
 msgid "active servers"
@@ -479,6 +488,7 @@ msgstr "Bevestig wachtwoord"
 msgid "Conflicts"
 msgstr "Conflicten"
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/lvs-aggregate.tsx
 #: src/components/routes/lvs-aggregate.tsx
 msgid "Conn rate"
@@ -566,6 +576,7 @@ msgctxt "Core system metrics"
 msgid "Core"
 msgstr "Kern"
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/lvs-aggregate.tsx
 msgid "CPS"
 msgstr ""
@@ -1160,11 +1171,13 @@ msgctxt "Docker image"
 msgid "Image"
 msgstr ""
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/lvs-aggregate.tsx
 msgid "In"
 msgstr ""
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/lvs-aggregate.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Inactive"
@@ -1257,6 +1270,15 @@ msgstr "Logboeken"
 msgid "Looking instead for where to create alerts? Click the bell <0/> icons in the systems table."
 msgstr "Zoek je waar je meldingen kunt aanmaken? Klik op de bel <0/> in de systeemtabel."
 
+#: src/components/routes/system.tsx
+msgid "LVS"
+msgstr ""
+
+#: src/components/routes/system.tsx
+#: src/components/routes/system.tsx
+msgid "LVS / IPVS"
+msgstr ""
+
 #: src/components/navbar.tsx
 #: src/components/navbar.tsx
 #: src/components/routes/lvs-aggregate.tsx
@@ -1317,6 +1339,7 @@ msgstr "Geheugengebruik"
 msgid "Memory usage of docker containers"
 msgstr "Geheugengebruik van docker containers"
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/lvs-aggregate.tsx
 msgid "Mode"
 msgstr ""
@@ -1361,6 +1384,10 @@ msgstr "Netwerk eenheid"
 msgid "No"
 msgstr "Nee"
 
+#: src/components/routes/lvs-aggregate.tsx
+msgid "no data"
+msgstr ""
+
 #: src/components/routes/haproxy-aggregate.tsx
 msgid "No data"
 msgstr ""
@@ -1402,6 +1429,10 @@ msgstr ""
 
 #: src/components/routes/lvs-aggregate.tsx
 msgid "No systems matching the \"lvs-*\" pattern were found."
+msgstr ""
+
+#: src/components/charts/ipvs-panel.tsx
+msgid "No virtual services configured."
 msgstr ""
 
 #: src/components/routes/lvs-aggregate.tsx
@@ -1455,6 +1486,7 @@ msgstr "Of ga verder met"
 msgid "Other"
 msgstr "Overig"
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/lvs-aggregate.tsx
 msgid "Out"
@@ -1625,6 +1657,7 @@ msgstr "Stille uren"
 msgid "Read"
 msgstr "Lezen"
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/lvs-aggregate.tsx
 msgid "Reals"
 msgstr ""
@@ -1724,6 +1757,7 @@ msgstr "Instellingen opslaan"
 msgid "Saved in the database and does not expire until you disable it."
 msgstr "Opgeslagen in de database en verloopt niet totdat u het uitschakelt."
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/lvs-aggregate.tsx
 msgid "Sched"
 msgstr ""
@@ -2046,6 +2080,7 @@ msgstr "Totaal: {0}"
 msgid "Traffic"
 msgstr ""
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/lvs-aggregate.tsx
@@ -2053,6 +2088,7 @@ msgstr ""
 msgid "Traffic In"
 msgstr ""
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/lvs-aggregate.tsx
@@ -2226,10 +2262,17 @@ msgstr "Meer weergeven"
 msgid "View your 200 most recent alerts."
 msgstr "Bekijk je 200 meest recente meldingen."
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/lvs-aggregate.tsx
 msgid "VIPs"
 msgstr ""
 
+#: src/components/routes/system.tsx
+#: src/components/routes/system.tsx
+msgid "Virtual server role, VIPs, and per-service stats"
+msgstr ""
+
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/lvs-aggregate.tsx
 msgid "Virtual Service"
 msgstr ""

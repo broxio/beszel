@@ -51,6 +51,10 @@ msgstr "{count, plural, one {{countString} hour} other {{countString} hours}}"
 msgid "{count, plural, one {{countString} minute} few {{countString} minutes} many {{countString} minutes} other {{countString} minutes}}"
 msgstr "{count, plural, one {{countString} minute} few {{countString} minutes} many {{countString} minutes} other {{countString} minutes}}"
 
+#: src/components/charts/ipvs-panel.tsx
+msgid "{drainedTotal} drained real server(s)"
+msgstr "{drainedTotal} drained real server(s)"
+
 #: src/components/routes/system/info-bar.tsx
 msgid "{threads, plural, one {# thread} other {# threads}}"
 msgstr "{threads, plural, one {# thread} other {# threads}}"
@@ -113,6 +117,7 @@ msgid "Actions"
 msgstr "Actions"
 
 #: src/components/alerts-history-columns.tsx
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/lvs-aggregate.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/settings/heartbeat.tsx
@@ -127,6 +132,10 @@ msgstr "Active / Standby"
 #: src/components/active-alerts.tsx
 msgid "Active Alerts"
 msgstr "Active Alerts"
+
+#: src/components/charts/ipvs-panel.tsx
+msgid "Active conns"
+msgstr "Active conns"
 
 #: src/components/routes/haproxy-aggregate.tsx
 msgid "active servers"
@@ -474,6 +483,7 @@ msgstr "Confirm password"
 msgid "Conflicts"
 msgstr "Conflicts"
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/lvs-aggregate.tsx
 #: src/components/routes/lvs-aggregate.tsx
 msgid "Conn rate"
@@ -561,6 +571,7 @@ msgctxt "Core system metrics"
 msgid "Core"
 msgstr "Core"
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/lvs-aggregate.tsx
 msgid "CPS"
 msgstr "CPS"
@@ -1155,11 +1166,13 @@ msgctxt "Docker image"
 msgid "Image"
 msgstr "Image"
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/lvs-aggregate.tsx
 msgid "In"
 msgstr "In"
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/lvs-aggregate.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Inactive"
@@ -1252,6 +1265,15 @@ msgstr "Logs"
 msgid "Looking instead for where to create alerts? Click the bell <0/> icons in the systems table."
 msgstr "Looking instead for where to create alerts? Click the bell <0/> icons in the systems table."
 
+#: src/components/routes/system.tsx
+msgid "LVS"
+msgstr "LVS"
+
+#: src/components/routes/system.tsx
+#: src/components/routes/system.tsx
+msgid "LVS / IPVS"
+msgstr "LVS / IPVS"
+
 #: src/components/navbar.tsx
 #: src/components/navbar.tsx
 #: src/components/routes/lvs-aggregate.tsx
@@ -1312,6 +1334,7 @@ msgstr "Memory Usage"
 msgid "Memory usage of docker containers"
 msgstr "Memory usage of docker containers"
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/lvs-aggregate.tsx
 msgid "Mode"
 msgstr "Mode"
@@ -1356,6 +1379,10 @@ msgstr "Network unit"
 msgid "No"
 msgstr "No"
 
+#: src/components/routes/lvs-aggregate.tsx
+msgid "no data"
+msgstr "no data"
+
 #: src/components/routes/haproxy-aggregate.tsx
 msgid "No data"
 msgstr "No data"
@@ -1398,6 +1425,10 @@ msgstr "No systems matching the \"ha-*\" pattern were found."
 #: src/components/routes/lvs-aggregate.tsx
 msgid "No systems matching the \"lvs-*\" pattern were found."
 msgstr "No systems matching the \"lvs-*\" pattern were found."
+
+#: src/components/charts/ipvs-panel.tsx
+msgid "No virtual services configured."
+msgstr "No virtual services configured."
 
 #: src/components/routes/lvs-aggregate.tsx
 msgid "No virtual services reported"
@@ -1450,6 +1481,7 @@ msgstr "Or continue with"
 msgid "Other"
 msgstr "Other"
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/lvs-aggregate.tsx
 msgid "Out"
@@ -1620,6 +1652,7 @@ msgstr "Quiet Hours"
 msgid "Read"
 msgstr "Read"
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/lvs-aggregate.tsx
 msgid "Reals"
 msgstr "Reals"
@@ -1719,6 +1752,7 @@ msgstr "Save Settings"
 msgid "Saved in the database and does not expire until you disable it."
 msgstr "Saved in the database and does not expire until you disable it."
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/lvs-aggregate.tsx
 msgid "Sched"
 msgstr "Sched"
@@ -2041,6 +2075,7 @@ msgstr "Total: {0}"
 msgid "Traffic"
 msgstr "Traffic"
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/lvs-aggregate.tsx
@@ -2048,6 +2083,7 @@ msgstr "Traffic"
 msgid "Traffic In"
 msgstr "Traffic In"
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/lvs-aggregate.tsx
@@ -2221,10 +2257,17 @@ msgstr "View more"
 msgid "View your 200 most recent alerts."
 msgstr "View your 200 most recent alerts."
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/lvs-aggregate.tsx
 msgid "VIPs"
 msgstr "VIPs"
 
+#: src/components/routes/system.tsx
+#: src/components/routes/system.tsx
+msgid "Virtual server role, VIPs, and per-service stats"
+msgstr "Virtual server role, VIPs, and per-service stats"
+
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/lvs-aggregate.tsx
 msgid "Virtual Service"
 msgstr "Virtual Service"

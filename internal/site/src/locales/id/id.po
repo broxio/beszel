@@ -56,6 +56,10 @@ msgstr "{count, plural, one {{countString} jam} other {{countString} jam}}"
 msgid "{count, plural, one {{countString} minute} few {{countString} minutes} many {{countString} minutes} other {{countString} minutes}}"
 msgstr "{count, plural, one {{countString} menit} few {{countString} menit} many {{countString} menit} other {{countString} menit}}"
 
+#: src/components/charts/ipvs-panel.tsx
+msgid "{drainedTotal} drained real server(s)"
+msgstr ""
+
 #: src/components/routes/system/info-bar.tsx
 msgid "{threads, plural, one {# thread} other {# threads}}"
 msgstr "{threads, plural, one {# thread} other {# thread}}"
@@ -118,6 +122,7 @@ msgid "Actions"
 msgstr "Aksi"
 
 #: src/components/alerts-history-columns.tsx
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/lvs-aggregate.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/settings/heartbeat.tsx
@@ -132,6 +137,10 @@ msgstr ""
 #: src/components/active-alerts.tsx
 msgid "Active Alerts"
 msgstr "Peringatan Aktif"
+
+#: src/components/charts/ipvs-panel.tsx
+msgid "Active conns"
+msgstr ""
 
 #: src/components/routes/haproxy-aggregate.tsx
 msgid "active servers"
@@ -479,6 +488,7 @@ msgstr "Konfirmasi kata sandi"
 msgid "Conflicts"
 msgstr "Konflik"
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/lvs-aggregate.tsx
 #: src/components/routes/lvs-aggregate.tsx
 msgid "Conn rate"
@@ -566,6 +576,7 @@ msgctxt "Core system metrics"
 msgid "Core"
 msgstr "Inti"
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/lvs-aggregate.tsx
 msgid "CPS"
 msgstr ""
@@ -1160,11 +1171,13 @@ msgctxt "Docker image"
 msgid "Image"
 msgstr "Gambar"
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/lvs-aggregate.tsx
 msgid "In"
 msgstr ""
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/lvs-aggregate.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Inactive"
@@ -1257,6 +1270,15 @@ msgstr "Log"
 msgid "Looking instead for where to create alerts? Click the bell <0/> icons in the systems table."
 msgstr "Mencari tempat untuk membuat peringatan? Klik ikon lonceng <0/> di tabel sistem."
 
+#: src/components/routes/system.tsx
+msgid "LVS"
+msgstr ""
+
+#: src/components/routes/system.tsx
+#: src/components/routes/system.tsx
+msgid "LVS / IPVS"
+msgstr ""
+
 #: src/components/navbar.tsx
 #: src/components/navbar.tsx
 #: src/components/routes/lvs-aggregate.tsx
@@ -1317,6 +1339,7 @@ msgstr "Penggunaan Memori"
 msgid "Memory usage of docker containers"
 msgstr "Penggunaan memori kontainer docker"
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/lvs-aggregate.tsx
 msgid "Mode"
 msgstr ""
@@ -1361,6 +1384,10 @@ msgstr "Unit jaringan"
 msgid "No"
 msgstr "Tidak"
 
+#: src/components/routes/lvs-aggregate.tsx
+msgid "no data"
+msgstr ""
+
 #: src/components/routes/haproxy-aggregate.tsx
 msgid "No data"
 msgstr ""
@@ -1402,6 +1429,10 @@ msgstr ""
 
 #: src/components/routes/lvs-aggregate.tsx
 msgid "No systems matching the \"lvs-*\" pattern were found."
+msgstr ""
+
+#: src/components/charts/ipvs-panel.tsx
+msgid "No virtual services configured."
 msgstr ""
 
 #: src/components/routes/lvs-aggregate.tsx
@@ -1455,6 +1486,7 @@ msgstr "Atau lanjutkan dengan"
 msgid "Other"
 msgstr "Lainnya"
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/lvs-aggregate.tsx
 msgid "Out"
@@ -1625,6 +1657,7 @@ msgstr "Jam Tenang"
 msgid "Read"
 msgstr "Baca"
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/lvs-aggregate.tsx
 msgid "Reals"
 msgstr ""
@@ -1724,6 +1757,7 @@ msgstr "Simpan Pengaturan"
 msgid "Saved in the database and does not expire until you disable it."
 msgstr "Disimpan di database dan tidak kedaluwarsa sampai Anda menonaktifkannya."
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/lvs-aggregate.tsx
 msgid "Sched"
 msgstr ""
@@ -2046,6 +2080,7 @@ msgstr ""
 msgid "Traffic"
 msgstr ""
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/lvs-aggregate.tsx
@@ -2053,6 +2088,7 @@ msgstr ""
 msgid "Traffic In"
 msgstr ""
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/lvs-aggregate.tsx
@@ -2226,10 +2262,17 @@ msgstr "Lihat lebih banyak"
 msgid "View your 200 most recent alerts."
 msgstr "Lihat 200 peringatan terbaru anda."
 
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/lvs-aggregate.tsx
 msgid "VIPs"
 msgstr ""
 
+#: src/components/routes/system.tsx
+#: src/components/routes/system.tsx
+msgid "Virtual server role, VIPs, and per-service stats"
+msgstr ""
+
+#: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/lvs-aggregate.tsx
 msgid "Virtual Service"
 msgstr ""
