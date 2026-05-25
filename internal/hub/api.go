@@ -2,6 +2,7 @@ package hub
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"regexp"
 	"strings"
@@ -11,6 +12,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/henrygd/beszel"
 	"github.com/henrygd/beszel/internal/alerts"
+	"github.com/henrygd/beszel/internal/entities/system"
 	"github.com/henrygd/beszel/internal/ghupdate"
 	"github.com/henrygd/beszel/internal/hub/config"
 	"github.com/henrygd/beszel/internal/hub/systems"
@@ -127,6 +129,8 @@ func (h *Hub) registerApiRoutes(se *core.ServeEvent) error {
 	apiAuth.POST("/smart/refresh", h.refreshSmartData).BindFunc(excludeReadOnlyRole)
 	// get systemd service details
 	apiAuth.GET("/systemd/info", h.getSystemdInfo)
+	// IPVS / LVS aggregate: lightweight endpoint returning only the IPVS field from latest stats
+	apiAuth.GET("/ipvs/stats", h.getIPVSStats)
 	// /containers routes
 	if enabled, _ := utils.GetEnv("CONTAINER_DETAILS"); enabled != "false" {
 		// get container logs
@@ -388,4 +392,57 @@ func (h *Hub) refreshSmartData(e *core.RequestEvent) error {
 	}
 
 	return e.JSON(http.StatusOK, map[string]string{"status": "ok"})
+}
+
+// ipvsStatsResponse is a lightweight response containing only the IPVS field.
+type ipvsStatsResponse struct {
+	System string            `json:"system"`
+	IPVS   *system.IPVSStats `json:"ipvs,omitempty"`
+}
+
+// getIPVSStats returns only the IPVS field from the latest system_stats record
+// for each requested system id (comma-separated `ids` query param). Avoids
+// shipping the full SystemStats blob (CPU/memory/disk/GPU) to the aggregate page.
+func (h *Hub) getIPVSStats(e *core.RequestEvent) error {
+	idsParam := e.Request.URL.Query().Get("ids")
+	if idsParam == "" {
+		return e.JSON(http.StatusBadRequest, map[string]string{"error": "ids parameter required"})
+	}
+
+	ids := strings.Split(idsParam, ",")
+	if len(ids) > 200 {
+		ids = ids[:200]
+	}
+
+	results := make([]ipvsStatsResponse, 0, len(ids))
+	for _, id := range ids {
+		id = strings.TrimSpace(id)
+		if id == "" {
+			continue
+		}
+		records, err := h.FindRecordsByFilter(
+			"system_stats",
+			"system = {:id}",
+			"-created",
+			1,
+			0,
+			dbx.Params{"id": id},
+		)
+		if err != nil || len(records) == 0 {
+			continue
+		}
+		statsRaw := records[0].GetString("stats")
+		if statsRaw == "" {
+			continue
+		}
+		var stats system.Stats
+		if err := json.Unmarshal([]byte(statsRaw), &stats); err != nil {
+			continue
+		}
+		if stats.IPVS == nil {
+			continue
+		}
+		results = append(results, ipvsStatsResponse{System: id, IPVS: stats.IPVS})
+	}
+	return e.JSON(http.StatusOK, results)
 }

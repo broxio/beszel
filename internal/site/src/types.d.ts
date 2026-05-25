@@ -151,6 +151,78 @@ export interface SystemStats {
 	bat?: [number, BatteryState]
 	/** network interfaces [upload bytes, download bytes, total upload bytes, total download bytes] */
 	ni?: Record<string, [number, number, number, number]>
+	/** IPVS / LVS stats (Linux only) */
+	ipvs?: IPVSStats
+}
+
+export interface IPVSStats {
+	/** role: "active" | "standby" | "unknown" */
+	r: "active" | "standby" | "unknown"
+	/** virtual IPs configured in IPVS (the WAN/ISP IPs) */
+	v: string[]
+	/** active connections (sum across services) */
+	ac?: number
+	/** inactive connections (sum across services, from destinations) */
+	ic?: number
+	/** connections per second (sum) */
+	cps?: number
+	/** bytes-in rate (bps, kernel-provided) */
+	bir?: number
+	/** bytes-out rate (bps, kernel-provided) */
+	bor?: number
+	/** packets-in rate */
+	pir?: number
+	/** packets-out rate */
+	por?: number
+	/** total bytes in (cumulative) */
+	tbi?: number
+	/** total bytes out (cumulative) */
+	tbo?: number
+	/** total connections (cumulative) */
+	tc?: number
+	/** per-service breakdown */
+	svc?: IPVSService[]
+}
+
+export interface IPVSService {
+	/** virtual IP */
+	v: string
+	/** port */
+	p: number
+	/** protocol: "TCP" | "UDP" | "SCTP" | "IP(<n>)" */
+	pr: string
+	/** scheduler: rr | wrr | lc | wlc | sh | dh | ... */
+	sc: string
+	/** forwarding mode: "NAT" | "DR" | "TUN" | "LOCAL" */
+	fm?: string
+	ac?: number
+	ic?: number
+	cps?: number
+	bir?: number
+	bor?: number
+	pir?: number
+	por?: number
+	tbi?: number
+	tbo?: number
+	tc?: number
+	/** destinations (real servers) */
+	d?: IPVSDest[]
+}
+
+export interface IPVSDest {
+	/** address */
+	a: string
+	/** port */
+	p: number
+	/** weight (0 = drained / down) */
+	w: number
+	/** forwarding mode */
+	fm?: string
+	ac?: number
+	ic?: number
+	cps?: number
+	bir?: number
+	bor?: number
 }
 
 export interface GPUData {

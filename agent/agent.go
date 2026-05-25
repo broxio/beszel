@@ -48,6 +48,7 @@ type Agent struct {
 	keys                      []gossh.PublicKey                                     // SSH public keys
 	smartManager              *SmartManager                                         // Manages SMART data
 	systemdManager            *systemdManager                                       // Manages systemd services
+	ipvsManager               *IPVSManager                                          // Manages IPVS / LVS stats (Linux only)
 }
 
 // NewAgent creates a new agent with the given data directory for persisting data.
@@ -143,6 +144,12 @@ func NewAgent(dataDir ...string) (agent *Agent, err error) {
 		slog.Debug("GPU", "err", err)
 	}
 
+	// initialize IPVS manager (Linux-only; silently skipped elsewhere)
+	agent.ipvsManager, err = NewIPVSManager()
+	if err != nil {
+		slog.Debug("IPVS", "err", err)
+	}
+
 	// if debugging, print stats
 	if agent.debug {
 		slog.Debug("Stats", "data", agent.gatherStats(common.DataRequestOptions{CacheTimeMs: defaultDataCacheTimeMs, IncludeDetails: true}))
@@ -175,6 +182,13 @@ func (a *Agent) gatherStats(options common.DataRequestOptions) *system.CombinedD
 			slog.Debug("Containers", "data", data.Containers)
 		} else {
 			slog.Debug("Containers", "err", err)
+		}
+	}
+
+	if a.ipvsManager != nil {
+		if ipvsStats := a.ipvsManager.GetStats(); ipvsStats != nil {
+			data.Stats.IPVS = ipvsStats
+			slog.Debug("IPVS", "role", ipvsStats.Role, "services", len(ipvsStats.Services))
 		}
 	}
 
