@@ -214,10 +214,10 @@ msgid "Average"
 msgstr "平均"
 
 #: src/components/routes/system.tsx
+#: src/components/routes/system.tsx
 msgid "Average backend response time (ms)"
 msgstr ""
 
-#: src/components/routes/system.tsx
 #: src/components/routes/system/charts/cpu-charts.tsx
 msgid "Average CPU utilization of containers"
 msgstr "容器的平均 CPU 使用率"
@@ -469,6 +469,7 @@ msgstr "連線中斷"
 #: src/components/routes/haproxy-aggregate.tsx
 msgid "Connections"
 msgstr ""
+
 #: src/components/routes/system.tsx
 msgid "Containers"
 msgstr "容器"
@@ -597,6 +598,7 @@ msgid "Cumulative Upload"
 msgstr "累計上傳"
 
 #: src/components/routes/system.tsx
+#: src/components/routes/system.tsx
 msgid "Current sessions across frontends and backends"
 msgstr ""
 
@@ -605,6 +607,7 @@ msgstr ""
 msgid "Current state"
 msgstr "目前狀態"
 
+#: src/components/routes/system.tsx
 #: src/components/routes/system.tsx
 msgid "Current status of all HAProxy frontends, backends, and servers"
 msgstr ""
@@ -647,6 +650,7 @@ msgstr "描述"
 msgid "Detail"
 msgstr "詳細資訊"
 
+#: src/components/routes/system.tsx
 #: src/components/routes/system.tsx
 msgid "Detailed server state and configuration"
 msgstr ""
@@ -959,19 +963,26 @@ msgstr "網格"
 msgid "Groups"
 msgstr ""
 
+#: src/components/routes/system.tsx
+msgid "HAProxy"
+msgstr ""
+
 #: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/haproxy-aggregate.tsx
 msgid "HAProxy Aggregate"
 msgstr ""
 
 #: src/components/routes/system.tsx
+#: src/components/routes/system.tsx
 msgid "HAProxy Error Rate"
 msgstr ""
 
 #: src/components/routes/system.tsx
+#: src/components/routes/system.tsx
 msgid "HAProxy HTTP Responses"
 msgstr ""
 
+#: src/components/routes/system.tsx
 #: src/components/routes/system.tsx
 msgid "HAProxy Memory Pools"
 msgstr ""
@@ -981,29 +992,36 @@ msgid "HAProxy offline"
 msgstr ""
 
 #: src/components/routes/system.tsx
+#: src/components/routes/system.tsx
 msgid "HAProxy Process Info"
 msgstr ""
 
+#: src/components/routes/system.tsx
 #: src/components/routes/system.tsx
 msgid "HAProxy process statistics and runtime information"
 msgstr ""
 
 #: src/components/routes/system.tsx
+#: src/components/routes/system.tsx
 msgid "HAProxy Request Rate"
 msgstr ""
 
+#: src/components/routes/system.tsx
 #: src/components/routes/system.tsx
 msgid "HAProxy Response Time"
 msgstr ""
 
 #: src/components/routes/system.tsx
+#: src/components/routes/system.tsx
 msgid "HAProxy Server States"
 msgstr ""
 
 #: src/components/routes/system.tsx
+#: src/components/routes/system.tsx
 msgid "HAProxy Sessions"
 msgstr ""
 
+#: src/components/routes/system.tsx
 #: src/components/routes/system.tsx
 msgid "HAProxy Status"
 msgstr ""
@@ -1013,9 +1031,11 @@ msgid "HAProxy systems should be named like \"ha-web-1\", \"ha-api-2\", etc."
 msgstr ""
 
 #: src/components/routes/system.tsx
+#: src/components/routes/system.tsx
 msgid "HAProxy Thread Activity"
 msgstr ""
 
+#: src/components/routes/system.tsx
 #: src/components/routes/system.tsx
 msgid "HAProxy Traffic"
 msgstr ""
@@ -1047,20 +1067,10 @@ msgid "Host / IP"
 msgstr "主機 / IP"
 
 #: src/components/routes/system.tsx
+#: src/components/routes/system.tsx
 msgid "HTTP 4xx and 5xx errors per second"
 msgstr ""
 
-#: src/components/routes/system.tsx
-msgid "HTTP requests per second"
-msgstr ""
-
-#: src/components/routes/system.tsx
-msgid "HTTP response codes per second (1xx-5xx)"
-msgstr ""
-
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "HTTP Responses (Total)"
-msgstr ""
 #: src/components/routes/settings/heartbeat.tsx
 msgid "HTTP Method"
 msgstr "HTTP 方法"
@@ -1068,6 +1078,20 @@ msgstr "HTTP 方法"
 #: src/components/routes/settings/heartbeat.tsx
 msgid "HTTP method: POST, GET, or HEAD (default: POST)"
 msgstr "HTTP 方法：POST、GET 或 HEAD (預設：POST)"
+
+#: src/components/routes/system.tsx
+#: src/components/routes/system.tsx
+msgid "HTTP requests per second"
+msgstr ""
+
+#: src/components/routes/system.tsx
+#: src/components/routes/system.tsx
+msgid "HTTP response codes per second (1xx-5xx)"
+msgstr ""
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "HTTP Responses (Total)"
+msgstr ""
 
 #: src/components/routes/system/disk-io-sheet.tsx
 msgctxt "Disk I/O average operation time (iostat await)"
@@ -1109,6 +1133,7 @@ msgstr "未啟用"
 #: src/components/routes/haproxy-aggregate.tsx
 msgid "Individual Systems"
 msgstr ""
+
 #: src/components/routes/settings/heartbeat.tsx
 msgid "Interval"
 msgstr "間隔"
@@ -1228,10 +1253,10 @@ msgid "Memory Peak"
 msgstr "記憶體峰值"
 
 #: src/components/routes/system.tsx
+#: src/components/routes/system.tsx
 msgid "Memory pool allocation and usage statistics"
 msgstr ""
 
-#: src/components/routes/system.tsx
 #: src/components/routes/system/charts/memory-charts.tsx
 #: src/lib/alerts.ts
 msgid "Memory Usage"
@@ -1430,8 +1455,10 @@ msgid "Per-core average utilization"
 msgstr "每個核心的平均使用率"
 
 #: src/components/routes/system.tsx
+#: src/components/routes/system.tsx
 msgid "Per-thread CPU usage and activity statistics"
 msgstr ""
+
 #: src/components/routes/system/charts/disk-charts.tsx
 msgid "Percent of time the disk is busy with I/O"
 msgstr "磁碟忙於 I/O 操作的時間百分比"
@@ -1657,6 +1684,10 @@ msgstr "查看<0>通知設置</0>以配置您接收警報的方式。"
 msgid "Select {foo}"
 msgstr "選擇 {foo}"
 
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "selected"
+msgstr ""
+
 #: src/components/routes/settings/heartbeat.tsx
 msgid "Send a single heartbeat ping to verify your endpoint is working."
 msgstr "發送單次 heartbeat ping 以驗證您的端點是否正常運作。"
@@ -1669,11 +1700,6 @@ msgstr "定期向外部監控服務發送出站 ping，以便您在不將 Beszel
 msgid "Send test heartbeat"
 msgstr "發送測試 heartbeat"
 
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "selected"
-msgstr ""
-
-#: src/components/routes/system.tsx
 #: src/components/routes/system/charts/network-charts.tsx
 msgid "Sent"
 msgstr "發送"
@@ -1901,6 +1927,7 @@ msgid "Total"
 msgstr "總計"
 
 #: src/components/routes/system.tsx
+#: src/components/routes/system.tsx
 msgid "Total bytes transferred (in + out)"
 msgstr ""
 
@@ -1922,6 +1949,8 @@ msgstr ""
 
 #: src/components/routes/haproxy-aggregate.tsx
 msgid "Total Sessions"
+msgstr ""
+
 #: src/components/routes/system/disk-io-sheet.tsx
 msgctxt "Disk I/O"
 msgid "Total time spent on read/write (can exceed 100%)"

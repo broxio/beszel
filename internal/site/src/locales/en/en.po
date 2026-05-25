@@ -209,10 +209,10 @@ msgid "Average"
 msgstr "Average"
 
 #: src/components/routes/system.tsx
+#: src/components/routes/system.tsx
 msgid "Average backend response time (ms)"
 msgstr "Average backend response time (ms)"
 
-#: src/components/routes/system.tsx
 #: src/components/routes/system/charts/cpu-charts.tsx
 msgid "Average CPU utilization of containers"
 msgstr "Average CPU utilization of containers"
@@ -464,6 +464,7 @@ msgstr "Connection is down"
 #: src/components/routes/haproxy-aggregate.tsx
 msgid "Connections"
 msgstr "Connections"
+
 #: src/components/routes/system.tsx
 msgid "Containers"
 msgstr "Containers"
@@ -592,6 +593,7 @@ msgid "Cumulative Upload"
 msgstr "Cumulative Upload"
 
 #: src/components/routes/system.tsx
+#: src/components/routes/system.tsx
 msgid "Current sessions across frontends and backends"
 msgstr "Current sessions across frontends and backends"
 
@@ -600,6 +602,7 @@ msgstr "Current sessions across frontends and backends"
 msgid "Current state"
 msgstr "Current state"
 
+#: src/components/routes/system.tsx
 #: src/components/routes/system.tsx
 msgid "Current status of all HAProxy frontends, backends, and servers"
 msgstr "Current status of all HAProxy frontends, backends, and servers"
@@ -642,6 +645,7 @@ msgstr "Description"
 msgid "Detail"
 msgstr "Detail"
 
+#: src/components/routes/system.tsx
 #: src/components/routes/system.tsx
 msgid "Detailed server state and configuration"
 msgstr "Detailed server state and configuration"
@@ -954,19 +958,26 @@ msgstr "Grid"
 msgid "Groups"
 msgstr "Groups"
 
+#: src/components/routes/system.tsx
+msgid "HAProxy"
+msgstr "HAProxy"
+
 #: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/haproxy-aggregate.tsx
 msgid "HAProxy Aggregate"
 msgstr "HAProxy Aggregate"
 
 #: src/components/routes/system.tsx
+#: src/components/routes/system.tsx
 msgid "HAProxy Error Rate"
 msgstr "HAProxy Error Rate"
 
 #: src/components/routes/system.tsx
+#: src/components/routes/system.tsx
 msgid "HAProxy HTTP Responses"
 msgstr "HAProxy HTTP Responses"
 
+#: src/components/routes/system.tsx
 #: src/components/routes/system.tsx
 msgid "HAProxy Memory Pools"
 msgstr "HAProxy Memory Pools"
@@ -976,29 +987,36 @@ msgid "HAProxy offline"
 msgstr "HAProxy offline"
 
 #: src/components/routes/system.tsx
+#: src/components/routes/system.tsx
 msgid "HAProxy Process Info"
 msgstr "HAProxy Process Info"
 
+#: src/components/routes/system.tsx
 #: src/components/routes/system.tsx
 msgid "HAProxy process statistics and runtime information"
 msgstr "HAProxy process statistics and runtime information"
 
 #: src/components/routes/system.tsx
+#: src/components/routes/system.tsx
 msgid "HAProxy Request Rate"
 msgstr "HAProxy Request Rate"
 
+#: src/components/routes/system.tsx
 #: src/components/routes/system.tsx
 msgid "HAProxy Response Time"
 msgstr "HAProxy Response Time"
 
 #: src/components/routes/system.tsx
+#: src/components/routes/system.tsx
 msgid "HAProxy Server States"
 msgstr "HAProxy Server States"
 
 #: src/components/routes/system.tsx
+#: src/components/routes/system.tsx
 msgid "HAProxy Sessions"
 msgstr "HAProxy Sessions"
 
+#: src/components/routes/system.tsx
 #: src/components/routes/system.tsx
 msgid "HAProxy Status"
 msgstr "HAProxy Status"
@@ -1008,9 +1026,11 @@ msgid "HAProxy systems should be named like \"ha-web-1\", \"ha-api-2\", etc."
 msgstr "HAProxy systems should be named like \"ha-web-1\", \"ha-api-2\", etc."
 
 #: src/components/routes/system.tsx
+#: src/components/routes/system.tsx
 msgid "HAProxy Thread Activity"
 msgstr "HAProxy Thread Activity"
 
+#: src/components/routes/system.tsx
 #: src/components/routes/system.tsx
 msgid "HAProxy Traffic"
 msgstr "HAProxy Traffic"
@@ -1042,20 +1062,10 @@ msgid "Host / IP"
 msgstr "Host / IP"
 
 #: src/components/routes/system.tsx
+#: src/components/routes/system.tsx
 msgid "HTTP 4xx and 5xx errors per second"
 msgstr "HTTP 4xx and 5xx errors per second"
 
-#: src/components/routes/system.tsx
-msgid "HTTP requests per second"
-msgstr "HTTP requests per second"
-
-#: src/components/routes/system.tsx
-msgid "HTTP response codes per second (1xx-5xx)"
-msgstr "HTTP response codes per second (1xx-5xx)"
-
-#: src/components/routes/haproxy-aggregate.tsx
-msgid "HTTP Responses (Total)"
-msgstr "HTTP Responses (Total)"
 #: src/components/routes/settings/heartbeat.tsx
 msgid "HTTP Method"
 msgstr "HTTP Method"
@@ -1063,6 +1073,20 @@ msgstr "HTTP Method"
 #: src/components/routes/settings/heartbeat.tsx
 msgid "HTTP method: POST, GET, or HEAD (default: POST)"
 msgstr "HTTP method: POST, GET, or HEAD (default: POST)"
+
+#: src/components/routes/system.tsx
+#: src/components/routes/system.tsx
+msgid "HTTP requests per second"
+msgstr "HTTP requests per second"
+
+#: src/components/routes/system.tsx
+#: src/components/routes/system.tsx
+msgid "HTTP response codes per second (1xx-5xx)"
+msgstr "HTTP response codes per second (1xx-5xx)"
+
+#: src/components/routes/haproxy-aggregate.tsx
+msgid "HTTP Responses (Total)"
+msgstr "HTTP Responses (Total)"
 
 #: src/components/routes/system/disk-io-sheet.tsx
 msgctxt "Disk I/O average operation time (iostat await)"
@@ -1104,6 +1128,7 @@ msgstr "Inactive"
 #: src/components/routes/haproxy-aggregate.tsx
 msgid "Individual Systems"
 msgstr "Individual Systems"
+
 #: src/components/routes/settings/heartbeat.tsx
 msgid "Interval"
 msgstr "Interval"
@@ -1223,10 +1248,10 @@ msgid "Memory Peak"
 msgstr "Memory Peak"
 
 #: src/components/routes/system.tsx
+#: src/components/routes/system.tsx
 msgid "Memory pool allocation and usage statistics"
 msgstr "Memory pool allocation and usage statistics"
 
-#: src/components/routes/system.tsx
 #: src/components/routes/system/charts/memory-charts.tsx
 #: src/lib/alerts.ts
 msgid "Memory Usage"
@@ -1425,8 +1450,10 @@ msgid "Per-core average utilization"
 msgstr "Per-core average utilization"
 
 #: src/components/routes/system.tsx
+#: src/components/routes/system.tsx
 msgid "Per-thread CPU usage and activity statistics"
 msgstr "Per-thread CPU usage and activity statistics"
+
 #: src/components/routes/system/charts/disk-charts.tsx
 msgid "Percent of time the disk is busy with I/O"
 msgstr "Percent of time the disk is busy with I/O"
@@ -1655,6 +1682,7 @@ msgstr "Select {foo}"
 #: src/components/routes/haproxy-aggregate.tsx
 msgid "selected"
 msgstr "selected"
+
 #: src/components/routes/settings/heartbeat.tsx
 msgid "Send a single heartbeat ping to verify your endpoint is working."
 msgstr "Send a single heartbeat ping to verify your endpoint is working."
@@ -1894,6 +1922,7 @@ msgid "Total"
 msgstr "Total"
 
 #: src/components/routes/system.tsx
+#: src/components/routes/system.tsx
 msgid "Total bytes transferred (in + out)"
 msgstr "Total bytes transferred (in + out)"
 
@@ -1916,6 +1945,7 @@ msgstr "Total Requests"
 #: src/components/routes/haproxy-aggregate.tsx
 msgid "Total Sessions"
 msgstr "Total Sessions"
+
 #: src/components/routes/system/disk-io-sheet.tsx
 msgctxt "Disk I/O"
 msgid "Total time spent on read/write (can exceed 100%)"
