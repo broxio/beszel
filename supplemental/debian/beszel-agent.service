@@ -23,5 +23,10 @@ ProtectSystem=strict
 RemoveIPC=yes
 RestrictSUIDSGID=true
 
+# Needed for IPVS / LVS monitoring (netlink to ip_vs requires CAP_NET_ADMIN).
+# Harmless on hosts without ip_vs — the cap just isn't exercised.
+AmbientCapabilities=CAP_NET_ADMIN
+CapabilityBoundingSet=CAP_NET_ADMIN
+
 [Install]
 WantedBy=multi-user.target
