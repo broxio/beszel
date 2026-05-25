@@ -48,6 +48,7 @@ type Agent struct {
 	keys                      []gossh.PublicKey                                     // SSH public keys
 	smartManager              *SmartManager                                         // Manages SMART data
 	systemdManager            *systemdManager                                       // Manages systemd services
+	haproxyManager            *HAProxyManager                                       // Manages HAProxy stats
 }
 
 // NewAgent creates a new agent with the given data directory for persisting data.
@@ -143,6 +144,12 @@ func NewAgent(dataDir ...string) (agent *Agent, err error) {
 		slog.Debug("GPU", "err", err)
 	}
 
+	// initialize HAProxy manager
+	agent.haproxyManager, err = NewHAProxyManager()
+	if err != nil {
+		slog.Debug("HAProxy", "err", err)
+	}
+
 	// if debugging, print stats
 	if agent.debug {
 		slog.Debug("Stats", "data", agent.gatherStats(common.DataRequestOptions{CacheTimeMs: defaultDataCacheTimeMs, IncludeDetails: true}))
@@ -175,6 +182,33 @@ func (a *Agent) gatherStats(options common.DataRequestOptions) *system.CombinedD
 			slog.Debug("Containers", "data", data.Containers)
 		} else {
 			slog.Debug("Containers", "err", err)
+		}
+	}
+
+	// collect HAProxy stats and info
+	if a.haproxyManager != nil {
+		if haproxyStats := a.haproxyManager.GetStats(); len(haproxyStats) > 0 {
+			data.Stats.HAProxy = haproxyStats
+			slog.Debug("HAProxy", "proxies", len(haproxyStats))
+		}
+		if haproxyInfo := a.haproxyManager.GetInfo(); haproxyInfo != nil {
+			data.Stats.HAProxyInfo = haproxyInfo
+		}
+		// Collect pools
+		if pools, summary := a.haproxyManager.GetPools(); len(pools) > 0 {
+			data.Stats.HAProxyPools = pools
+			data.Stats.HAProxyPoolSummary = summary
+			slog.Debug("HAProxy pools", "count", len(pools))
+		}
+		// Collect activity
+		if activity := a.haproxyManager.GetActivity(); len(activity) > 0 {
+			data.Stats.HAProxyActivity = activity
+			slog.Debug("HAProxy activity", "threads", len(activity))
+		}
+		// Collect server states
+		if servers := a.haproxyManager.GetServersState(); len(servers) > 0 {
+			data.Stats.HAProxyServers = servers
+			slog.Debug("HAProxy servers", "count", len(servers))
 		}
 	}
 

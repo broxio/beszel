@@ -1,0 +1,7 @@
+# No changelog in the repo at the moment
+beszel: no-changelog
+# Needs to be fixed in Beszel build
+beszel: hardening-no-pie
+beszel: hardening-no-relro
+# Maybe one day
+beszel: no-manual-page

@@ -180,6 +180,18 @@ export default function Navbar() {
 					</TooltipTrigger>
 					<TooltipContent>S.M.A.R.T.</TooltipContent>
 				</Tooltip>
+				<Tooltip>
+					<TooltipTrigger asChild>
+						<Link
+							href={getPagePath($router, "haproxyAggregate")}
+							className={cn("hidden md:grid", buttonVariants({ variant: "ghost", size: "icon" }))}
+							aria-label="HAProxy"
+						>
+							<ServerIcon className="h-[1.2rem] w-[1.2rem]" strokeWidth={1.5} />
+						</Link>
+					</TooltipTrigger>
+					<TooltipContent>HAProxy</TooltipContent>
+				</Tooltip>
 				<LangToggle />
 				<ModeToggle />
 				<Tooltip>

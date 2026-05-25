@@ -151,6 +151,200 @@ export interface SystemStats {
 	bat?: [number, BatteryState]
 	/** network interfaces [upload bytes, download bytes, total upload bytes, total download bytes] */
 	ni?: Record<string, [number, number, number, number]>
+	/** HAProxy stats */
+	hap?: HAProxyStats[]
+	/** HAProxy process info */
+	hapi?: HAProxyInfo
+	/** HAProxy memory pools */
+	hpp?: HAProxyPool[]
+	/** HAProxy pool summary */
+	hpps?: HAProxyPoolSummary
+	/** HAProxy thread activity */
+	hpa?: HAProxyActivity[]
+	/** HAProxy server states */
+	hpsv?: HAProxyServerState[]
+}
+
+export interface HAProxyStats {
+	/** proxy name */
+	n: string
+	/** type (FRONTEND, BACKEND, SERVER) */
+	t: string
+	/** status (UP, DOWN, OPEN, etc.) */
+	s: string
+	/** current sessions */
+	sc: number
+	/** max sessions */
+	sm?: number
+	/** session limit */
+	sl?: number
+	/** total sessions */
+	st: number
+	/** bytes in */
+	bi: number
+	/** bytes out */
+	bo: number
+	/** request rate (per second) */
+	rr?: number
+	/** total requests */
+	rt?: number
+	/** response time (ms) */
+	rsp?: number
+	/** 1xx responses (cumulative) */
+	r1?: number
+	/** 2xx responses (cumulative) */
+	r2?: number
+	/** 3xx responses (cumulative) */
+	r3?: number
+	/** 4xx responses (cumulative) */
+	r4?: number
+	/** 5xx responses (cumulative) */
+	r5?: number
+	/** 1xx responses per second */
+	r1r?: number
+	/** 2xx responses per second */
+	r2r?: number
+	/** 3xx responses per second */
+	r3r?: number
+	/** 4xx responses per second */
+	r4r?: number
+	/** 5xx responses per second */
+	r5r?: number
+	/** failed health checks */
+	hfl?: number
+	/** active servers (backends only) */
+	as?: number
+	/** backup servers (backends only) */
+	bs?: number
+	/** bytes in per second */
+	bir?: number
+	/** bytes out per second */
+	bor?: number
+}
+
+export interface HAProxyInfo {
+	/** HAProxy version */
+	v: string
+	/** uptime string */
+	up: string
+	/** uptime in seconds */
+	us: number
+	/** max memory MB */
+	mm?: number
+	/** pool allocated MB */
+	pa?: number
+	/** pool used MB */
+	pu?: number
+	/** number of threads */
+	nt: number
+	/** max connections */
+	mc: number
+	/** current connections */
+	cc: number
+	/** cumulative connections */
+	tc: number
+	/** cumulative requests */
+	tr: number
+	/** max SSL connections */
+	msc?: number
+	/** current SSL connections */
+	csc?: number
+	/** cumulative SSL connections */
+	tsc?: number
+	/** connection rate */
+	cr?: number
+	/** max connection rate */
+	mcr?: number
+	/** session rate */
+	sr?: number
+	/** max session rate */
+	msr?: number
+	/** SSL rate */
+	slr?: number
+	/** max SSL rate */
+	mslr?: number
+	/** tasks */
+	tk?: number
+	/** run queue */
+	rq?: number
+	/** idle percent */
+	ip?: number
+	/** node name */
+	nd?: string
+	/** total bytes out */
+	bo?: number
+	/** bytes out rate */
+	bor?: number
+	/** process ID */
+	pid?: number
+	/** SSL frontend session reuse % */
+	srp?: number
+}
+
+export interface HAProxyPool {
+	/** pool name */
+	n: string
+	/** element size (bytes) */
+	sz: number
+	/** allocated bytes */
+	a: number
+	/** used count */
+	u: number
+	/** in thread caches */
+	ic?: number
+	/** allocation failures */
+	f?: number
+}
+
+export interface HAProxyPoolSummary {
+	/** total pools */
+	tp: number
+	/** total allocated bytes */
+	ta: number
+	/** total used bytes */
+	tu: number
+	/** in thread caches */
+	tc?: number
+}
+
+export interface HAProxyActivity {
+	/** thread ID */
+	tid: number
+	/** context switches */
+	cs: number
+	/** task switches */
+	ts: number
+	/** main loops */
+	lp: number
+	/** avg CPU % */
+	cpu: number
+	/** avg loop time (us) */
+	lus: number
+	/** accepted connections */
+	acc?: number
+	/** poll I/O */
+	pio?: number
+}
+
+export interface HAProxyServerState {
+	/** backend name */
+	bk: string
+	/** server name */
+	sv: string
+	/** address */
+	addr: string
+	/** port */
+	port: number
+	/** operational state (0=stopped, 2=running) */
+	os: number
+	/** admin state */
+	as: number
+	/** weight */
+	w: number
+	/** check status */
+	cks?: number
+	/** seconds since last change */
+	lc?: number
 }
 
 export interface GPUData {
