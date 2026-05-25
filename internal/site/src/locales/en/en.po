@@ -19,6 +19,11 @@ msgctxt "New version available"
 msgid "{0} available"
 msgstr "{0} available"
 
+#. placeholder {0}: totals.drainedServerCount
+#: src/components/routes/lvs-aggregate.tsx
+msgid "{0} drained"
+msgstr "{0} drained"
+
 #. placeholder {0}: table.getFilteredSelectedRowModel().rows.length
 #. placeholder {1}: table.getFilteredRowModel().rows.length
 #: src/components/routes/settings/alerts-history-data-table.tsx
@@ -54,6 +59,11 @@ msgstr "{threads, plural, one {# thread} other {# threads}}"
 #: src/components/routes/haproxy-aggregate.tsx
 msgid "{totalOnline} online, {totalOffline} offline across {0} groups"
 msgstr "{totalOnline} online, {totalOffline} offline across {0} groups"
+
+#. placeholder {0}: groups.size
+#: src/components/routes/lvs-aggregate.tsx
+msgid "{totalWith} reporting, {totalWithout} silent across {0} groups"
+msgstr "{totalWith} reporting, {totalWithout} silent across {0} groups"
 
 #: src/lib/utils.ts
 msgid "1 hour"
@@ -103,11 +113,16 @@ msgid "Actions"
 msgstr "Actions"
 
 #: src/components/alerts-history-columns.tsx
+#: src/components/routes/lvs-aggregate.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/settings/heartbeat.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Active"
 msgstr "Active"
+
+#: src/components/routes/lvs-aggregate.tsx
+msgid "Active / Standby"
+msgstr "Active / Standby"
 
 #: src/components/active-alerts.tsx
 msgid "Active Alerts"
@@ -412,6 +427,7 @@ msgid "Clear"
 msgstr "Clear"
 
 #: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/lvs-aggregate.tsx
 msgid "Clear All"
 msgstr "Clear All"
 
@@ -436,6 +452,7 @@ msgid "Click to copy"
 msgstr "Click to copy"
 
 #: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/lvs-aggregate.tsx
 msgid "Collapse"
 msgstr "Collapse"
 
@@ -457,13 +474,23 @@ msgstr "Confirm password"
 msgid "Conflicts"
 msgstr "Conflicts"
 
+#: src/components/routes/lvs-aggregate.tsx
+#: src/components/routes/lvs-aggregate.tsx
+msgid "Conn rate"
+msgstr "Conn rate"
+
 #: src/components/active-alerts.tsx
 msgid "Connection is down"
 msgstr "Connection is down"
 
 #: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/lvs-aggregate.tsx
 msgid "Connections"
 msgstr "Connections"
+
+#: src/components/routes/lvs-aggregate.tsx
+msgid "Conns"
+msgstr "Conns"
 
 #: src/components/routes/system.tsx
 msgid "Containers"
@@ -533,6 +560,10 @@ msgstr "Copy YAML"
 msgctxt "Core system metrics"
 msgid "Core"
 msgstr "Core"
+
+#: src/components/routes/lvs-aggregate.tsx
+msgid "CPS"
+msgstr "CPS"
 
 #: src/components/containers-table/containers-table-columns.tsx
 #: src/components/systemd-table/systemd-table-columns.tsx
@@ -778,7 +809,6 @@ msgstr "Enter your one-time password."
 msgid "Ephemeral"
 msgstr "Ephemeral"
 
-#: src/components/login/auth-form.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/settings/config-yaml.tsx
 #: src/components/routes/settings/heartbeat.tsx
@@ -816,6 +846,7 @@ msgid "Exited active"
 msgstr "Exited active"
 
 #: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/lvs-aggregate.tsx
 msgid "Expand"
 msgstr "Expand"
 
@@ -875,10 +906,12 @@ msgid "Failed: {0}"
 msgstr "Failed: {0}"
 
 #: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/lvs-aggregate.tsx
 msgid "Filter by zone:"
 msgstr "Filter by zone:"
 
 #: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/lvs-aggregate.tsx
 msgid "Filter groups:"
 msgstr "Filter groups:"
 
@@ -955,6 +988,7 @@ msgid "Grid"
 msgstr "Grid"
 
 #: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/lvs-aggregate.tsx
 msgid "Groups"
 msgstr "Groups"
 
@@ -1057,6 +1091,10 @@ msgctxt "Button to copy install command"
 msgid "Homebrew command"
 msgstr "Homebrew command"
 
+#: src/components/routes/lvs-aggregate.tsx
+msgid "Host"
+msgstr "Host"
+
 #: src/components/add-system.tsx
 msgid "Host / IP"
 msgstr "Host / IP"
@@ -1118,9 +1156,11 @@ msgid "Image"
 msgstr "Image"
 
 #: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/lvs-aggregate.tsx
 msgid "In"
 msgstr "In"
 
+#: src/components/routes/lvs-aggregate.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Inactive"
 msgstr "Inactive"
@@ -1212,6 +1252,17 @@ msgstr "Logs"
 msgid "Looking instead for where to create alerts? Click the bell <0/> icons in the systems table."
 msgstr "Looking instead for where to create alerts? Click the bell <0/> icons in the systems table."
 
+#: src/components/navbar.tsx
+#: src/components/navbar.tsx
+#: src/components/routes/lvs-aggregate.tsx
+#: src/components/routes/lvs-aggregate.tsx
+msgid "LVS Aggregate"
+msgstr "LVS Aggregate"
+
+#: src/components/routes/lvs-aggregate.tsx
+msgid "LVS systems should be named like \"lvs-web-1\", \"lvs-edge-2\", etc."
+msgstr "LVS systems should be named like \"lvs-web-1\", \"lvs-edge-2\", etc."
+
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Main PID"
 msgstr "Main PID"
@@ -1261,6 +1312,10 @@ msgstr "Memory Usage"
 msgid "Memory usage of docker containers"
 msgstr "Memory usage of docker containers"
 
+#: src/components/routes/lvs-aggregate.tsx
+msgid "Mode"
+msgstr "Mode"
+
 #. Device model
 #: src/components/routes/system/smart-table.tsx
 msgid "Model"
@@ -1309,6 +1364,10 @@ msgstr "No data"
 msgid "No HAProxy Systems Found"
 msgstr "No HAProxy Systems Found"
 
+#: src/components/routes/lvs-aggregate.tsx
+msgid "No LVS Systems Found"
+msgstr "No LVS Systems Found"
+
 #: src/components/command-palette.tsx
 #: src/components/systemd-table/systemd-table.tsx
 msgid "No results found."
@@ -1335,6 +1394,14 @@ msgstr "No systems found."
 #: src/components/routes/haproxy-aggregate.tsx
 msgid "No systems matching the \"ha-*\" pattern were found."
 msgstr "No systems matching the \"ha-*\" pattern were found."
+
+#: src/components/routes/lvs-aggregate.tsx
+msgid "No systems matching the \"lvs-*\" pattern were found."
+msgstr "No systems matching the \"lvs-*\" pattern were found."
+
+#: src/components/routes/lvs-aggregate.tsx
+msgid "No virtual services reported"
+msgstr "No virtual services reported"
 
 #: src/components/command-palette.tsx
 #: src/components/routes/settings/layout.tsx
@@ -1384,6 +1451,7 @@ msgid "Other"
 msgstr "Other"
 
 #: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/lvs-aggregate.tsx
 msgid "Out"
 msgstr "Out"
 
@@ -1552,6 +1620,10 @@ msgstr "Quiet Hours"
 msgid "Read"
 msgstr "Read"
 
+#: src/components/routes/lvs-aggregate.tsx
+msgid "Reals"
+msgstr "Reals"
+
 #: src/components/routes/system/charts/network-charts.tsx
 msgid "Received"
 msgstr "Received"
@@ -1646,6 +1718,10 @@ msgstr "Save Settings"
 #: src/components/routes/settings/tokens-fingerprints.tsx
 msgid "Saved in the database and does not expire until you disable it."
 msgstr "Saved in the database and does not expire until you disable it."
+
+#: src/components/routes/lvs-aggregate.tsx
+msgid "Sched"
+msgstr "Sched"
 
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Schedule"
@@ -1784,6 +1860,11 @@ msgstr "Swap space used by the system"
 msgid "Swap Usage"
 msgstr "Swap Usage"
 
+#: src/components/mode-toggle.tsx
+#: src/components/mode-toggle.tsx
+msgid "Switch theme"
+msgstr "Switch theme"
+
 #: src/components/add-system.tsx
 #: src/components/alerts-history-columns.tsx
 #: src/components/containers-table/containers-table-columns.tsx
@@ -1894,8 +1975,8 @@ msgstr "To email(s)"
 
 #: src/components/mode-toggle.tsx
 #: src/components/mode-toggle.tsx
-msgid "Toggle theme"
-msgstr "Toggle theme"
+#~ msgid "Toggle theme"
+#~ msgstr "Toggle theme"
 
 #: src/components/add-system.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
@@ -1962,11 +2043,15 @@ msgstr "Traffic"
 
 #: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/lvs-aggregate.tsx
+#: src/components/routes/lvs-aggregate.tsx
 msgid "Traffic In"
 msgstr "Traffic In"
 
 #: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/lvs-aggregate.tsx
+#: src/components/routes/lvs-aggregate.tsx
 msgid "Traffic Out"
 msgstr "Traffic Out"
 
@@ -2072,6 +2157,7 @@ msgstr "Update"
 
 #: src/components/containers-table/containers-table-columns.tsx
 #: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/lvs-aggregate.tsx
 #: src/components/routes/system/smart-table.tsx
 #: src/components/systemd-table/systemd-table-columns.tsx
 msgid "Updated"
@@ -2134,6 +2220,14 @@ msgstr "View more"
 #: src/components/routes/settings/alerts-history-data-table.tsx
 msgid "View your 200 most recent alerts."
 msgstr "View your 200 most recent alerts."
+
+#: src/components/routes/lvs-aggregate.tsx
+msgid "VIPs"
+msgstr "VIPs"
+
+#: src/components/routes/lvs-aggregate.tsx
+msgid "Virtual Service"
+msgstr "Virtual Service"
 
 #: src/components/systems-table/systems-table.tsx
 msgid "Visible Fields"

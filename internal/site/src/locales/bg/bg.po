@@ -24,6 +24,11 @@ msgctxt "New version available"
 msgid "{0} available"
 msgstr "Версия {0} е налична"
 
+#. placeholder {0}: totals.drainedServerCount
+#: src/components/routes/lvs-aggregate.tsx
+msgid "{0} drained"
+msgstr ""
+
 #. placeholder {0}: table.getFilteredSelectedRowModel().rows.length
 #. placeholder {1}: table.getFilteredRowModel().rows.length
 #: src/components/routes/settings/alerts-history-data-table.tsx
@@ -58,6 +63,11 @@ msgstr "{threads, plural, one {# нишка} other {# нишки}}"
 #. placeholder {0}: groups.size
 #: src/components/routes/haproxy-aggregate.tsx
 msgid "{totalOnline} online, {totalOffline} offline across {0} groups"
+msgstr ""
+
+#. placeholder {0}: groups.size
+#: src/components/routes/lvs-aggregate.tsx
+msgid "{totalWith} reporting, {totalWithout} silent across {0} groups"
 msgstr ""
 
 #: src/lib/utils.ts
@@ -108,11 +118,16 @@ msgid "Actions"
 msgstr "Действия"
 
 #: src/components/alerts-history-columns.tsx
+#: src/components/routes/lvs-aggregate.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/settings/heartbeat.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Active"
 msgstr "Активен"
+
+#: src/components/routes/lvs-aggregate.tsx
+msgid "Active / Standby"
+msgstr ""
 
 #: src/components/active-alerts.tsx
 msgid "Active Alerts"
@@ -417,6 +432,7 @@ msgid "Clear"
 msgstr "Изчисти"
 
 #: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/lvs-aggregate.tsx
 msgid "Clear All"
 msgstr ""
 
@@ -441,6 +457,7 @@ msgid "Click to copy"
 msgstr "Настисни за да копираш"
 
 #: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/lvs-aggregate.tsx
 msgid "Collapse"
 msgstr ""
 
@@ -462,12 +479,22 @@ msgstr "Потвърди парола"
 msgid "Conflicts"
 msgstr "Конфликти"
 
+#: src/components/routes/lvs-aggregate.tsx
+#: src/components/routes/lvs-aggregate.tsx
+msgid "Conn rate"
+msgstr ""
+
 #: src/components/active-alerts.tsx
 msgid "Connection is down"
 msgstr "Връзката е прекъсната"
 
 #: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/lvs-aggregate.tsx
 msgid "Connections"
+msgstr ""
+
+#: src/components/routes/lvs-aggregate.tsx
+msgid "Conns"
 msgstr ""
 
 #: src/components/routes/system.tsx
@@ -538,6 +565,10 @@ msgstr "Копирай YAML"
 msgctxt "Core system metrics"
 msgid "Core"
 msgstr "Основни"
+
+#: src/components/routes/lvs-aggregate.tsx
+msgid "CPS"
+msgstr ""
 
 #: src/components/containers-table/containers-table-columns.tsx
 #: src/components/systemd-table/systemd-table-columns.tsx
@@ -783,7 +814,6 @@ msgstr "Въведете Вашата еднократна парола."
 msgid "Ephemeral"
 msgstr "Ефимерен"
 
-#: src/components/login/auth-form.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/settings/config-yaml.tsx
 #: src/components/routes/settings/heartbeat.tsx
@@ -821,6 +851,7 @@ msgid "Exited active"
 msgstr "Излезе активно"
 
 #: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/lvs-aggregate.tsx
 msgid "Expand"
 msgstr ""
 
@@ -880,10 +911,12 @@ msgid "Failed: {0}"
 msgstr "Неуспешни: {0}"
 
 #: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/lvs-aggregate.tsx
 msgid "Filter by zone:"
 msgstr ""
 
 #: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/lvs-aggregate.tsx
 msgid "Filter groups:"
 msgstr ""
 
@@ -960,6 +993,7 @@ msgid "Grid"
 msgstr "Мрежово"
 
 #: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/lvs-aggregate.tsx
 msgid "Groups"
 msgstr ""
 
@@ -1062,6 +1096,10 @@ msgctxt "Button to copy install command"
 msgid "Homebrew command"
 msgstr "Команда Homebrew"
 
+#: src/components/routes/lvs-aggregate.tsx
+msgid "Host"
+msgstr ""
+
 #: src/components/add-system.tsx
 msgid "Host / IP"
 msgstr "Хост / IP"
@@ -1123,9 +1161,11 @@ msgid "Image"
 msgstr "Образ"
 
 #: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/lvs-aggregate.tsx
 msgid "In"
 msgstr ""
 
+#: src/components/routes/lvs-aggregate.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Inactive"
 msgstr "Неактивен"
@@ -1217,6 +1257,17 @@ msgstr "Логове"
 msgid "Looking instead for where to create alerts? Click the bell <0/> icons in the systems table."
 msgstr "Търсиш къде да създадеш тревоги? Натисни емотиконата за звънец <0/> в таблицата за системи."
 
+#: src/components/navbar.tsx
+#: src/components/navbar.tsx
+#: src/components/routes/lvs-aggregate.tsx
+#: src/components/routes/lvs-aggregate.tsx
+msgid "LVS Aggregate"
+msgstr ""
+
+#: src/components/routes/lvs-aggregate.tsx
+msgid "LVS systems should be named like \"lvs-web-1\", \"lvs-edge-2\", etc."
+msgstr ""
+
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Main PID"
 msgstr "Главен PID"
@@ -1266,6 +1317,10 @@ msgstr "Употреба на паметта"
 msgid "Memory usage of docker containers"
 msgstr "Използването на памет от docker контейнерите"
 
+#: src/components/routes/lvs-aggregate.tsx
+msgid "Mode"
+msgstr ""
+
 #. Device model
 #: src/components/routes/system/smart-table.tsx
 msgid "Model"
@@ -1314,6 +1369,10 @@ msgstr ""
 msgid "No HAProxy Systems Found"
 msgstr ""
 
+#: src/components/routes/lvs-aggregate.tsx
+msgid "No LVS Systems Found"
+msgstr ""
+
 #: src/components/command-palette.tsx
 #: src/components/systemd-table/systemd-table.tsx
 msgid "No results found."
@@ -1339,6 +1398,14 @@ msgstr "Няма намерени системи."
 
 #: src/components/routes/haproxy-aggregate.tsx
 msgid "No systems matching the \"ha-*\" pattern were found."
+msgstr ""
+
+#: src/components/routes/lvs-aggregate.tsx
+msgid "No systems matching the \"lvs-*\" pattern were found."
+msgstr ""
+
+#: src/components/routes/lvs-aggregate.tsx
+msgid "No virtual services reported"
 msgstr ""
 
 #: src/components/command-palette.tsx
@@ -1389,6 +1456,7 @@ msgid "Other"
 msgstr "Други"
 
 #: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/lvs-aggregate.tsx
 msgid "Out"
 msgstr ""
 
@@ -1557,6 +1625,10 @@ msgstr "Тихи часове"
 msgid "Read"
 msgstr "Прочети"
 
+#: src/components/routes/lvs-aggregate.tsx
+msgid "Reals"
+msgstr ""
+
 #: src/components/routes/system/charts/network-charts.tsx
 msgid "Received"
 msgstr "Получени"
@@ -1651,6 +1723,10 @@ msgstr "Запази настройките"
 #: src/components/routes/settings/tokens-fingerprints.tsx
 msgid "Saved in the database and does not expire until you disable it."
 msgstr "Запазен е в базата данни и не изтича, докато не го деактивирате."
+
+#: src/components/routes/lvs-aggregate.tsx
+msgid "Sched"
+msgstr ""
 
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Schedule"
@@ -1789,6 +1865,11 @@ msgstr "Изполван swap от системата"
 msgid "Swap Usage"
 msgstr "Използване на swap"
 
+#: src/components/mode-toggle.tsx
+#: src/components/mode-toggle.tsx
+msgid "Switch theme"
+msgstr ""
+
 #: src/components/add-system.tsx
 #: src/components/alerts-history-columns.tsx
 #: src/components/containers-table/containers-table-columns.tsx
@@ -1899,8 +1980,8 @@ msgstr "До имейл(ите)"
 
 #: src/components/mode-toggle.tsx
 #: src/components/mode-toggle.tsx
-msgid "Toggle theme"
-msgstr "Включи тема"
+#~ msgid "Toggle theme"
+#~ msgstr "Включи тема"
 
 #: src/components/add-system.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
@@ -1967,11 +2048,15 @@ msgstr ""
 
 #: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/lvs-aggregate.tsx
+#: src/components/routes/lvs-aggregate.tsx
 msgid "Traffic In"
 msgstr ""
 
 #: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/lvs-aggregate.tsx
+#: src/components/routes/lvs-aggregate.tsx
 msgid "Traffic Out"
 msgstr ""
 
@@ -2077,6 +2162,7 @@ msgstr "Актуализирай"
 
 #: src/components/containers-table/containers-table-columns.tsx
 #: src/components/routes/haproxy-aggregate.tsx
+#: src/components/routes/lvs-aggregate.tsx
 #: src/components/routes/system/smart-table.tsx
 #: src/components/systemd-table/systemd-table-columns.tsx
 msgid "Updated"
@@ -2139,6 +2225,14 @@ msgstr "Виж повече"
 #: src/components/routes/settings/alerts-history-data-table.tsx
 msgid "View your 200 most recent alerts."
 msgstr "Прегледайте последните си 200 сигнала."
+
+#: src/components/routes/lvs-aggregate.tsx
+msgid "VIPs"
+msgstr ""
+
+#: src/components/routes/lvs-aggregate.tsx
+msgid "Virtual Service"
+msgstr ""
 
 #: src/components/systems-table/systems-table.tsx
 msgid "Visible Fields"
