@@ -56,6 +56,59 @@ type Stats struct {
 	HAProxyPoolSummary *HAProxyPoolSummary   `json:"hpps,omitempty" cbor:"53,keyasint,omitempty"` // hpps: HAProxy pool summary totals
 	HAProxyActivity    []HAProxyActivity     `json:"hpa,omitempty" cbor:"54,keyasint,omitempty"`  // hpa: HAProxy per-thread activity (from "show activity")
 	HAProxyServers     []HAProxyServerState  `json:"hpsv,omitempty" cbor:"55,keyasint,omitempty"` // hpsv: HAProxy server states (from "show servers state")
+	IPVS               *IPVSStats            `json:"ipvs,omitempty" cbor:"60,keyasint,omitempty"` // IPVS / LVS stats (Linux only)
+}
+
+// IPVSStats is the per-host IPVS snapshot collected by the agent.
+// All traffic aggregates use service-level stats only — summing service + destination
+// would double-count, since service.bytes_in == sum(destinations.bytes_in).
+type IPVSStats struct {
+	Role          string        `json:"r" cbor:"0,keyasint"`                       // "active" | "standby" | "unknown" — VIP-bound check
+	VirtualIPs    []string      `json:"v" cbor:"1,keyasint"`                       // distinct VIPs from IPVS config (the WAN/ISP IPs)
+	ActiveConns   uint32        `json:"ac" cbor:"2,keyasint,omitempty"`            // sum active across services
+	InactiveConns uint32        `json:"ic" cbor:"3,keyasint,omitempty"`            // sum inactive across services (from destinations)
+	ConnRate      uint64        `json:"cps" cbor:"4,keyasint,omitempty"`           // sum new conns/sec
+	BytesInRate   uint64        `json:"bir" cbor:"5,keyasint,omitempty"`           // bits/sec ingress (kernel-provided)
+	BytesOutRate  uint64        `json:"bor" cbor:"6,keyasint,omitempty"`           // bits/sec egress
+	PktInRate     uint64        `json:"pir" cbor:"7,keyasint,omitempty"`           // packets/sec ingress
+	PktOutRate    uint64        `json:"por" cbor:"8,keyasint,omitempty"`           // packets/sec egress
+	TotalBytesIn  uint64        `json:"tbi" cbor:"9,keyasint,omitempty"`           // cumulative bytes in
+	TotalBytesOut uint64        `json:"tbo" cbor:"10,keyasint,omitempty"`          // cumulative bytes out
+	TotalConns    uint64        `json:"tc" cbor:"11,keyasint,omitempty"`           // cumulative conns
+	Services      []IPVSService `json:"svc,omitempty" cbor:"12,keyasint,omitempty"`
+}
+
+// IPVSService represents one virtual service (VIP:port/proto).
+type IPVSService struct {
+	VIP           string     `json:"v" cbor:"0,keyasint"`
+	Port          uint16     `json:"p" cbor:"1,keyasint"`
+	Protocol      string     `json:"pr" cbor:"2,keyasint"`                  // "TCP" | "UDP" | "IP(<n>)"
+	Scheduler     string     `json:"sc" cbor:"3,keyasint"`                  // rr/wrr/lc/wlc/sh/dh
+	ForwardMode   string     `json:"fm,omitempty" cbor:"4,keyasint,omitempty"` // NAT/DR/TUN — derived from first destination
+	ActiveConns   uint32     `json:"ac" cbor:"5,keyasint,omitempty"`
+	InactiveConns uint32     `json:"ic" cbor:"6,keyasint,omitempty"`
+	ConnRate      uint64     `json:"cps" cbor:"7,keyasint,omitempty"`
+	BytesInRate   uint64     `json:"bir" cbor:"8,keyasint,omitempty"`
+	BytesOutRate  uint64     `json:"bor" cbor:"9,keyasint,omitempty"`
+	PktInRate     uint64     `json:"pir" cbor:"10,keyasint,omitempty"`
+	PktOutRate    uint64     `json:"por" cbor:"11,keyasint,omitempty"`
+	TotalBytesIn  uint64     `json:"tbi" cbor:"12,keyasint,omitempty"`
+	TotalBytesOut uint64     `json:"tbo" cbor:"13,keyasint,omitempty"`
+	TotalConns    uint64     `json:"tc" cbor:"14,keyasint,omitempty"`
+	Destinations  []IPVSDest `json:"d,omitempty" cbor:"15,keyasint,omitempty"`
+}
+
+// IPVSDest represents one real server backing a virtual service.
+type IPVSDest struct {
+	Address       string `json:"a" cbor:"0,keyasint"`
+	Port          uint16 `json:"p" cbor:"1,keyasint"`
+	Weight        int32  `json:"w" cbor:"2,keyasint"`                   // 0 = drained / down
+	ForwardMode   string `json:"fm,omitempty" cbor:"3,keyasint,omitempty"` // NAT/DR/TUN
+	ActiveConns   uint32 `json:"ac" cbor:"4,keyasint,omitempty"`
+	InactiveConns uint32 `json:"ic" cbor:"5,keyasint,omitempty"`
+	ConnRate      uint64 `json:"cps" cbor:"6,keyasint,omitempty"`
+	BytesInRate   uint64 `json:"bir" cbor:"7,keyasint,omitempty"`
+	BytesOutRate  uint64 `json:"bor" cbor:"8,keyasint,omitempty"`
 }
 
 // Uint8Slice wraps []uint8 to customize JSON encoding while keeping CBOR efficient.
