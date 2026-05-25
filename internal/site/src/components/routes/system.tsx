@@ -12,6 +12,7 @@ import HAProxyInfoPanel from "@/components/charts/haproxy-info"
 import HAProxyPools from "@/components/charts/haproxy-pools"
 import HAProxyActivity from "@/components/charts/haproxy-activity"
 import HAProxyServers from "@/components/charts/haproxy-servers"
+import IPVSPanel from "@/components/charts/ipvs-panel"
 import { ChartCard } from "./system/chart-card"
 import InfoBar from "./system/info-bar"
 import { useSystemData } from "./system/use-system-data"
@@ -74,11 +75,14 @@ export default memo(function SystemDetail({ id }: { id: string }) {
 	const hasSystemd = system.info.sv
 	const hasGpu = hasGpuData || hasGpuPowerData
 	const hasHAProxyData = (systemStats.at(-1)?.stats?.hap?.length ?? 0) > 0
+	const ipvsData = systemStats.at(-1)?.stats?.ipvs
+	const hasIPVSData = !!ipvsData
 
 	// keep tabsRef in sync for keyboard navigation
 	const tabs = ["core", "disk"]
 	if (hasGpu) tabs.push("gpu")
 	if (hasHAProxyData) tabs.push("haproxy")
+	if (hasIPVSData) tabs.push("ipvs")
 	if (hasContainers) tabs.push("containers")
 	if (hasSystemd) tabs.push("services")
 	tabsRef.current = tabs
@@ -265,6 +269,17 @@ export default memo(function SystemDetail({ id }: { id: string }) {
 					</>
 				)}
 
+				{/* IPVS / LVS panel — shown for any host reporting IPVS stats */}
+				{hasIPVSData && ipvsData && (
+					<Card className="p-4">
+						<CardHeader className="pb-4 pt-0 px-0">
+							<CardTitle className="text-xl sm:text-2xl">{t`LVS / IPVS`}</CardTitle>
+							<CardDescription>{t`Virtual server role, VIPs, and per-service stats`}</CardDescription>
+						</CardHeader>
+						<IPVSPanel ipvs={ipvsData} />
+					</Card>
+				)}
+
 				{maybeHasSmartData && <LazySmartTable systemId={system.id} />}
 
 				{hasContainersTable && <LazyContainersTable systemId={system.id} />}
@@ -296,6 +311,12 @@ export default memo(function SystemDetail({ id }: { id: string }) {
 						<TabsTrigger value="haproxy" className="w-full flex items-center gap-2">
 							<NetworkIcon className="size-3.5" />
 							<Trans>HAProxy</Trans>
+						</TabsTrigger>
+					)}
+					{hasIPVSData && (
+						<TabsTrigger value="ipvs" className="w-full flex items-center gap-2">
+							<NetworkIcon className="size-3.5" />
+							<Trans>LVS</Trans>
 						</TabsTrigger>
 					)}
 					{hasContainers && (
@@ -466,6 +487,20 @@ export default memo(function SystemDetail({ id }: { id: string }) {
 									</Card>
 								)}
 							</>
+						)}
+					</TabsContent>
+				)}
+
+				{hasIPVSData && ipvsData && (
+					<TabsContent value="ipvs" forceMount className={activeTab === "ipvs" ? "contents" : "hidden"}>
+						{mountedTabs.has("ipvs") && (
+							<Card className="p-4">
+								<CardHeader className="pb-4 pt-0 px-0">
+									<CardTitle className="text-xl sm:text-2xl">{t`LVS / IPVS`}</CardTitle>
+									<CardDescription>{t`Virtual server role, VIPs, and per-service stats`}</CardDescription>
+								</CardHeader>
+								<IPVSPanel ipvs={ipvsData} />
+							</Card>
 						)}
 					</TabsContent>
 				)}
