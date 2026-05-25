@@ -1,7 +1,9 @@
 import { useLingui } from "@lingui/react/macro"
 import {
+	AlertCircleIcon,
 	ChevronDownIcon,
 	ChevronUpIcon,
+	CircleOffIcon,
 	FilterIcon,
 	LayersIcon,
 	RefreshCwIcon,
@@ -524,10 +526,31 @@ const Sparkline = memo(function Sparkline({ data, color }: { data: number[]; col
 	)
 })
 
-const ROLE_CLASS: Record<string, string> = {
+type HostStatus = "active" | "standby" | "unknown" | "no-data" | "down"
+
+const STATUS_CLASS: Record<HostStatus, string> = {
 	active: "bg-green-500/20 text-green-700 border-green-500/40",
 	standby: "bg-gray-500/20 text-gray-700 border-gray-500/40",
 	unknown: "bg-yellow-500/20 text-yellow-700 border-yellow-500/40",
+	"no-data": "bg-orange-500/20 text-orange-700 border-orange-500/40",
+	down: "bg-red-500/20 text-red-700 border-red-500/40",
+}
+
+/**
+ * Tooltip text for the "no-data" state. Hosts named lvs-* but reporting no IPVS
+ * field typically have a permission gap (the netlink call to ip_vs needs
+ * CAP_NET_ADMIN, which the default agent service user doesn't have).
+ */
+const NO_DATA_HINT =
+	"Agent up but no IPVS data. Likely missing CAP_NET_ADMIN " +
+	"(add /etc/systemd/system/beszel-agent.service.d/ipvs.conf with " +
+	"AmbientCapabilities=CAP_NET_ADMIN and restart), or ip_vs kernel " +
+	"module not loaded (modprobe ip_vs), or agent older than v0.18.7-mp.1."
+
+function deriveHostStatus(systemStatus: SystemRecord["status"], ipvs: IPVSStats | undefined): HostStatus {
+	if (systemStatus !== "up") return "down"
+	if (!ipvs) return "no-data"
+	return ipvs.r
 }
 
 const GroupCard = memo(function GroupCard({
@@ -558,17 +581,24 @@ const GroupCard = memo(function GroupCard({
 						<CardDescription className="mt-1 flex flex-wrap items-center gap-2">
 							{systems.map((s) => {
 								const ipvs = statsMap.get(s.id)
-								const role = ipvs?.r ?? "unknown"
+								const status = deriveHostStatus(s.status, ipvs)
+								const tooltip = status === "no-data" ? NO_DATA_HINT : undefined
 								return (
 									<span
 										key={s.id}
+										title={tooltip}
 										className={cn(
 											"inline-flex items-center gap-1.5 px-2 py-0.5 rounded border text-xs font-medium",
-											ROLE_CLASS[role] ?? ROLE_CLASS.unknown,
+											STATUS_CLASS[status],
+											tooltip && "cursor-help",
 										)}
 									>
 										{s.name}
-										<span className="uppercase opacity-80">{role}</span>
+										{status === "no-data" && <AlertCircleIcon className="h-3 w-3" />}
+										{status === "down" && <CircleOffIcon className="h-3 w-3" />}
+										<span className="uppercase opacity-80">
+											{status === "no-data" ? t`no data` : status}
+										</span>
 									</span>
 								)
 							})}
