@@ -40,11 +40,19 @@ export default memo(function VectorPanel({ vec }: { vec: VectorStats }) {
 	// Hold previous snapshot per-component to derive rates without re-renders.
 	const prevRef = useRef<Map<string, RateSnapshot>>(new Map())
 	const aggPrevRef = useRef<RateSnapshot | null>(null)
+	const lastVecKeyRef = useRef<string>("")
 	const [tick, setTick] = useState(0)
 
-	// Bump tick whenever a new sample arrives so the table re-renders with new rates.
+	// Bump tick only when the underlying counter values actually changed.
+	// If the parent re-renders us with the same record's contents (stale data
+	// between hub writes), recomputing produces rate=0 deltas and flaps the
+	// display — leave the previously computed rates in place instead.
 	useEffect(() => {
-		setTick((n) => n + 1)
+		const key = `${vec.re ?? 0}-${vec.se ?? 0}-${vec.rb ?? 0}-${vec.sb ?? 0}`
+		if (key !== lastVecKeyRef.current) {
+			lastVecKeyRef.current = key
+			setTick((n) => n + 1)
+		}
 	}, [vec])
 
 	const now = Date.now()

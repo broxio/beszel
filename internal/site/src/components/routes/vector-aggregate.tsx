@@ -27,7 +27,12 @@ import {
 } from "@/lib/vector-aggregate"
 import type { SystemRecord, VectorComponent, VectorStats } from "@/types"
 
-const POLL_INTERVAL = 5000
+// Poll once per minute — matches the hub's typical system_stats write cadence
+// and mirrors the effective update rate of the per-system Vector panel (which
+// only re-renders when a new chart-history entry arrives). Polling faster just
+// fetches the same record repeatedly and gets skipped by the duplicate-sample
+// guard below; polling at the data cadence eliminates the dead polls entirely.
+const POLL_INTERVAL = 60000
 const HISTORY_LENGTH = 60
 
 interface ThroughputPoint {
@@ -121,6 +126,19 @@ export default memo(function VectorAggregatePage() {
 					timestamp: now,
 				}
 				const prev = prevCountersRef.current.get(systemId)
+				// If every cumulative counter is identical to the previous sample,
+				// the hub hasn't written a new system_stats record between our polls.
+				// Recomputing here would produce rate=0 and flap the display. Skip
+				// and leave the last good rate in history.
+				if (
+					prev &&
+					prev.receivedEvents === sample.receivedEvents &&
+					prev.sentEvents === sample.sentEvents &&
+					prev.receivedBytes === sample.receivedBytes &&
+					prev.sentBytes === sample.sentBytes
+				) {
+					continue
+				}
 				if (prev) {
 					const interval = now - prev.timestamp
 					const point: ThroughputPoint = {
