@@ -45,11 +45,15 @@ interface CounterSample {
 	receivedBytes: number
 	sentBytes: number
 	timestamp: number
+	/** Hub-side record created timestamp — used to detect duplicate samples
+	 * when the UI polls faster than the hub stores new system_stats records. */
+	recordTs: string
 }
 
 interface VectorResponseItem {
 	system: string
 	vector?: VectorStats
+	created?: string
 }
 
 const STATUS_CLASS: Record<VectorHostStatus, string> = {
@@ -104,23 +108,40 @@ export default memo(function VectorAggregatePage() {
 				query: { ids },
 			})
 			const next = new Map<string, VectorStats>()
+			const recordTsMap = new Map<string, string>()
 			for (const item of response) {
-				if (item.vector) next.set(item.system, item.vector)
+				if (item.vector) {
+					next.set(item.system, item.vector)
+					recordTsMap.set(item.system, item.created ?? "")
+				}
 			}
 			if (!mountedRef.current) return
 
-			// Derive rates per system from previous sample.
+			// Derive rates per system from previous sample. We compare the hub-side
+			// `created` timestamp first — if the same record is still the latest one
+			// (UI polling faster than the hub writes new records) we skip this tick
+			// entirely. Without that, identical counter pairs produce rate=0 and the
+			// display flaps every interval.
 			const now = Date.now()
 			const hist = throughputHistoryRef.current
 			for (const [systemId, vec] of next) {
+				const recordTs = recordTsMap.get(systemId) ?? ""
+				const prev = prevCountersRef.current.get(systemId)
+
+				if (prev && recordTs && prev.recordTs === recordTs) {
+					// Same underlying record — don't recompute rate or update prev.
+					// The last rate sample stays visible in the UI.
+					continue
+				}
+
 				const sample: CounterSample = {
 					receivedEvents: vec.re ?? 0,
 					sentEvents: vec.se ?? 0,
 					receivedBytes: vec.rb ?? 0,
 					sentBytes: vec.sb ?? 0,
 					timestamp: now,
+					recordTs,
 				}
-				const prev = prevCountersRef.current.get(systemId)
 				if (prev) {
 					const interval = now - prev.timestamp
 					const point: ThroughputPoint = {
