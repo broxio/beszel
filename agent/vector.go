@@ -1,34 +1,39 @@
 package agent
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"log/slog"
-	"net/http"
-	"net/url"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/henrygd/beszel/agent/utils"
+	"github.com/henrygd/beszel/agent/vectorpb"
 	"github.com/henrygd/beszel/internal/entities/system"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
-// VectorManager polls a local Vector aggregator's GraphQL API and exposes
-// per-component throughput, byte, and error counters. Activation is opt-in
-// via the VECTOR_API_URL env var — when unset, NewVectorManager returns
-// (nil, error) and the agent skips Vector collection.
+// VectorManager polls a local Vector aggregator's gRPC observability API
+// and exposes per-component throughput and byte counters. Opt-in via the
+// VECTOR_API_ADDR env var (a gRPC dial target like "127.0.0.1:8687", not
+// a URL) — when unset, NewVectorManager returns (nil, error) and the agent
+// skips Vector collection.
 //
-// Unlike IPVS (kernel estimator) Vector exposes only cumulative counters; the
-// UI derives rates client-side from the polling interval, same as HAProxy.
+// Vector exposes only cumulative counters; the UI derives per-second rates
+// client-side from successive samples (parallels HAProxy, in contrast to
+// LVS where the kernel estimator provides rates directly).
+//
+// The gRPC API has separate streaming RPCs (StreamComponentMetrics) for
+// "live" `vector top`-style updates, but we stick with polling here to
+// match the rest of the agent's collection model.
 type VectorManager struct {
 	sync.Mutex
-	endpoint     string
-	httpClient   *http.Client
+	addr         string
+	conn         *grpc.ClientConn
+	client       vectorpb.ObservabilityServiceClient
 	stats        *system.VectorStats
 	lastUpdate   time.Time
 	updatePeriod time.Duration
@@ -42,19 +47,28 @@ const (
 	vectorRequestTimeout        = 4 * time.Second
 )
 
-var errVectorDisabled = errors.New("VECTOR_API_URL not set")
+var errVectorDisabled = errors.New("VECTOR_API_ADDR not set")
 
-// NewVectorManager returns a manager only when VECTOR_API_URL is set AND the
-// endpoint answers the `health` query. Probe failures bubble up so the agent
-// logs the reason at DEBUG and continues without Vector collection.
+// NewVectorManager returns a manager only when VECTOR_API_ADDR is set AND the
+// endpoint answers GetMeta. Probe failures bubble up so the agent logs the
+// reason at DEBUG and continues without Vector collection.
 func NewVectorManager() (*VectorManager, error) {
-	raw, ok := utils.GetEnv("VECTOR_API_URL")
-	if !ok || strings.TrimSpace(raw) == "" {
-		return nil, errVectorDisabled
+	// Backward-compat alias: accept VECTOR_API_URL too so an mp.5 config keeps
+	// working after the operator notices the rename. The URL form will likely
+	// have a "/graphql" suffix that we strip before dialing.
+	addr, ok := utils.GetEnv("VECTOR_API_ADDR")
+	if !ok || strings.TrimSpace(addr) == "" {
+		if legacy, lok := utils.GetEnv("VECTOR_API_URL"); lok && strings.TrimSpace(legacy) != "" {
+			addr = legacy
+			slog.Warn("VECTOR_API_URL is deprecated, use VECTOR_API_ADDR (host:port)", "value", legacy)
+		} else {
+			return nil, errVectorDisabled
+		}
 	}
-	endpoint, err := normalizeVectorEndpoint(raw)
+
+	dialTarget, err := normalizeVectorAddr(addr)
 	if err != nil {
-		return nil, fmt.Errorf("invalid VECTOR_API_URL: %w", err)
+		return nil, fmt.Errorf("invalid VECTOR_API_ADDR: %w", err)
 	}
 
 	updatePeriod := vectorDefaultUpdateInterval
@@ -65,40 +79,64 @@ func NewVectorManager() (*VectorManager, error) {
 		}
 	}
 
+	// grpc.NewClient lazy-connects on first RPC, so dial errors surface on the
+	// initial fetch rather than here. That's fine for our probe model.
+	conn, err := grpc.NewClient(dialTarget, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return nil, fmt.Errorf("vector dial: %w", err)
+	}
+
 	vm := &VectorManager{
-		endpoint:     endpoint,
+		addr:         dialTarget,
+		conn:         conn,
+		client:       vectorpb.NewObservabilityServiceClient(conn),
 		updatePeriod: updatePeriod,
-		httpClient:   &http.Client{Timeout: vectorRequestTimeout},
 	}
 
 	if _, err := vm.fetch(); err != nil {
+		_ = conn.Close()
 		return nil, err
 	}
-	slog.Info("Vector monitoring enabled", "endpoint", endpoint)
+	slog.Info("Vector monitoring enabled", "addr", dialTarget)
 	return vm, nil
 }
 
-// normalizeVectorEndpoint accepts forms users typically set:
-//   - http://host:8686                  → http://host:8686/graphql
-//   - http://host:8686/                 → http://host:8686/graphql
-//   - http://host:8686/graphql          → unchanged
-//   - host:8686                         → http://host:8686/graphql
-func normalizeVectorEndpoint(raw string) (string, error) {
-	raw = strings.TrimSpace(raw)
-	if !strings.Contains(raw, "://") {
-		raw = "http://" + raw
+// normalizeVectorAddr accepts forms users typically set and produces a gRPC
+// dial target (host:port). Tolerates the old VECTOR_API_URL shapes — anyone
+// upgrading from mp.5 likely still has http://host:8687/graphql in their conf.
+//
+//   - 127.0.0.1:8687              → 127.0.0.1:8687
+//   - http://127.0.0.1:8687       → 127.0.0.1:8687
+//   - http://127.0.0.1:8687/graphql → 127.0.0.1:8687 (path stripped)
+//   - vector-host:8687            → vector-host:8687
+func normalizeVectorAddr(raw string) (string, error) {
+	addr := strings.TrimSpace(raw)
+	if addr == "" {
+		return "", fmt.Errorf("empty address")
 	}
-	u, err := url.Parse(raw)
-	if err != nil {
-		return "", err
+	// Strip scheme if present.
+	if i := strings.Index(addr, "://"); i >= 0 {
+		addr = addr[i+3:]
 	}
-	if u.Host == "" {
+	// Strip any path component.
+	if i := strings.IndexByte(addr, '/'); i >= 0 {
+		addr = addr[:i]
+	}
+	if addr == "" {
 		return "", fmt.Errorf("missing host")
 	}
-	if u.Path == "" || u.Path == "/" {
-		u.Path = "/graphql"
+	return addr, nil
+}
+
+// Close releases the underlying gRPC connection. Currently the agent has no
+// shutdown hook for managers, but Close is here for tests and future use.
+func (vm *VectorManager) Close() error {
+	vm.Lock()
+	defer vm.Unlock()
+	if vm.conn != nil {
+		return vm.conn.Close()
 	}
-	return u.String(), nil
+	return nil
 }
 
 // GetStats returns a copy of the most recent Vector snapshot, refreshing if stale.
@@ -138,128 +176,50 @@ func (vm *VectorManager) GetConnectionHealth() (failures int, lastErr error) {
 	return vm.consecutiveFailures, vm.lastError
 }
 
-// vectorQuery bundles everything we need in one round trip:
-//   - health flag
-//   - meta (version + hostname)
-//   - all components with their cumulative metric counters
-//
-// We request `first: 10000` to skip cursor pagination — even large Vector
-// pipelines stay well under that.
-const vectorQuery = `query BeszelVectorSnapshot {
-  health
-  meta { versionString hostname }
-  components(first: 10000) {
-    edges {
-      node {
-        componentId
-        componentType
-        componentKind
-        metrics {
-          receivedEventsTotal { receivedEventsTotal }
-          sentEventsTotal { sentEventsTotal }
-          receivedBytesTotal { receivedBytesTotal }
-          sentBytesTotal { sentBytesTotal }
-          errorsTotal { errorsTotal }
-          discardedEventsTotal { discardedEventsTotal }
-        }
-      }
-    }
-  }
-}`
-
-type vectorGQLResponse struct {
-	Data struct {
-		Health bool `json:"health"`
-		Meta   struct {
-			VersionString string `json:"versionString"`
-			Hostname      string `json:"hostname"`
-		} `json:"meta"`
-		Components struct {
-			Edges []struct {
-				Node struct {
-					ComponentID   string `json:"componentId"`
-					ComponentType string `json:"componentType"`
-					ComponentKind string `json:"componentKind"`
-					Metrics       struct {
-						ReceivedEventsTotal   *struct{ ReceivedEventsTotal float64 `json:"receivedEventsTotal"` }   `json:"receivedEventsTotal"`
-						SentEventsTotal       *struct{ SentEventsTotal float64 `json:"sentEventsTotal"` }           `json:"sentEventsTotal"`
-						ReceivedBytesTotal    *struct{ ReceivedBytesTotal float64 `json:"receivedBytesTotal"` }     `json:"receivedBytesTotal"`
-						SentBytesTotal        *struct{ SentBytesTotal float64 `json:"sentBytesTotal"` }             `json:"sentBytesTotal"`
-						ErrorsTotal           *struct{ ErrorsTotal float64 `json:"errorsTotal"` }                   `json:"errorsTotal"`
-						DiscardedEventsTotal  *struct{ DiscardedEventsTotal float64 `json:"discardedEventsTotal"` } `json:"discardedEventsTotal"`
-					} `json:"metrics"`
-				} `json:"node"`
-			} `json:"edges"`
-		} `json:"components"`
-	} `json:"data"`
-	Errors []struct {
-		Message string `json:"message"`
-	} `json:"errors"`
-}
-
+// fetch issues two unary RPCs (GetMeta + GetComponents) and assembles the
+// VectorStats snapshot. Both calls share a single timeout — if Vector is
+// slow, fail fast rather than blocking the agent's collection loop.
 func (vm *VectorManager) fetch() (*system.VectorStats, error) {
-	body, _ := json.Marshal(map[string]any{"query": vectorQuery})
-
 	ctx, cancel := context.WithTimeout(context.Background(), vectorRequestTimeout)
 	defer cancel()
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, vm.endpoint, bytes.NewReader(body))
+	meta, err := vm.client.GetMeta(ctx, &vectorpb.GetMetaRequest{})
 	if err != nil {
-		return nil, fmt.Errorf("vector request: %w", err)
+		return nil, fmt.Errorf("vector GetMeta: %w", err)
 	}
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/json")
 
-	resp, err := vm.httpClient.Do(req)
+	components, err := vm.client.GetComponents(ctx, &vectorpb.GetComponentsRequest{Limit: 0})
 	if err != nil {
-		return nil, fmt.Errorf("vector http: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		respBody, _ := io.ReadAll(io.LimitReader(resp.Body, 512))
-		return nil, fmt.Errorf("vector status %d: %s", resp.StatusCode, string(respBody))
-	}
-
-	var out vectorGQLResponse
-	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
-		return nil, fmt.Errorf("vector decode: %w", err)
-	}
-	if len(out.Errors) > 0 {
-		return nil, fmt.Errorf("vector graphql: %s", out.Errors[0].Message)
+		return nil, fmt.Errorf("vector GetComponents: %w", err)
 	}
 
 	stats := &system.VectorStats{
-		Version:  out.Data.Meta.VersionString,
-		Hostname: out.Data.Meta.Hostname,
-		Healthy:  out.Data.Health,
+		Version:  meta.GetVersion(),
+		Hostname: meta.GetHostname(),
+		// gRPC API has no health endpoint distinct from connection health —
+		// successful GetMeta = healthy. Anyone listening on that port and
+		// implementing this proto is by definition a working Vector.
+		Healthy: true,
 	}
 
-	for _, edge := range out.Data.Components.Edges {
-		n := edge.Node
+	for _, c := range components.GetComponents() {
 		comp := system.VectorComponent{
-			ID:   n.ComponentID,
-			Type: n.ComponentType,
-			Kind: strings.ToLower(n.ComponentKind),
+			ID:   c.GetComponentId(),
+			Type: c.GetOnType(),
+			Kind: componentKindString(c.GetComponentType()),
 		}
-		if m := n.Metrics.ReceivedEventsTotal; m != nil {
-			comp.ReceivedEvents = uint64(m.ReceivedEventsTotal)
+		if m := c.GetMetrics(); m != nil {
+			comp.ReceivedEvents = uint64(m.GetReceivedEventsTotal())
+			comp.SentEvents = uint64(m.GetSentEventsTotal())
+			comp.ReceivedBytes = uint64(m.GetReceivedBytesTotal())
+			comp.SentBytes = uint64(m.GetSentBytesTotal())
 		}
-		if m := n.Metrics.SentEventsTotal; m != nil {
-			comp.SentEvents = uint64(m.SentEventsTotal)
-		}
-		if m := n.Metrics.ReceivedBytesTotal; m != nil {
-			comp.ReceivedBytes = uint64(m.ReceivedBytesTotal)
-		}
-		if m := n.Metrics.SentBytesTotal; m != nil {
-			comp.SentBytes = uint64(m.SentBytesTotal)
-		}
-		if m := n.Metrics.ErrorsTotal; m != nil {
-			comp.Errors = uint64(m.ErrorsTotal)
-		}
-		if m := n.Metrics.DiscardedEventsTotal; m != nil {
-			comp.Discarded = uint64(m.DiscardedEventsTotal)
-		}
+		// Vector's GetComponents proto doesn't expose errors_total or
+		// discarded_events_total — those are only available via the streaming
+		// StreamComponentMetrics RPC (MetricName.METRIC_NAME_ERRORS_TOTAL).
+		// We leave comp.Errors / comp.Discarded zero rather than open a
+		// long-lived stream just for those counts. Revisit if errors become
+		// the operator's primary question.
 
 		stats.Components = append(stats.Components, comp)
 		stats.ComponentCount++
@@ -275,9 +235,23 @@ func (vm *VectorManager) fetch() (*system.VectorStats, error) {
 			stats.SentEvents += comp.SentEvents
 			stats.SentBytes += comp.SentBytes
 		}
-		stats.ErrorsTotal += comp.Errors
-		stats.DiscardedTotal += comp.Discarded
 	}
 
 	return stats, nil
+}
+
+// componentKindString maps the proto enum to the lowercase strings the UI
+// expects ("source" / "transform" / "sink"). Anything else (UNSPECIFIED or
+// a future kind) becomes "unknown" so the UI doesn't have to learn new values.
+func componentKindString(t vectorpb.ComponentType) string {
+	switch t {
+	case vectorpb.ComponentType_COMPONENT_TYPE_SOURCE:
+		return "source"
+	case vectorpb.ComponentType_COMPONENT_TYPE_TRANSFORM:
+		return "transform"
+	case vectorpb.ComponentType_COMPONENT_TYPE_SINK:
+		return "sink"
+	default:
+		return "unknown"
+	}
 }
