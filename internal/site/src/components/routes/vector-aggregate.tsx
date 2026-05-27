@@ -121,6 +121,19 @@ export default memo(function VectorAggregatePage() {
 					timestamp: now,
 				}
 				const prev = prevCountersRef.current.get(systemId)
+				// If every cumulative counter is identical to the previous sample,
+				// the hub hasn't written a new system_stats record between our polls.
+				// Recomputing here would produce rate=0 and flap the display. Skip
+				// and leave the last good rate in history.
+				if (
+					prev &&
+					prev.receivedEvents === sample.receivedEvents &&
+					prev.sentEvents === sample.sentEvents &&
+					prev.receivedBytes === sample.receivedBytes &&
+					prev.sentBytes === sample.sentBytes
+				) {
+					continue
+				}
 				if (prev) {
 					const interval = now - prev.timestamp
 					const point: ThroughputPoint = {
