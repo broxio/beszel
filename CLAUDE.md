@@ -235,6 +235,7 @@ curl -s "https://hub.example/api/beszel/ipvs/stats?ids=<system_id>" -H "Authoriz
 | `v0.18.7-mp.2` | Pure version bump to disambiguate "did the new binary actually deploy?" during prod rollout |
 | `v0.18.7-mp.3` | `CAP_NET_ADMIN` baked into packaged systemd unit (the prod-blocker fix) |
 | `v0.18.7-mp.4` | Per-host status badges on `/lvs` with no-data diagnostic tooltip; new IPVS panel on `/system/<id>` |
+| `v0.18.7-mp.5` | Initial Vector aggregator monitoring: agent collector (opt-in via `VECTOR_API_URL`), hub `/api/beszel/vector/stats` endpoint, `/vector` aggregate page, per-system Vector panel |
 
 ## Vector Aggregator Monitoring
 
