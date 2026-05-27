@@ -27,7 +27,12 @@ import {
 } from "@/lib/vector-aggregate"
 import type { SystemRecord, VectorComponent, VectorStats } from "@/types"
 
-const POLL_INTERVAL = 5000
+// Poll once per minute — matches the hub's typical system_stats write cadence
+// and mirrors the effective update rate of the per-system Vector panel (which
+// only re-renders when a new chart-history entry arrives). Polling faster just
+// fetches the same record repeatedly and gets skipped by the duplicate-sample
+// guard below; polling at the data cadence eliminates the dead polls entirely.
+const POLL_INTERVAL = 60000
 const HISTORY_LENGTH = 60
 
 interface ThroughputPoint {
