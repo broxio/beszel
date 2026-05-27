@@ -201,11 +201,31 @@ export default memo(function VectorAggregatePage() {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [])
 
+	useEffect(() => {
+		document.title = `${t`Vector Aggregate`} / Beszel`
+	}, [t])
+
+	const handleRefresh = () => {
+		if (loading) return
+		setLoading(true)
+		fetchStats()
+	}
+
+	// Visibility rule: include any system that currently reports a vec field.
+	const vectorSystems = useMemo(
+		() => allSystems.filter((s) => statsMap.has(s.id)),
+		[allSystems, statsMap],
+	)
+
 	// Manage rt_metrics subscriptions per Vector host. Re-runs whenever the set
 	// of visible Vector hosts changes (new host appears in statsMap → subscribe;
 	// host disappears → unsubscribe). Each subscription delivers full system
 	// data ~1× per second from the hub's realtime worker (which calls the agent
 	// on demand); we extract stats.vec and feed it into applyVectorSample.
+	//
+	// MUST be declared after `vectorSystems` because the deps array references
+	// it — an earlier version had this above the useMemo and crashed on first
+	// render with a TDZ ReferenceError.
 	useEffect(() => {
 		const subs = subscriptionsRef.current
 		const desired = new Set(vectorSystems.map((s) => s.id))
@@ -249,9 +269,6 @@ export default memo(function VectorAggregatePage() {
 			})
 		}
 
-		// Effect cleanup runs on every re-run AND on unmount. We only want to
-		// tear everything down on unmount; per-host changes are handled at the
-		// top of this effect. Use a ref to distinguish.
 		return undefined
 	}, [vectorSystems])
 
@@ -262,22 +279,6 @@ export default memo(function VectorAggregatePage() {
 			subscriptionsRef.current.clear()
 		}
 	}, [])
-
-	useEffect(() => {
-		document.title = `${t`Vector Aggregate`} / Beszel`
-	}, [t])
-
-	const handleRefresh = () => {
-		if (loading) return
-		setLoading(true)
-		fetchStats()
-	}
-
-	// Visibility rule: include any system that currently reports a vec field.
-	const vectorSystems = useMemo(
-		() => allSystems.filter((s) => statsMap.has(s.id)),
-		[allSystems, statsMap],
-	)
 
 	const grandTotals = useMemo(() => {
 		let receivedEventsRate = 0
