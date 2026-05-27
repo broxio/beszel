@@ -133,6 +133,8 @@ func (h *Hub) registerApiRoutes(se *core.ServeEvent) error {
 	apiAuth.GET("/haproxy/stats", h.getHAProxyStats)
 	// IPVS / LVS aggregate: lightweight endpoint returning only the IPVS field from latest stats
 	apiAuth.GET("/ipvs/stats", h.getIPVSStats)
+	// Vector aggregate: lightweight endpoint returning only the Vector field from latest stats
+	apiAuth.GET("/vector/stats", h.getVectorStats)
 	// /containers routes
 	if enabled, _ := utils.GetEnv("CONTAINER_DETAILS"); enabled != "false" {
 		// get container logs
@@ -512,6 +514,59 @@ func (h *Hub) getIPVSStats(e *core.RequestEvent) error {
 			continue
 		}
 		results = append(results, ipvsStatsResponse{System: id, IPVS: stats.IPVS})
+	}
+	return e.JSON(http.StatusOK, results)
+}
+
+// vectorStatsResponse is a lightweight response containing only the Vector field.
+type vectorStatsResponse struct {
+	System string              `json:"system"`
+	Vector *system.VectorStats `json:"vector,omitempty"`
+}
+
+// getVectorStats returns only the Vector field from the latest system_stats record
+// for each requested system id (comma-separated `ids` query param). The per-system
+// panel polls this at 1s for the live view; the /vector aggregate page polls at 5s.
+func (h *Hub) getVectorStats(e *core.RequestEvent) error {
+	idsParam := e.Request.URL.Query().Get("ids")
+	if idsParam == "" {
+		return e.JSON(http.StatusBadRequest, map[string]string{"error": "ids parameter required"})
+	}
+
+	ids := strings.Split(idsParam, ",")
+	if len(ids) > 200 {
+		ids = ids[:200]
+	}
+
+	results := make([]vectorStatsResponse, 0, len(ids))
+	for _, id := range ids {
+		id = strings.TrimSpace(id)
+		if id == "" {
+			continue
+		}
+		records, err := h.FindRecordsByFilter(
+			"system_stats",
+			"system = {:id}",
+			"-created",
+			1,
+			0,
+			dbx.Params{"id": id},
+		)
+		if err != nil || len(records) == 0 {
+			continue
+		}
+		statsRaw := records[0].GetString("stats")
+		if statsRaw == "" {
+			continue
+		}
+		var stats system.Stats
+		if err := json.Unmarshal([]byte(statsRaw), &stats); err != nil {
+			continue
+		}
+		if stats.Vector == nil {
+			continue
+		}
+		results = append(results, vectorStatsResponse{System: id, Vector: stats.Vector})
 	}
 	return e.JSON(http.StatusOK, results)
 }
