@@ -78,13 +78,8 @@ export default memo(function SystemDetail({ id }: { id: string }) {
 	const hasHAProxyData = (systemStats.at(-1)?.stats?.hap?.length ?? 0) > 0
 	const ipvsData = systemStats.at(-1)?.stats?.ipvs
 	const hasIPVSData = !!ipvsData
-	const latestStatsRecord = systemStats.at(-1)
-	const vectorData = latestStatsRecord?.stats?.vec
+	const vectorData = systemStats.at(-1)?.stats?.vec
 	const hasVectorData = !!vectorData
-	// Pass the record's `created` to the Vector panel so it can detect duplicate
-	// samples and skip rate recomputation — without this, the rate display
-	// flaps to 0 every interval the underlying record hasn't been updated.
-	const vectorRecordTs = latestStatsRecord ? String(latestStatsRecord.created ?? "") : ""
 
 	// keep tabsRef in sync for keyboard navigation
 	const tabs = ["core", "disk"]
@@ -296,7 +291,7 @@ export default memo(function SystemDetail({ id }: { id: string }) {
 							<CardTitle className="text-xl sm:text-2xl">{t`Vector`}</CardTitle>
 							<CardDescription>{t`Components, throughput, and error counts from the local Vector aggregator`}</CardDescription>
 						</CardHeader>
-						<VectorPanel vec={vectorData} recordTs={vectorRecordTs} />
+						<VectorPanel vec={vectorData} />
 					</Card>
 				)}
 
@@ -539,7 +534,7 @@ export default memo(function SystemDetail({ id }: { id: string }) {
 									<CardTitle className="text-xl sm:text-2xl">{t`Vector`}</CardTitle>
 									<CardDescription>{t`Components, throughput, and error counts from the local Vector aggregator`}</CardDescription>
 								</CardHeader>
-								<VectorPanel vec={vectorData} recordTs={vectorRecordTs} />
+								<VectorPanel vec={vectorData} />
 							</Card>
 						)}
 					</TabsContent>

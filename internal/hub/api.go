@@ -518,14 +518,10 @@ func (h *Hub) getIPVSStats(e *core.RequestEvent) error {
 	return e.JSON(http.StatusOK, results)
 }
 
-// vectorStatsResponse is a lightweight response containing only the Vector field
-// plus the record's creation timestamp. The UI uses `created` to skip duplicate
-// samples — without it, polling the endpoint faster than the hub stores new
-// records would compute rate=0 from same-counter pairs and flap the display.
+// vectorStatsResponse is a lightweight response containing only the Vector field.
 type vectorStatsResponse struct {
-	System  string              `json:"system"`
-	Vector  *system.VectorStats `json:"vector,omitempty"`
-	Created string              `json:"created,omitempty"`
+	System string              `json:"system"`
+	Vector *system.VectorStats `json:"vector,omitempty"`
 }
 
 // getVectorStats returns only the Vector field from the latest system_stats record
@@ -570,11 +566,7 @@ func (h *Hub) getVectorStats(e *core.RequestEvent) error {
 		if stats.Vector == nil {
 			continue
 		}
-		results = append(results, vectorStatsResponse{
-			System:  id,
-			Vector:  stats.Vector,
-			Created: records[0].GetDateTime("created").String(),
-		})
+		results = append(results, vectorStatsResponse{System: id, Vector: stats.Vector})
 	}
 	return e.JSON(http.StatusOK, results)
 }

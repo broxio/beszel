@@ -32,29 +32,20 @@ interface RateSnapshot {
  * Per-system Vector panel. Derives rates client-side from successive samples
  * of the cumulative counters — mirrors how the agent ships HAProxy data.
  * Renders nothing useful until two samples have been collected (rate is 0).
- *
- * `recordTs` is the latest system_stats record's `created` timestamp. We use
- * it to ignore renders that don't represent a new underlying record — without
- * that, rates flap to 0 every time the UI re-renders against the same record.
  */
-export default memo(function VectorPanel({ vec, recordTs }: { vec: VectorStats; recordTs: string }) {
+export default memo(function VectorPanel({ vec }: { vec: VectorStats }) {
 	const { t } = useLingui()
 	const components = vec.co ?? []
 
 	// Hold previous snapshot per-component to derive rates without re-renders.
 	const prevRef = useRef<Map<string, RateSnapshot>>(new Map())
 	const aggPrevRef = useRef<RateSnapshot | null>(null)
-	const lastRecordTsRef = useRef<string>("")
 	const [tick, setTick] = useState(0)
 
-	// Bump tick only when a NEW underlying record arrives. Re-renders against
-	// the same record don't advance the rate derivation.
+	// Bump tick whenever a new sample arrives so the table re-renders with new rates.
 	useEffect(() => {
-		if (recordTs && recordTs !== lastRecordTsRef.current) {
-			lastRecordTsRef.current = recordTs
-			setTick((n) => n + 1)
-		}
-	}, [recordTs])
+		setTick((n) => n + 1)
+	}, [vec])
 
 	const now = Date.now()
 
