@@ -50,6 +50,7 @@ type Agent struct {
 	systemdManager            *systemdManager                                       // Manages systemd services
 	haproxyManager            *HAProxyManager                                       // Manages HAProxy stats
 	ipvsManager               *IPVSManager                                          // Manages IPVS / LVS stats (Linux only)
+	vectorManager             *VectorManager                                        // Manages Vector aggregator stats (opt-in via VECTOR_API_URL)
 }
 
 // NewAgent creates a new agent with the given data directory for persisting data.
@@ -157,6 +158,12 @@ func NewAgent(dataDir ...string) (agent *Agent, err error) {
 		slog.Debug("IPVS", "err", err)
 	}
 
+	// initialize Vector manager (opt-in via VECTOR_API_URL)
+	agent.vectorManager, err = NewVectorManager()
+	if err != nil {
+		slog.Debug("Vector", "err", err)
+	}
+
 	// if debugging, print stats
 	if agent.debug {
 		slog.Debug("Stats", "data", agent.gatherStats(common.DataRequestOptions{CacheTimeMs: defaultDataCacheTimeMs, IncludeDetails: true}))
@@ -223,6 +230,13 @@ func (a *Agent) gatherStats(options common.DataRequestOptions) *system.CombinedD
 		if ipvsStats := a.ipvsManager.GetStats(); ipvsStats != nil {
 			data.Stats.IPVS = ipvsStats
 			slog.Debug("IPVS", "role", ipvsStats.Role, "services", len(ipvsStats.Services))
+		}
+	}
+
+	if a.vectorManager != nil {
+		if vectorStats := a.vectorManager.GetStats(); vectorStats != nil {
+			data.Stats.Vector = vectorStats
+			slog.Debug("Vector", "version", vectorStats.Version, "components", len(vectorStats.Components), "healthy", vectorStats.Healthy)
 		}
 	}
 

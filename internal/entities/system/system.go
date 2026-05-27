@@ -57,6 +57,43 @@ type Stats struct {
 	HAProxyActivity    []HAProxyActivity     `json:"hpa,omitempty" cbor:"54,keyasint,omitempty"`  // hpa: HAProxy per-thread activity (from "show activity")
 	HAProxyServers     []HAProxyServerState  `json:"hpsv,omitempty" cbor:"55,keyasint,omitempty"` // hpsv: HAProxy server states (from "show servers state")
 	IPVS               *IPVSStats            `json:"ipvs,omitempty" cbor:"60,keyasint,omitempty"` // IPVS / LVS stats (Linux only)
+	Vector             *VectorStats          `json:"vec,omitempty" cbor:"80,keyasint,omitempty"`  // Vector aggregator GraphQL stats (opt-in via VECTOR_API_URL)
+}
+
+// VectorStats is the per-host snapshot of a Vector aggregator instance, polled
+// via Vector's GraphQL API (default :8686). Counters are reported as-is and the
+// UI derives rates client-side (matches the HAProxy approach, unlike IPVS which
+// gets rates directly from the kernel estimator).
+type VectorStats struct {
+	Version        string            `json:"v,omitempty" cbor:"0,keyasint,omitempty"`   // Vector versionString from meta query
+	Hostname       string            `json:"h,omitempty" cbor:"1,keyasint,omitempty"`   // Vector reported hostname
+	Healthy        bool              `json:"hl" cbor:"2,keyasint"`                       // health query result
+	UptimeSec      uint64            `json:"u,omitempty" cbor:"3,keyasint,omitempty"`   // process uptime in seconds (if exposed)
+	ComponentCount uint32            `json:"cc,omitempty" cbor:"4,keyasint,omitempty"`  // total components
+	SourceCount    uint32            `json:"sc,omitempty" cbor:"5,keyasint,omitempty"`  // source-kind components
+	TransformCount uint32            `json:"tc,omitempty" cbor:"6,keyasint,omitempty"`  // transform-kind components
+	SinkCount      uint32            `json:"sk,omitempty" cbor:"7,keyasint,omitempty"`  // sink-kind components
+	ErrorsTotal    uint64            `json:"e,omitempty" cbor:"8,keyasint,omitempty"`   // sum of errors_total across components
+	DiscardedTotal uint64            `json:"d,omitempty" cbor:"9,keyasint,omitempty"`   // sum of discarded_events_total across components
+	ReceivedEvents uint64            `json:"re,omitempty" cbor:"10,keyasint,omitempty"` // sum of received_events_total across sources
+	SentEvents     uint64            `json:"se,omitempty" cbor:"11,keyasint,omitempty"` // sum of sent_events_total across sinks
+	ReceivedBytes  uint64            `json:"rb,omitempty" cbor:"12,keyasint,omitempty"` // sum of received_bytes_total across sources
+	SentBytes      uint64            `json:"sb,omitempty" cbor:"13,keyasint,omitempty"` // sum of sent_bytes_total across sinks
+	Components     []VectorComponent `json:"co,omitempty" cbor:"14,keyasint,omitempty"` // per-component breakdown
+}
+
+// VectorComponent represents one source/transform/sink component.
+// All metric fields are cumulative counters from Vector — the UI derives rates.
+type VectorComponent struct {
+	ID             string `json:"i" cbor:"0,keyasint"`                       // componentId
+	Type           string `json:"t" cbor:"1,keyasint"`                       // componentType (e.g. "kafka", "remap", "elasticsearch")
+	Kind           string `json:"k" cbor:"2,keyasint"`                       // "source" | "transform" | "sink"
+	ReceivedEvents uint64 `json:"re,omitempty" cbor:"3,keyasint,omitempty"` // received_events_total
+	SentEvents     uint64 `json:"se,omitempty" cbor:"4,keyasint,omitempty"` // sent_events_total
+	ReceivedBytes  uint64 `json:"rb,omitempty" cbor:"5,keyasint,omitempty"` // received_bytes_total
+	SentBytes      uint64 `json:"sb,omitempty" cbor:"6,keyasint,omitempty"` // sent_bytes_total
+	Errors         uint64 `json:"e,omitempty" cbor:"7,keyasint,omitempty"`  // errors_total
+	Discarded      uint64 `json:"d,omitempty" cbor:"8,keyasint,omitempty"`  // discarded_events_total
 }
 
 // IPVSStats is the per-host IPVS snapshot collected by the agent.

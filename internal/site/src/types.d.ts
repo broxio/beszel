@@ -165,6 +165,8 @@ export interface SystemStats {
 	hpsv?: HAProxyServerState[]
 	/** IPVS / LVS stats (Linux only) */
 	ipvs?: IPVSStats
+	/** Vector aggregator GraphQL stats (opt-in via VECTOR_API_URL on the agent) */
+	vec?: VectorStats
 }
 
 export interface HAProxyStats {
@@ -417,6 +419,60 @@ export interface IPVSDest {
 	cps?: number
 	bir?: number
 	bor?: number
+}
+
+export interface VectorStats {
+	/** versionString from Vector meta query */
+	v?: string
+	/** hostname reported by Vector */
+	h?: string
+	/** health query result */
+	hl: boolean
+	/** uptime in seconds (currently unused — Vector GraphQL doesn't expose it) */
+	u?: number
+	/** total component count */
+	cc?: number
+	/** source-kind component count */
+	sc?: number
+	/** transform-kind component count */
+	tc?: number
+	/** sink-kind component count */
+	sk?: number
+	/** sum of errors_total across components (cumulative) */
+	e?: number
+	/** sum of discarded_events_total across components (cumulative) */
+	d?: number
+	/** sum of received_events_total across sources (cumulative) */
+	re?: number
+	/** sum of sent_events_total across sinks (cumulative) */
+	se?: number
+	/** sum of received_bytes_total across sources (cumulative) */
+	rb?: number
+	/** sum of sent_bytes_total across sinks (cumulative) */
+	sb?: number
+	/** per-component breakdown */
+	co?: VectorComponent[]
+}
+
+export interface VectorComponent {
+	/** componentId */
+	i: string
+	/** componentType (e.g. "kafka", "remap", "elasticsearch") */
+	t: string
+	/** componentKind: "source" | "transform" | "sink" */
+	k: "source" | "transform" | "sink" | string
+	/** received_events_total (cumulative) */
+	re?: number
+	/** sent_events_total (cumulative) */
+	se?: number
+	/** received_bytes_total (cumulative) */
+	rb?: number
+	/** sent_bytes_total (cumulative) */
+	sb?: number
+	/** errors_total (cumulative) */
+	e?: number
+	/** discarded_events_total (cumulative) */
+	d?: number
 }
 
 export interface GPUData {
