@@ -91,8 +91,15 @@ func (a *Agent) StartServer(opts ServerOptions) error {
 		PtyCallback: func(ctx ssh.Context, pty ssh.Pty) bool {
 			return false
 		},
-		// close idle connections after 70 seconds
+		// close idle connections after 70 seconds (channel-traffic-aware — does
+		// not fire while a port-forward is actively shipping bytes).
 		IdleTimeout: 70 * time.Second,
+		// Allow direct-tcpip forwards ONLY to Vector's gRPC API port on
+		// localhost. Enables the hub to dial Vector's StreamComponentMetrics
+		// gRPC service through this SSH connection without exposing the rest
+		// of the agent's localhost services. Disabled entirely when
+		// VECTOR_API_ADDR is not set.
+		LocalPortForwardingCallback: vectorForwardCallback(),
 	}
 
 	// Start SSH server on the listener
@@ -205,6 +212,83 @@ func (a *Agent) writeToSession(w io.Writer, stats *system.CombinedData, hubVersi
 		return cbor.NewEncoder(w).Encode(stats)
 	}
 	return json.NewEncoder(w).Encode(stats)
+}
+
+// vectorForwardCallback returns a LocalPortForwardingCallback that allows
+// direct-tcpip channels to Vector's gRPC API port and rejects everything else.
+//
+// The hub uses this forward to stream Vector observability data
+// (StreamComponentMetrics) without needing a new agent-side handler — it dials
+// gRPC straight through to the local Vector instance. Whitelisting one specific
+// destination keeps the surface narrow: the hub gets reach into the agent's
+// Vector port but not into anything else on localhost.
+//
+// When VECTOR_API_ADDR is not set on the agent (no Vector on this host) all
+// forwards are denied — same posture as before this change.
+func vectorForwardCallback() ssh.LocalPortForwardingCallback {
+	var allowedHost string
+	var allowedPort uint32
+
+	addr, ok := utils.GetEnv("VECTOR_API_ADDR")
+	if !ok || strings.TrimSpace(addr) == "" {
+		// Legacy alias from mp.5 era — accept either spelling.
+		if legacy, lok := utils.GetEnv("VECTOR_API_URL"); lok {
+			addr = legacy
+		}
+	}
+	if h, p, err := parseHostPort(addr); err == nil {
+		allowedHost = h
+		allowedPort = p
+		slog.Info("SSH local port forward allowed for Vector", "host", allowedHost, "port", allowedPort)
+	}
+
+	return func(ctx ssh.Context, destinationHost string, destinationPort uint32) bool {
+		if allowedPort == 0 {
+			slog.Debug("SSH port forward denied (Vector not configured)", "to", fmt.Sprintf("%s:%d", destinationHost, destinationPort))
+			return false
+		}
+		// Only loopback destinations matching the configured Vector port.
+		if destinationPort != allowedPort {
+			slog.Debug("SSH port forward denied (wrong port)", "to", fmt.Sprintf("%s:%d", destinationHost, destinationPort), "allowed", fmt.Sprintf("%s:%d", allowedHost, allowedPort))
+			return false
+		}
+		if destinationHost != "127.0.0.1" && destinationHost != "localhost" && destinationHost != allowedHost {
+			slog.Debug("SSH port forward denied (wrong host)", "to", fmt.Sprintf("%s:%d", destinationHost, destinationPort), "allowed", fmt.Sprintf("%s:%d", allowedHost, allowedPort))
+			return false
+		}
+		return true
+	}
+}
+
+// parseHostPort tolerates the URL-shaped inputs that VECTOR_API_ADDR / _URL
+// historically accepted, plus plain host:port. Returns the host (loopback
+// expected) and port number.
+func parseHostPort(raw string) (string, uint32, error) {
+	s := strings.TrimSpace(raw)
+	if s == "" {
+		return "", 0, errors.New("empty")
+	}
+	if i := strings.Index(s, "://"); i >= 0 {
+		s = s[i+3:]
+	}
+	if i := strings.IndexByte(s, '/'); i >= 0 {
+		s = s[:i]
+	}
+	host, portStr, err := net.SplitHostPort(s)
+	if err != nil {
+		return "", 0, err
+	}
+	var port uint32
+	for _, r := range portStr {
+		if r < '0' || r > '9' {
+			return "", 0, fmt.Errorf("invalid port: %q", portStr)
+		}
+		port = port*10 + uint32(r-'0')
+	}
+	if port == 0 || port > 65535 {
+		return "", 0, fmt.Errorf("port out of range: %d", port)
+	}
+	return host, port, nil
 }
 
 // extractHubVersion extracts the beszel version from SSH client version string.
