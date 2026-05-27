@@ -19,10 +19,27 @@ msgctxt "New version available"
 msgid "{0} available"
 msgstr "{0} available"
 
+#. placeholder {0}: formatNumber(vec.e ?? 0)
+#: src/components/charts/vector-panel.tsx
+msgid "{0} cumulative errors"
+msgstr "{0} cumulative errors"
+
 #. placeholder {0}: totals.drainedServerCount
 #: src/components/routes/lvs-aggregate.tsx
 msgid "{0} drained"
 msgstr "{0} drained"
+
+#. placeholder {0}: formatNumber(vec.e ?? 0)
+#: src/components/routes/vector-aggregate.tsx
+msgid "{0} errors"
+msgstr "{0} errors"
+
+#. placeholder {0}: grandTotals.healthy
+#. placeholder {1}: grandTotals.unhealthy
+#. placeholder {2}: vectorSystems.length
+#: src/components/routes/vector-aggregate.tsx
+msgid "{0} healthy, {1} unhealthy across {2} hosts"
+msgstr "{0} healthy, {1} unhealthy across {2} hosts"
 
 #. placeholder {0}: table.getFilteredSelectedRowModel().rows.length
 #. placeholder {1}: table.getFilteredRowModel().rows.length
@@ -30,10 +47,27 @@ msgstr "{0} drained"
 msgid "{0} of {1} row(s) selected."
 msgstr "{0} of {1} row(s) selected."
 
+#. placeholder {0}: vec.sc ?? 0
+#. placeholder {1}: vec.tc ?? 0
+#. placeholder {2}: vec.sk ?? 0
+#: src/components/charts/vector-panel.tsx
+#: src/components/routes/vector-aggregate.tsx
+msgid "{0} sources · {1} transforms · {2} sinks"
+msgstr "{0} sources · {1} transforms · {2} sinks"
+
 #. placeholder {0}: systems.length
 #: src/components/routes/haproxy-aggregate.tsx
 msgid "{0} systems"
 msgstr "{0} systems"
+
+#. placeholder {0}: formatNumber(vec.re ?? 0)
+#. placeholder {0}: formatNumber(vec.se ?? 0)
+#: src/components/charts/vector-panel.tsx
+#: src/components/charts/vector-panel.tsx
+#: src/components/routes/vector-aggregate.tsx
+#: src/components/routes/vector-aggregate.tsx
+msgid "{0} total"
+msgstr "{0} total"
 
 #: src/components/routes/system/info-bar.tsx
 msgid "{cores, plural, one {# core} other {# cores}}"
@@ -350,6 +384,26 @@ msgstr "Boot state"
 msgid "Bytes (KB/s, MB/s, GB/s)"
 msgstr "Bytes (KB/s, MB/s, GB/s)"
 
+#: src/components/charts/vector-panel.tsx
+msgid "Bytes in"
+msgstr "Bytes in"
+
+#: src/components/charts/vector-panel.tsx
+#: src/components/routes/vector-aggregate.tsx
+#: src/components/routes/vector-aggregate.tsx
+msgid "Bytes in/s"
+msgstr "Bytes in/s"
+
+#: src/components/charts/vector-panel.tsx
+msgid "Bytes out"
+msgstr "Bytes out"
+
+#: src/components/charts/vector-panel.tsx
+#: src/components/routes/vector-aggregate.tsx
+#: src/components/routes/vector-aggregate.tsx
+msgid "Bytes out/s"
+msgstr "Bytes out/s"
+
 #: src/components/routes/system/charts/memory-charts.tsx
 msgid "Cache / Buffers"
 msgstr "Cache / Buffers"
@@ -462,6 +516,7 @@ msgstr "Click to copy"
 
 #: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/lvs-aggregate.tsx
+#: src/components/routes/vector-aggregate.tsx
 msgid "Collapse"
 msgstr "Collapse"
 
@@ -469,6 +524,16 @@ msgstr "Collapse"
 #: src/components/login/forgot-pass-form.tsx
 msgid "Command line instructions"
 msgstr "Command line instructions"
+
+#: src/components/charts/vector-panel.tsx
+#: src/components/routes/vector-aggregate.tsx
+msgid "Component"
+msgstr "Component"
+
+#: src/components/routes/system.tsx
+#: src/components/routes/system.tsx
+msgid "Components, throughput, and error counts from the local Vector aggregator"
+msgstr "Components, throughput, and error counts from the local Vector aggregator"
 
 #: src/components/routes/settings/notifications.tsx
 msgid "Configure how you receive alert notifications."
@@ -833,6 +898,35 @@ msgstr "Ephemeral"
 msgid "Error"
 msgstr "Error"
 
+#: src/components/charts/vector-panel.tsx
+#: src/components/routes/vector-aggregate.tsx
+msgid "Errors"
+msgstr "Errors"
+
+#: src/components/routes/vector-aggregate.tsx
+msgid "Errors total"
+msgstr "Errors total"
+
+#: src/components/charts/vector-panel.tsx
+msgid "Events in"
+msgstr "Events in"
+
+#: src/components/charts/vector-panel.tsx
+#: src/components/routes/vector-aggregate.tsx
+#: src/components/routes/vector-aggregate.tsx
+msgid "Events in/s"
+msgstr "Events in/s"
+
+#: src/components/charts/vector-panel.tsx
+msgid "Events out"
+msgstr "Events out"
+
+#: src/components/charts/vector-panel.tsx
+#: src/components/routes/vector-aggregate.tsx
+#: src/components/routes/vector-aggregate.tsx
+msgid "Events out/s"
+msgstr "Events out/s"
+
 #: src/components/routes/settings/heartbeat.tsx
 msgid "Example:"
 msgstr "Example:"
@@ -858,6 +952,7 @@ msgstr "Exited active"
 
 #: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/lvs-aggregate.tsx
+#: src/components/routes/vector-aggregate.tsx
 msgid "Expand"
 msgstr "Expand"
 
@@ -1084,6 +1179,10 @@ msgstr "HAProxy Traffic"
 msgid "Health"
 msgstr "Health"
 
+#: src/components/charts/vector-panel.tsx
+msgid "healthy"
+msgstr "healthy"
+
 #: src/components/routes/settings/layout.tsx
 msgid "Heartbeat"
 msgstr "Heartbeat"
@@ -1189,6 +1288,11 @@ msgstr "Interval"
 #: src/components/login/auth-form.tsx
 msgid "Invalid email address."
 msgstr "Invalid email address."
+
+#: src/components/charts/vector-panel.tsx
+#: src/components/routes/vector-aggregate.tsx
+msgid "Kind"
+msgstr "Kind"
 
 #: src/components/lang-toggle.tsx
 #: src/components/routes/settings/general.tsx
@@ -1379,7 +1483,16 @@ msgstr "Network unit"
 msgid "No"
 msgstr "No"
 
+#: src/components/routes/vector-aggregate.tsx
+msgid "No agents are reporting Vector data yet."
+msgstr "No agents are reporting Vector data yet."
+
+#: src/components/charts/vector-panel.tsx
+msgid "No components reported by Vector."
+msgstr "No components reported by Vector."
+
 #: src/components/routes/lvs-aggregate.tsx
+#: src/components/routes/vector-aggregate.tsx
 msgid "no data"
 msgstr "no data"
 
@@ -1413,6 +1526,10 @@ msgstr "No results."
 msgid "No S.M.A.R.T. attributes available for this device."
 msgstr "No S.M.A.R.T. attributes available for this device."
 
+#: src/components/routes/vector-aggregate.tsx
+msgid "No Systems"
+msgstr "No Systems"
+
 #: src/components/systems-table/systems-table.tsx
 #: src/components/systems-table/systems-table.tsx
 msgid "No systems found."
@@ -1425,6 +1542,10 @@ msgstr "No systems matching the \"ha-*\" pattern were found."
 #: src/components/routes/lvs-aggregate.tsx
 msgid "No systems matching the \"lvs-*\" pattern were found."
 msgstr "No systems matching the \"lvs-*\" pattern were found."
+
+#: src/components/routes/vector-aggregate.tsx
+msgid "No Vector hosts found"
+msgstr "No Vector hosts found"
 
 #: src/components/charts/ipvs-panel.tsx
 msgid "No virtual services configured."
@@ -1661,6 +1782,14 @@ msgstr "Reals"
 msgid "Received"
 msgstr "Received"
 
+#: src/components/routes/vector-aggregate.tsx
+msgid "Received bytes"
+msgstr "Received bytes"
+
+#: src/components/routes/vector-aggregate.tsx
+msgid "Received events"
+msgstr "Received events"
+
 #: src/components/containers-table/containers-table.tsx
 #: src/components/containers-table/containers-table.tsx
 #: src/components/routes/system/smart-table.tsx
@@ -1809,6 +1938,14 @@ msgstr "Send test heartbeat"
 msgid "Sent"
 msgstr "Sent"
 
+#: src/components/routes/vector-aggregate.tsx
+msgid "Sent bytes"
+msgstr "Sent bytes"
+
+#: src/components/routes/vector-aggregate.tsx
+msgid "Sent events"
+msgstr "Sent events"
+
 #: src/components/routes/system/smart-table.tsx
 msgid "Serial Number"
 msgstr "Serial Number"
@@ -1835,6 +1972,10 @@ msgstr "Set percentage thresholds for meter colors."
 #: src/components/routes/settings/heartbeat.tsx
 msgid "Set the following environment variables on your Beszel hub to enable heartbeat monitoring:"
 msgstr "Set the following environment variables on your Beszel hub to enable heartbeat monitoring:"
+
+#: src/components/routes/vector-aggregate.tsx
+msgid "Set VECTOR_API_URL (e.g. http://127.0.0.1:8686/graphql) on a beszel-agent and ensure the local Vector instance has its GraphQL API enabled."
+msgstr "Set VECTOR_API_URL (e.g. http://127.0.0.1:8686/graphql) on a beszel-agent and ensure the local Vector instance has its GraphQL API enabled."
 
 #: src/components/command-palette.tsx
 #: src/components/command-palette.tsx
@@ -2147,11 +2288,17 @@ msgstr "Triggers when status switches between up and down"
 msgid "Triggers when usage of any disk exceeds a threshold"
 msgstr "Triggers when usage of any disk exceeds a threshold"
 
+#: src/components/charts/vector-panel.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/system/smart-table.tsx
+#: src/components/routes/vector-aggregate.tsx
 msgid "Type"
 msgstr "Type"
+
+#: src/components/charts/vector-panel.tsx
+msgid "unhealthy"
+msgstr "unhealthy"
 
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Unit file"
@@ -2195,6 +2342,7 @@ msgstr "Update"
 #: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/lvs-aggregate.tsx
 #: src/components/routes/system/smart-table.tsx
+#: src/components/routes/vector-aggregate.tsx
 #: src/components/systemd-table/systemd-table-columns.tsx
 msgid "Updated"
 msgstr "Updated"
@@ -2243,6 +2391,19 @@ msgstr "Utilization"
 msgid "Value"
 msgstr "Value"
 
+#: src/components/routes/system.tsx
+#: src/components/routes/system.tsx
+#: src/components/routes/system.tsx
+msgid "Vector"
+msgstr "Vector"
+
+#: src/components/navbar.tsx
+#: src/components/navbar.tsx
+#: src/components/routes/vector-aggregate.tsx
+#: src/components/routes/vector-aggregate.tsx
+msgid "Vector Aggregate"
+msgstr "Vector Aggregate"
+
 #: src/components/systems-table/systems-table.tsx
 msgid "View"
 msgstr "View"
@@ -2279,6 +2440,10 @@ msgstr "Visible Fields"
 #: src/components/routes/system/chart-card.tsx
 msgid "Waiting for enough records to display"
 msgstr "Waiting for enough records to display"
+
+#: src/components/routes/vector-aggregate.tsx
+msgid "Waiting for system records to load…"
+msgstr "Waiting for system records to load…"
 
 #: src/components/routes/settings/general.tsx
 msgid "Want to help improve our translations? Check <0>Crowdin</0> for details."

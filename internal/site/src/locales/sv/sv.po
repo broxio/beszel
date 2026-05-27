@@ -24,9 +24,26 @@ msgctxt "New version available"
 msgid "{0} available"
 msgstr "{0} tillgänglig"
 
+#. placeholder {0}: formatNumber(vec.e ?? 0)
+#: src/components/charts/vector-panel.tsx
+msgid "{0} cumulative errors"
+msgstr ""
+
 #. placeholder {0}: totals.drainedServerCount
 #: src/components/routes/lvs-aggregate.tsx
 msgid "{0} drained"
+msgstr ""
+
+#. placeholder {0}: formatNumber(vec.e ?? 0)
+#: src/components/routes/vector-aggregate.tsx
+msgid "{0} errors"
+msgstr ""
+
+#. placeholder {0}: grandTotals.healthy
+#. placeholder {1}: grandTotals.unhealthy
+#. placeholder {2}: vectorSystems.length
+#: src/components/routes/vector-aggregate.tsx
+msgid "{0} healthy, {1} unhealthy across {2} hosts"
 msgstr ""
 
 #. placeholder {0}: table.getFilteredSelectedRowModel().rows.length
@@ -35,9 +52,26 @@ msgstr ""
 msgid "{0} of {1} row(s) selected."
 msgstr "{0} av {1} rad(er) valda."
 
+#. placeholder {0}: vec.sc ?? 0
+#. placeholder {1}: vec.tc ?? 0
+#. placeholder {2}: vec.sk ?? 0
+#: src/components/charts/vector-panel.tsx
+#: src/components/routes/vector-aggregate.tsx
+msgid "{0} sources · {1} transforms · {2} sinks"
+msgstr ""
+
 #. placeholder {0}: systems.length
 #: src/components/routes/haproxy-aggregate.tsx
 msgid "{0} systems"
+msgstr ""
+
+#. placeholder {0}: formatNumber(vec.re ?? 0)
+#. placeholder {0}: formatNumber(vec.se ?? 0)
+#: src/components/charts/vector-panel.tsx
+#: src/components/charts/vector-panel.tsx
+#: src/components/routes/vector-aggregate.tsx
+#: src/components/routes/vector-aggregate.tsx
+msgid "{0} total"
 msgstr ""
 
 #: src/components/routes/system/info-bar.tsx
@@ -355,6 +389,26 @@ msgstr "Starttillstånd"
 msgid "Bytes (KB/s, MB/s, GB/s)"
 msgstr "Bytes (KB/s, MB/s, GB/S)"
 
+#: src/components/charts/vector-panel.tsx
+msgid "Bytes in"
+msgstr ""
+
+#: src/components/charts/vector-panel.tsx
+#: src/components/routes/vector-aggregate.tsx
+#: src/components/routes/vector-aggregate.tsx
+msgid "Bytes in/s"
+msgstr ""
+
+#: src/components/charts/vector-panel.tsx
+msgid "Bytes out"
+msgstr ""
+
+#: src/components/charts/vector-panel.tsx
+#: src/components/routes/vector-aggregate.tsx
+#: src/components/routes/vector-aggregate.tsx
+msgid "Bytes out/s"
+msgstr ""
+
 #: src/components/routes/system/charts/memory-charts.tsx
 msgid "Cache / Buffers"
 msgstr "Cache / Buffertar"
@@ -467,6 +521,7 @@ msgstr "Klicka för att kopiera"
 
 #: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/lvs-aggregate.tsx
+#: src/components/routes/vector-aggregate.tsx
 msgid "Collapse"
 msgstr ""
 
@@ -474,6 +529,16 @@ msgstr ""
 #: src/components/login/forgot-pass-form.tsx
 msgid "Command line instructions"
 msgstr "Instruktioner för kommandoraden"
+
+#: src/components/charts/vector-panel.tsx
+#: src/components/routes/vector-aggregate.tsx
+msgid "Component"
+msgstr ""
+
+#: src/components/routes/system.tsx
+#: src/components/routes/system.tsx
+msgid "Components, throughput, and error counts from the local Vector aggregator"
+msgstr ""
 
 #: src/components/routes/settings/notifications.tsx
 msgid "Configure how you receive alert notifications."
@@ -838,6 +903,35 @@ msgstr "Flyktig"
 msgid "Error"
 msgstr "Fel"
 
+#: src/components/charts/vector-panel.tsx
+#: src/components/routes/vector-aggregate.tsx
+msgid "Errors"
+msgstr ""
+
+#: src/components/routes/vector-aggregate.tsx
+msgid "Errors total"
+msgstr ""
+
+#: src/components/charts/vector-panel.tsx
+msgid "Events in"
+msgstr ""
+
+#: src/components/charts/vector-panel.tsx
+#: src/components/routes/vector-aggregate.tsx
+#: src/components/routes/vector-aggregate.tsx
+msgid "Events in/s"
+msgstr ""
+
+#: src/components/charts/vector-panel.tsx
+msgid "Events out"
+msgstr ""
+
+#: src/components/charts/vector-panel.tsx
+#: src/components/routes/vector-aggregate.tsx
+#: src/components/routes/vector-aggregate.tsx
+msgid "Events out/s"
+msgstr ""
+
 #: src/components/routes/settings/heartbeat.tsx
 msgid "Example:"
 msgstr "Exempel:"
@@ -863,6 +957,7 @@ msgstr "Avslutades aktivt"
 
 #: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/lvs-aggregate.tsx
+#: src/components/routes/vector-aggregate.tsx
 msgid "Expand"
 msgstr ""
 
@@ -1089,6 +1184,10 @@ msgstr ""
 msgid "Health"
 msgstr "Hälsa"
 
+#: src/components/charts/vector-panel.tsx
+msgid "healthy"
+msgstr ""
+
 #: src/components/routes/settings/layout.tsx
 msgid "Heartbeat"
 msgstr "Hjärtslag"
@@ -1194,6 +1293,11 @@ msgstr "Intervall"
 #: src/components/login/auth-form.tsx
 msgid "Invalid email address."
 msgstr "Ogiltig e-postadress."
+
+#: src/components/charts/vector-panel.tsx
+#: src/components/routes/vector-aggregate.tsx
+msgid "Kind"
+msgstr ""
 
 #: src/components/lang-toggle.tsx
 #: src/components/routes/settings/general.tsx
@@ -1384,7 +1488,16 @@ msgstr "Nätverksenhet"
 msgid "No"
 msgstr "Nej"
 
+#: src/components/routes/vector-aggregate.tsx
+msgid "No agents are reporting Vector data yet."
+msgstr ""
+
+#: src/components/charts/vector-panel.tsx
+msgid "No components reported by Vector."
+msgstr ""
+
 #: src/components/routes/lvs-aggregate.tsx
+#: src/components/routes/vector-aggregate.tsx
 msgid "no data"
 msgstr ""
 
@@ -1418,6 +1531,10 @@ msgstr "Inga resultat."
 msgid "No S.M.A.R.T. attributes available for this device."
 msgstr "Inga S.M.A.R.T.-attribut tillgängliga för den här enheten."
 
+#: src/components/routes/vector-aggregate.tsx
+msgid "No Systems"
+msgstr ""
+
 #: src/components/systems-table/systems-table.tsx
 #: src/components/systems-table/systems-table.tsx
 msgid "No systems found."
@@ -1429,6 +1546,10 @@ msgstr ""
 
 #: src/components/routes/lvs-aggregate.tsx
 msgid "No systems matching the \"lvs-*\" pattern were found."
+msgstr ""
+
+#: src/components/routes/vector-aggregate.tsx
+msgid "No Vector hosts found"
 msgstr ""
 
 #: src/components/charts/ipvs-panel.tsx
@@ -1666,6 +1787,14 @@ msgstr ""
 msgid "Received"
 msgstr "Mottaget"
 
+#: src/components/routes/vector-aggregate.tsx
+msgid "Received bytes"
+msgstr ""
+
+#: src/components/routes/vector-aggregate.tsx
+msgid "Received events"
+msgstr ""
+
 #: src/components/containers-table/containers-table.tsx
 #: src/components/containers-table/containers-table.tsx
 #: src/components/routes/system/smart-table.tsx
@@ -1814,6 +1943,14 @@ msgstr "Skicka test-heartbeat"
 msgid "Sent"
 msgstr "Skickat"
 
+#: src/components/routes/vector-aggregate.tsx
+msgid "Sent bytes"
+msgstr ""
+
+#: src/components/routes/vector-aggregate.tsx
+msgid "Sent events"
+msgstr ""
+
 #: src/components/routes/system/smart-table.tsx
 msgid "Serial Number"
 msgstr "Serienummer"
@@ -1840,6 +1977,10 @@ msgstr "Ställ in procentuella tröskelvärden för mätarfärger."
 #: src/components/routes/settings/heartbeat.tsx
 msgid "Set the following environment variables on your Beszel hub to enable heartbeat monitoring:"
 msgstr "Ställ in följande miljövariabler på din Beszel-hubb för att aktivera heartbeat-övervakning:"
+
+#: src/components/routes/vector-aggregate.tsx
+msgid "Set VECTOR_API_URL (e.g. http://127.0.0.1:8686/graphql) on a beszel-agent and ensure the local Vector instance has its GraphQL API enabled."
+msgstr ""
 
 #: src/components/command-palette.tsx
 #: src/components/command-palette.tsx
@@ -2152,11 +2293,17 @@ msgstr "Utlöses när status växlar mellan upp och ner"
 msgid "Triggers when usage of any disk exceeds a threshold"
 msgstr "Utlöses när användningen av någon disk överskrider ett tröskelvärde"
 
+#: src/components/charts/vector-panel.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/system/smart-table.tsx
+#: src/components/routes/vector-aggregate.tsx
 msgid "Type"
 msgstr "Typ"
+
+#: src/components/charts/vector-panel.tsx
+msgid "unhealthy"
+msgstr ""
 
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Unit file"
@@ -2200,6 +2347,7 @@ msgstr "Uppdatera"
 #: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/lvs-aggregate.tsx
 #: src/components/routes/system/smart-table.tsx
+#: src/components/routes/vector-aggregate.tsx
 #: src/components/systemd-table/systemd-table-columns.tsx
 msgid "Updated"
 msgstr "Uppdaterad"
@@ -2248,6 +2396,19 @@ msgstr "Användning"
 msgid "Value"
 msgstr "Värde"
 
+#: src/components/routes/system.tsx
+#: src/components/routes/system.tsx
+#: src/components/routes/system.tsx
+msgid "Vector"
+msgstr ""
+
+#: src/components/navbar.tsx
+#: src/components/navbar.tsx
+#: src/components/routes/vector-aggregate.tsx
+#: src/components/routes/vector-aggregate.tsx
+msgid "Vector Aggregate"
+msgstr ""
+
 #: src/components/systems-table/systems-table.tsx
 msgid "View"
 msgstr "Visa"
@@ -2284,6 +2445,10 @@ msgstr "Synliga fält"
 #: src/components/routes/system/chart-card.tsx
 msgid "Waiting for enough records to display"
 msgstr "Väntar på tillräckligt med poster att visa"
+
+#: src/components/routes/vector-aggregate.tsx
+msgid "Waiting for system records to load…"
+msgstr ""
 
 #: src/components/routes/settings/general.tsx
 msgid "Want to help improve our translations? Check <0>Crowdin</0> for details."
