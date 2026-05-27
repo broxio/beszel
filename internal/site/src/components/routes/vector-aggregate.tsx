@@ -25,9 +25,15 @@ import {
 	formatNumber,
 	type VectorHostStatus,
 } from "@/lib/vector-aggregate"
-import type { SystemRecord, VectorComponent, VectorStats } from "@/types"
+import type { SystemRecord, SystemStats, VectorComponent, VectorStats } from "@/types"
 
-const POLL_INTERVAL = 5000
+// Polling is now only used for initial host discovery + a slow safety-net
+// refresh. Live rate updates flow through the `rt_metrics` realtime subscription
+// (one per Vector host) which the hub already runs at a 1s tick for the
+// per-system page. Each rt_metrics frame brings genuinely fresh Vector data
+// (subject to the agent's VECTOR_UPDATE_INTERVAL — defaults to 5s; set it to
+// 1s or 2s on the agent for true sub-second freshness).
+const POLL_INTERVAL = 60000
 const HISTORY_LENGTH = 60
 
 interface ThroughputPoint {
@@ -76,10 +82,71 @@ export default memo(function VectorAggregatePage() {
 	const fetchingRef = useRef(false)
 	const systemsRef = useRef<SystemRecord[]>([])
 
-	// Per-system previous counter sample to derive rates between polls.
+	// Per-system previous counter sample to derive rates between updates (from
+	// either rt_metrics ticks or the slow polling fallback).
 	const prevCountersRef = useRef<Map<string, CounterSample>>(new Map())
 	const throughputHistoryRef = useRef<ThroughputHistory>(new Map())
 	const [throughputHistory, setThroughputHistory] = useState<ThroughputHistory>(new Map())
+
+	// Active rt_metrics subscriptions keyed by system id. Each entry holds the
+	// unsubscribe function returned by pb.realtime.subscribe.
+	const subscriptionsRef = useRef<Map<string, () => void>>(new Map())
+
+	/**
+	 * Apply a fresh Vector snapshot from any source (polling or rt_metrics).
+	 * Updates statsMap, computes rate from the previous sample, pushes to
+	 * history. Duplicate-counter samples (e.g. when the agent's Vector cache
+	 * hasn't refreshed) are still recorded in statsMap so component lists
+	 * stay current, but skip rate recomputation so the displayed rate doesn't
+	 * flap to 0.
+	 */
+	const applyVectorSample = (systemId: string, vec: VectorStats) => {
+		if (!mountedRef.current) return
+		const now = Date.now()
+		const sample: CounterSample = {
+			receivedEvents: vec.re ?? 0,
+			sentEvents: vec.se ?? 0,
+			receivedBytes: vec.rb ?? 0,
+			sentBytes: vec.sb ?? 0,
+			timestamp: now,
+		}
+		const prev = prevCountersRef.current.get(systemId)
+		const sameCounters =
+			prev &&
+			prev.receivedEvents === sample.receivedEvents &&
+			prev.sentEvents === sample.sentEvents &&
+			prev.receivedBytes === sample.receivedBytes &&
+			prev.sentBytes === sample.sentBytes
+
+		if (!sameCounters && prev) {
+			const interval = now - prev.timestamp
+			const point: ThroughputPoint = {
+				receivedEventsRate: deriveRate(sample.receivedEvents, prev.receivedEvents, interval),
+				sentEventsRate: deriveRate(sample.sentEvents, prev.sentEvents, interval),
+				receivedBytesRate: deriveRate(sample.receivedBytes, prev.receivedBytes, interval),
+				sentBytesRate: deriveRate(sample.sentBytes, prev.sentBytes, interval),
+				timestamp: now,
+			}
+			const hist = throughputHistoryRef.current
+			let h = hist.get(systemId)
+			if (!h) {
+				h = []
+				hist.set(systemId, h)
+			}
+			h.push(point)
+			if (h.length > HISTORY_LENGTH) h.shift()
+			setThroughputHistory(new Map(hist))
+		}
+		if (!sameCounters) {
+			prevCountersRef.current.set(systemId, sample)
+		}
+		setStatsMap((prevMap) => {
+			const next = new Map(prevMap)
+			next.set(systemId, vec)
+			return next
+		})
+		setLastUpdate(new Date())
+	}
 
 	// Subscribe to systems store — Vector visibility is decided after fetch
 	// (based on which systems have a `vec` field), so we hold *all* systems
@@ -93,6 +160,13 @@ export default memo(function VectorAggregatePage() {
 		return $systems.subscribe(update)
 	}, [])
 
+	/**
+	 * Initial host discovery + slow safety-net refresh. After mount, this fires
+	 * once to populate the visible host list within ~300ms, then again every
+	 * POLL_INTERVAL (60s) as a backstop in case a new Vector host comes online
+	 * or the rt_metrics subscription was missed for some host. Per-host rate
+	 * updates flow primarily through the rt_metrics subscription effect below.
+	 */
 	const fetchStats = async () => {
 		const systems = systemsRef.current
 		if (systems.length === 0 || fetchingRef.current || !mountedRef.current) return
@@ -103,60 +177,10 @@ export default memo(function VectorAggregatePage() {
 				method: "GET",
 				query: { ids },
 			})
-			const next = new Map<string, VectorStats>()
-			for (const item of response) {
-				if (item.vector) next.set(item.system, item.vector)
-			}
 			if (!mountedRef.current) return
-
-			// Derive rates per system from previous sample.
-			const now = Date.now()
-			const hist = throughputHistoryRef.current
-			for (const [systemId, vec] of next) {
-				const sample: CounterSample = {
-					receivedEvents: vec.re ?? 0,
-					sentEvents: vec.se ?? 0,
-					receivedBytes: vec.rb ?? 0,
-					sentBytes: vec.sb ?? 0,
-					timestamp: now,
-				}
-				const prev = prevCountersRef.current.get(systemId)
-				// If every cumulative counter is identical to the previous sample,
-				// the hub hasn't written a new system_stats record between our polls.
-				// Recomputing here would produce rate=0 and flap the display. Skip
-				// and leave the last good rate in history.
-				if (
-					prev &&
-					prev.receivedEvents === sample.receivedEvents &&
-					prev.sentEvents === sample.sentEvents &&
-					prev.receivedBytes === sample.receivedBytes &&
-					prev.sentBytes === sample.sentBytes
-				) {
-					continue
-				}
-				if (prev) {
-					const interval = now - prev.timestamp
-					const point: ThroughputPoint = {
-						receivedEventsRate: deriveRate(sample.receivedEvents, prev.receivedEvents, interval),
-						sentEventsRate: deriveRate(sample.sentEvents, prev.sentEvents, interval),
-						receivedBytesRate: deriveRate(sample.receivedBytes, prev.receivedBytes, interval),
-						sentBytesRate: deriveRate(sample.sentBytes, prev.sentBytes, interval),
-						timestamp: now,
-					}
-					let h = hist.get(systemId)
-					if (!h) {
-						h = []
-						hist.set(systemId, h)
-					}
-					h.push(point)
-					if (h.length > HISTORY_LENGTH) h.shift()
-				}
-				prevCountersRef.current.set(systemId, sample)
+			for (const item of response) {
+				if (item.vector) applyVectorSample(item.system, item.vector)
 			}
-
-			setStatsMap(next)
-			setThroughputHistory(new Map(hist))
-			setLastUpdate(new Date())
 		} catch (err) {
 			console.error("Failed to fetch Vector stats:", err)
 		} finally {
@@ -192,6 +216,69 @@ export default memo(function VectorAggregatePage() {
 		() => allSystems.filter((s) => statsMap.has(s.id)),
 		[allSystems, statsMap],
 	)
+
+	// Manage rt_metrics subscriptions per Vector host. Re-runs whenever the set
+	// of visible Vector hosts changes (new host appears in statsMap → subscribe;
+	// host disappears → unsubscribe). Each subscription delivers full system
+	// data ~1× per second from the hub's realtime worker (which calls the agent
+	// on demand); we extract stats.vec and feed it into applyVectorSample.
+	//
+	// MUST be declared after `vectorSystems` because the deps array references
+	// it — an earlier version had this above the useMemo and crashed on first
+	// render with a TDZ ReferenceError.
+	useEffect(() => {
+		const subs = subscriptionsRef.current
+		const desired = new Set(vectorSystems.map((s) => s.id))
+
+		// Tear down subscriptions for hosts that are no longer Vector hosts.
+		for (const [id, unsub] of subs) {
+			if (!desired.has(id)) {
+				unsub()
+				subs.delete(id)
+			}
+		}
+
+		// Subscribe to any new Vector host.
+		for (const sys of vectorSystems) {
+			if (subs.has(sys.id)) continue
+			let cancelled = false
+			pb.realtime
+				.subscribe(
+					"rt_metrics",
+					(data: { stats: SystemStats }) => {
+						const vec = data?.stats?.vec
+						if (vec) applyVectorSample(sys.id, vec)
+					},
+					{ query: { system: sys.id } },
+				)
+				.then((unsub) => {
+					// Component may have unmounted (or this host removed) while the
+					// subscribe promise was in flight — clean up immediately if so.
+					if (cancelled || !mountedRef.current) {
+						unsub()
+						return
+					}
+					subs.set(sys.id, unsub)
+				})
+				.catch((err) => {
+					console.error("Failed to subscribe to rt_metrics", sys.id, err)
+				})
+			// Track cancellation for the in-flight promise above.
+			subs.set(sys.id, () => {
+				cancelled = true
+			})
+		}
+
+		return undefined
+	}, [vectorSystems])
+
+	// Final unsubscribe on unmount.
+	useEffect(() => {
+		return () => {
+			for (const [, unsub] of subscriptionsRef.current) unsub()
+			subscriptionsRef.current.clear()
+		}
+	}, [])
 
 	const grandTotals = useMemo(() => {
 		let receivedEventsRate = 0
