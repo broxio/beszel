@@ -4,7 +4,7 @@ set -e
 # Configuration
 # VERSION: upstream version (e.g., 0.17.0)
 # RELEASE: custom release tag (e.g., emp)
-VERSION="${VERSION:-0.18.7-mp.6}"
+VERSION="${VERSION:-0.18.7-mp.7}"
 RELEASE="${RELEASE:-emp}"
 GOARCH="${GOARCH:-amd64}"
 PACKAGE="${1:-all}"  # agent, hub, or all
