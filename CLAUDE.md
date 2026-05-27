@@ -235,24 +235,45 @@ curl -s "https://hub.example/api/beszel/ipvs/stats?ids=<system_id>" -H "Authoriz
 | `v0.18.7-mp.2` | Pure version bump to disambiguate "did the new binary actually deploy?" during prod rollout |
 | `v0.18.7-mp.3` | `CAP_NET_ADMIN` baked into packaged systemd unit (the prod-blocker fix) |
 | `v0.18.7-mp.4` | Per-host status badges on `/lvs` with no-data diagnostic tooltip; new IPVS panel on `/system/<id>` |
-| `v0.18.7-mp.5` | Initial Vector aggregator monitoring: agent collector (opt-in via `VECTOR_API_URL`), hub `/api/beszel/vector/stats` endpoint, `/vector` aggregate page, per-system Vector panel |
+| `v0.18.7-mp.5` | Initial Vector aggregator monitoring (broken — agent used GraphQL but Vector's API is gRPC); UI/hub/types are sound and reused by mp.6 |
+| `v0.18.7-mp.6` | Vector collector rewritten on grpc-go using Vector's `observability.proto`. Env var rename `VECTOR_API_URL` → `VECTOR_API_ADDR` (URL form still accepted for back-compat) |
 
 ## Vector Aggregator Monitoring
 
 ### Architecture Decisions
 
-#### Data source: Vector's GraphQL API
-Vector ships a GraphQL endpoint (default `:8686`) that powers `vector top`. The agent issues one batched HTTP POST per poll containing `health`, `meta { versionString hostname }`, and `components(first: 10000)` with each component's `receivedEventsTotal`, `sentEventsTotal`, `receivedBytesTotal`, `sentBytesTotal`, `errorsTotal`, `discardedEventsTotal`. Cursor pagination is skipped — pipelines well under 10000 components is the assumption.
+#### Data source: Vector's gRPC observability API
+Vector ships a gRPC service (`vector.observability.v1.ObservabilityService`) defined in `proto/vector/observability.proto`. The agent issues two unary RPCs per poll: `GetMeta` (version + hostname) and `GetComponents` (per-component metrics with `received_bytes_total`, `received_events_total`, `sent_bytes_total`, `sent_events_total`). Vector's `vector top` CLI uses the same service via `StreamComponentMetrics`.
 
-Vector exposes **cumulative counters only**. The agent ships them as-is and the UI derives per-second rates client-side from successive samples (parallels HAProxy, in contrast to LVS where the kernel estimator provides rates directly).
+A trimmed copy of the proto lives in `agent/vectorpb/observability.proto` (drops the event-tapping RPC so we don't have to vendor Vector's full event proto chain). Generated Go bindings (`observability.pb.go`, `observability_grpc.pb.go`) are committed.
+
+Vector exposes **cumulative counters only via GetComponents**. The agent ships them as-is and the UI derives per-second rates client-side from successive samples (parallels HAProxy, in contrast to LVS where the kernel estimator provides rates directly).
+
+**Important gotcha:** the proto's `ComponentMetrics` does NOT include `errors_total` or `discarded_events_total` — those are only available via the streaming `StreamComponentMetrics` RPC (`MetricName.METRIC_NAME_ERRORS_TOTAL`). The agent leaves those fields zero rather than open a long-lived stream just for the count. If error visibility becomes the operator's primary question, add a side-stream goroutine.
+
+#### Earlier wrong turn (mp.5)
+The first cut shipped as `v0.18.7-mp.5` was built against a Vector GraphQL API that doesn't exist in current Vector. Older Vector versions did serve GraphQL on the `[api]` port but the project removed it — current `src/api/` in vectordotdev/vector has only `grpc/`, `grpc_server.rs`, `mod.rs`. Symptom on the agent was `DEBUG Vector err="vector decode: EOF"`; manual `curl -v` on the endpoint returned `content-type: application/grpc grpc-status: 12 UNIMPLEMENTED`. mp.6 swaps the agent's HTTP+JSON client for grpc-go with generated protobuf bindings.
 
 #### Opt-in via env var (different from LVS)
-Unlike LVS (auto-enables on any host with the `ip_vs` module), Vector is **opt-in via `VECTOR_API_URL`** on the agent. Justification: Vector's GraphQL API has to be explicitly enabled in `vector.toml` (`api.enabled = true`) and bound to a port — there's no kernel-level discovery hook. When unset, `NewVectorManager` returns `(nil, errVectorDisabled)` and the agent skips Vector collection.
+Unlike LVS (auto-enables on any host with the `ip_vs` module), Vector is **opt-in via `VECTOR_API_ADDR`** on the agent. Justification: Vector's API has to be explicitly enabled in `vector.toml` (`api.enabled = true`) and bound to a port — there's no kernel-level discovery hook. When unset, `NewVectorManager` returns `(nil, errVectorDisabled)` and the agent skips Vector collection.
 
-Accepted forms of `VECTOR_API_URL`:
-- `http://127.0.0.1:8686`
-- `http://127.0.0.1:8686/graphql`
-- `127.0.0.1:8686` (scheme defaulted to `http://`, path to `/graphql`)
+`VECTOR_API_ADDR` is a gRPC dial target (host:port), **not a URL**. The collector tolerates URL-shaped inputs to ease the upgrade path from mp.5:
+- `127.0.0.1:8687` (canonical)
+- `vector-host:8687`
+- `http://127.0.0.1:8687` → scheme stripped
+- `http://127.0.0.1:8687/graphql` → scheme + path stripped (so an mp.5 conf keeps working with a warning)
+
+For ease of migration, `VECTOR_API_URL` is also accepted as a legacy alias and logged at WARN.
+
+#### Port collision rule
+Vector's `[api]` block AND the `vector` *source* (Vector-to-Vector pipeline ingest) are **both gRPC services**. They cannot share a port. The default API bind is `127.0.0.1:8686` and the `vector` source typically also wants `:8686`. If both are configured, the source wins the bind and the API silently fails to start. Symptom: `curl -v -X POST host:8686/anything` returns `content-type: application/grpc grpc-status: 12` (which is the source's gRPC handler rejecting an unknown service).
+
+**Fix:** give the API its own port:
+```toml
+[api]
+enabled = true
+address = "127.0.0.1:8687"   # NOT 8686 if a `vector` source is configured
+```
 
 #### Visibility on `/vector` (no hostname pattern)
 HAProxy/LVS gate visibility on the aggregate page by hostname (`ha-*`, `lvs-*`). Vector skips that convention because Vector deployments are heterogeneous (aggregators, edge collectors, single-tenant pipelines) and hostnames already encode other concerns. **Visibility = presence of the `vec` field in the latest stats record** — i.e. the operator's `VECTOR_API_URL` decision is the opt-in.
@@ -275,7 +296,9 @@ Per-host aggregates:
 This avoids triple-counting (events that flow source → transform → sink would otherwise show 3× the actual throughput in the host-level aggregate).
 
 ### File Structure
-- `agent/vector.go` — `VectorManager`, HTTP+GraphQL client, endpoint normalization, polling state
+- `agent/vector.go` — `VectorManager`, gRPC client (grpc-go + insecure creds), addr normalization, polling state
+- `agent/vectorpb/observability.proto` — trimmed copy of Vector's proto (event tapping dropped)
+- `agent/vectorpb/observability.pb.go` + `observability_grpc.pb.go` — generated bindings (committed)
 - `internal/entities/system/system.go` — `VectorStats`, `VectorComponent` types (CBOR keys 80+)
 - `internal/hub/api.go` — `getVectorStats` handler at `/api/beszel/vector/stats`
 - `internal/site/src/lib/vector-aggregate.ts` — visibility filter, group totals, rate derivation, formatters, host status
@@ -283,11 +306,22 @@ This avoids triple-counting (events that flow source → transform → sink woul
 - `internal/site/src/components/charts/vector-panel.tsx` — per-system Vector panel (mounted from `/system/<id>` when `vec` is present)
 
 ### Data Flow
-1. Agent's `VectorManager.fetch()` POSTs one bundled GraphQL query to `VECTOR_API_URL`
+1. Agent's `VectorManager.fetch()` issues `GetMeta` + `GetComponents` gRPC calls against `VECTOR_API_ADDR`
 2. Build per-component entries from the response; sum per-kind totals (sources / transforms / sinks)
 3. Aggregate to `data.Stats.Vector` in agent `gatherStats`; ship via existing system_stats pipeline
 4. UI polls `/api/beszel/vector/stats?ids=...` every 5s on the aggregate page; derives rates client-side from successive cumulative-counter samples
 5. Per-system panel reads `systemStats.at(-1)?.stats?.vec` (no separate poll — same data cadence as the rest of the system page)
+
+### Regenerating proto bindings
+After editing `agent/vectorpb/observability.proto` (e.g. to track upstream proto changes), regenerate with:
+```bash
+cd agent/vectorpb
+PATH=$HOME/go/bin:$PATH protoc \
+  --go_out=. --go-grpc_out=. \
+  --go_opt=paths=source_relative --go-grpc_opt=paths=source_relative \
+  observability.proto
+```
+Requires `protoc` plus `protoc-gen-go` and `protoc-gen-go-grpc` in `$PATH` (install with `go install google.golang.org/protobuf/cmd/protoc-gen-go@latest` and `go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest`).
 
 ### UI status states (per-host badge on `/vector`)
 Computed in `deriveHostStatus(systemStatus, vec)`:
@@ -297,15 +331,16 @@ Computed in `deriveHostStatus(systemStatus, vec)`:
 - **down** (gray) — host isn't reporting at all
 
 ### Configuration
-- `VECTOR_API_URL=http://127.0.0.1:8686/graphql` — enables collection (required)
+- `VECTOR_API_ADDR=127.0.0.1:8687` — gRPC dial target, enables collection (required)
+- `VECTOR_API_URL` — accepted as legacy alias from mp.5 (logged at WARN, URL-shaped inputs are normalized to host:port)
 - `VECTOR_UPDATE_INTERVAL=5s` — override agent collection period (default 5s)
-- Vector side: `api.enabled = true` and `api.address = "127.0.0.1:8686"` in `vector.toml`
+- Vector side: `api.enabled = true` and `api.address = "127.0.0.1:8687"` in `vector.toml` (use a different port than any configured `vector` source — see "Port collision rule" above)
 
 ### Troubleshooting
 Enable debug logging temporarily and inspect the Vector init line:
 ```bash
 echo 'LOG_LEVEL=debug' | sudo tee -a /etc/beszel-agent.conf
-echo 'VECTOR_API_URL=http://127.0.0.1:8686/graphql' | sudo tee -a /etc/beszel-agent.conf
+echo 'VECTOR_API_ADDR=127.0.0.1:8687' | sudo tee -a /etc/beszel-agent.conf
 sudo systemctl restart beszel-agent
 sleep 3
 sudo journalctl -u beszel-agent -n 50 --no-pager | grep -iE 'vector'
@@ -314,11 +349,18 @@ sudo journalctl -u beszel-agent -n 50 --no-pager | grep -iE 'vector'
 Expected outcomes:
 | Log line | Meaning | Fix |
 |---|---|---|
-| `INFO Vector monitoring enabled endpoint=...` | Working | — |
-| `DEBUG Vector err="VECTOR_API_URL not set"` | env var missing | Set `VECTOR_API_URL` |
-| `DEBUG Vector err="vector http: ... connection refused"` | Vector API not listening | Enable `api { enabled = true }` in `vector.toml` |
-| `DEBUG Vector err="vector status 404: ..."` | Wrong path | Append `/graphql` to the URL |
-| `DEBUG Vector err="vector graphql: ..."` | Schema mismatch (older Vector) | Upgrade Vector, or report the field that's missing |
+| `INFO Vector monitoring enabled addr=...` | Working | — |
+| `DEBUG Vector err="VECTOR_API_ADDR not set"` | env var missing | Set `VECTOR_API_ADDR` |
+| `DEBUG Vector err="vector GetMeta: ... connection refused"` | Vector API not listening on that port | Check `[api] enabled = true` and `address` in `vector.toml`; verify with `ss -ltnp \| grep <port>` |
+| `DEBUG Vector err="vector GetMeta: ... Unimplemented"` | Hit the wrong gRPC service (likely a `vector` source on that port) | Move the API to a different port from the `vector` source |
+| `DEBUG Vector err="vector GetMeta: ... deadline exceeded"` | API reachable but slow | Bump `vectorRequestTimeout` or investigate Vector load |
+| `WARN VECTOR_API_URL is deprecated, use VECTOR_API_ADDR (host:port)` | Operator still on mp.5-era conf | Rename env var (the agent still works via the alias) |
+
+Manual gRPC probe from the Vector host (requires `grpcurl`):
+```bash
+grpcurl -plaintext 127.0.0.1:8687 vector.observability.v1.ObservabilityService/GetMeta
+# expect: {"version":"0.xx.x","hostname":"..."}
+```
 
 Hub-side check that the data is reaching the hub:
 ```bash
