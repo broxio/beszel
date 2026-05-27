@@ -235,3 +235,94 @@ curl -s "https://hub.example/api/beszel/ipvs/stats?ids=<system_id>" -H "Authoriz
 | `v0.18.7-mp.2` | Pure version bump to disambiguate "did the new binary actually deploy?" during prod rollout |
 | `v0.18.7-mp.3` | `CAP_NET_ADMIN` baked into packaged systemd unit (the prod-blocker fix) |
 | `v0.18.7-mp.4` | Per-host status badges on `/lvs` with no-data diagnostic tooltip; new IPVS panel on `/system/<id>` |
+
+## Vector Aggregator Monitoring
+
+### Architecture Decisions
+
+#### Data source: Vector's GraphQL API
+Vector ships a GraphQL endpoint (default `:8686`) that powers `vector top`. The agent issues one batched HTTP POST per poll containing `health`, `meta { versionString hostname }`, and `components(first: 10000)` with each component's `receivedEventsTotal`, `sentEventsTotal`, `receivedBytesTotal`, `sentBytesTotal`, `errorsTotal`, `discardedEventsTotal`. Cursor pagination is skipped — pipelines well under 10000 components is the assumption.
+
+Vector exposes **cumulative counters only**. The agent ships them as-is and the UI derives per-second rates client-side from successive samples (parallels HAProxy, in contrast to LVS where the kernel estimator provides rates directly).
+
+#### Opt-in via env var (different from LVS)
+Unlike LVS (auto-enables on any host with the `ip_vs` module), Vector is **opt-in via `VECTOR_API_URL`** on the agent. Justification: Vector's GraphQL API has to be explicitly enabled in `vector.toml` (`api.enabled = true`) and bound to a port — there's no kernel-level discovery hook. When unset, `NewVectorManager` returns `(nil, errVectorDisabled)` and the agent skips Vector collection.
+
+Accepted forms of `VECTOR_API_URL`:
+- `http://127.0.0.1:8686`
+- `http://127.0.0.1:8686/graphql`
+- `127.0.0.1:8686` (scheme defaulted to `http://`, path to `/graphql`)
+
+#### Visibility on `/vector` (no hostname pattern)
+HAProxy/LVS gate visibility on the aggregate page by hostname (`ha-*`, `lvs-*`). Vector skips that convention because Vector deployments are heterogeneous (aggregators, edge collectors, single-tenant pipelines) and hostnames already encode other concerns. **Visibility = presence of the `vec` field in the latest stats record** — i.e. the operator's `VECTOR_API_URL` decision is the opt-in.
+
+#### Polling cadence
+- Agent → Vector: 5s default, override with `VECTOR_UPDATE_INTERVAL` env var
+- Hub `/api/beszel/vector/stats` → UI: 5s on the `/vector` aggregate page
+- Per-system panel on `/system/<id>` reads from the existing `systemStats` history (same cadence as the rest of that page)
+
+The "live" feel of `vector top` would require either WebSocket subscriptions through the agent tunnel (significant new transport work) or hub→agent direct reachability (typically blocked by NAT). Decision: ship the polling version first; subscriptions are an explicit follow-up if 5s isn't tight enough in practice.
+
+#### Aggregation rules
+Vector pipelines are independent per host so a plain sum across hosts is correct (no double-counting concern like HAProxy frontend/backend or IPVS service/destination).
+
+Per-host aggregates:
+- `received_events / received_bytes` → summed across **source-kind** components only
+- `sent_events / sent_bytes` → summed across **sink-kind** components only
+- `errors_total / discarded_events_total` → summed across **all** components
+
+This avoids triple-counting (events that flow source → transform → sink would otherwise show 3× the actual throughput in the host-level aggregate).
+
+### File Structure
+- `agent/vector.go` — `VectorManager`, HTTP+GraphQL client, endpoint normalization, polling state
+- `internal/entities/system/system.go` — `VectorStats`, `VectorComponent` types (CBOR keys 80+)
+- `internal/hub/api.go` — `getVectorStats` handler at `/api/beszel/vector/stats`
+- `internal/site/src/lib/vector-aggregate.ts` — visibility filter, group totals, rate derivation, formatters, host status
+- `internal/site/src/components/routes/vector-aggregate.tsx` — `/vector` aggregate route
+- `internal/site/src/components/charts/vector-panel.tsx` — per-system Vector panel (mounted from `/system/<id>` when `vec` is present)
+
+### Data Flow
+1. Agent's `VectorManager.fetch()` POSTs one bundled GraphQL query to `VECTOR_API_URL`
+2. Build per-component entries from the response; sum per-kind totals (sources / transforms / sinks)
+3. Aggregate to `data.Stats.Vector` in agent `gatherStats`; ship via existing system_stats pipeline
+4. UI polls `/api/beszel/vector/stats?ids=...` every 5s on the aggregate page; derives rates client-side from successive cumulative-counter samples
+5. Per-system panel reads `systemStats.at(-1)?.stats?.vec` (no separate poll — same data cadence as the rest of the system page)
+
+### UI status states (per-host badge on `/vector`)
+Computed in `deriveHostStatus(systemStatus, vec)`:
+- **healthy** (green) — agent reporting Vector data and `health: true`
+- **unhealthy** (red) — agent reporting Vector data and `health: false`
+- **no-data** (orange) — system status is `up` but no `vec` field. Hover tooltip explains likely causes (`VECTOR_API_URL` unset, Vector GraphQL endpoint unreachable, agent older than the build that introduced Vector support)
+- **down** (gray) — host isn't reporting at all
+
+### Configuration
+- `VECTOR_API_URL=http://127.0.0.1:8686/graphql` — enables collection (required)
+- `VECTOR_UPDATE_INTERVAL=5s` — override agent collection period (default 5s)
+- Vector side: `api.enabled = true` and `api.address = "127.0.0.1:8686"` in `vector.toml`
+
+### Troubleshooting
+Enable debug logging temporarily and inspect the Vector init line:
+```bash
+echo 'LOG_LEVEL=debug' | sudo tee -a /etc/beszel-agent.conf
+echo 'VECTOR_API_URL=http://127.0.0.1:8686/graphql' | sudo tee -a /etc/beszel-agent.conf
+sudo systemctl restart beszel-agent
+sleep 3
+sudo journalctl -u beszel-agent -n 50 --no-pager | grep -iE 'vector'
+```
+
+Expected outcomes:
+| Log line | Meaning | Fix |
+|---|---|---|
+| `INFO Vector monitoring enabled endpoint=...` | Working | — |
+| `DEBUG Vector err="VECTOR_API_URL not set"` | env var missing | Set `VECTOR_API_URL` |
+| `DEBUG Vector err="vector http: ... connection refused"` | Vector API not listening | Enable `api { enabled = true }` in `vector.toml` |
+| `DEBUG Vector err="vector status 404: ..."` | Wrong path | Append `/graphql` to the URL |
+| `DEBUG Vector err="vector graphql: ..."` | Schema mismatch (older Vector) | Upgrade Vector, or report the field that's missing |
+
+Hub-side check that the data is reaching the hub:
+```bash
+curl -s "https://hub.example/api/beszel/vector/stats?ids=<system_id>" -H "Authorization: $TOKEN" | jq
+# expect: [{"system":"<id>","vector":{"hl":true,"v":"0.43.0",...}}]
+# empty []  → agent isn't shipping the field (check agent-side log table above)
+# 404       → hub binary doesn't have the endpoint (upgrade hub)
+```
