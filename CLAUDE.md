@@ -237,7 +237,8 @@ curl -s "https://hub.example/api/beszel/ipvs/stats?ids=<system_id>" -H "Authoriz
 | `v0.18.7-mp.4` | Per-host status badges on `/lvs` with no-data diagnostic tooltip; new IPVS panel on `/system/<id>` |
 | `v0.18.7-mp.5` | Initial Vector aggregator monitoring (broken — agent used GraphQL but Vector's API is gRPC); UI/hub/types are sound and reused by mp.6 |
 | `v0.18.7-mp.6` | Vector collector rewritten on grpc-go using Vector's `observability.proto`. Env var rename `VECTOR_API_URL` → `VECTOR_API_ADDR` (URL form still accepted for back-compat) |
-| `v0.18.7-mp.7` | Client-only fix for `/vector` rate display flapping to 0: skip rate recomputation when polled counters are unchanged from prev sample; poll the aggregate page at 60s (matches hub `system_stats` write cadence) instead of 5s. No data-path or hub-endpoint changes. (Second mp.7 attempt — first one that added a hub `Created` field broke Vector display and was reverted.) |
+| `v0.18.7-mp.7` | Client-only fix for `/vector` rate display flapping to 0: skip rate recomputation when polled counters are unchanged from prev sample. 60s polling commit was tried and reverted (5s polling kept). No data-path or hub-endpoint changes. (Second mp.7 attempt — first one that added a hub `Created` field broke Vector display and was reverted.) |
+| `v0.18.7-mp.8` | `/vector` aggregate page now drives live updates from the `rt_metrics` realtime subscription (reuses `system_realtime.go`'s 1s-tick worker — same machinery the `/system/<id>` page uses). HTTP polling retained at 60s as initial-discovery + safety-net fallback. Hub-only deploy; agent unchanged. Set `VECTOR_UPDATE_INTERVAL=1s` on the agent for true sub-second freshness (default 5s cache otherwise). |
 
 ## Vector Aggregator Monitoring
 
