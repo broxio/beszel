@@ -32,6 +32,7 @@ const Containers = lazy(() => import("@/components/routes/containers.tsx"))
 const Smart = lazy(() => import("@/components/routes/smart.tsx"))
 const HAProxyAggregate = lazy(() => import("@/components/routes/haproxy-aggregate.tsx"))
 const LVS = lazy(() => import("@/components/routes/lvs-aggregate.tsx"))
+const VectorAggregate = lazy(() => import("@/components/routes/vector-aggregate.tsx"))
 const SystemDetail = lazy(() => import("@/components/routes/system.tsx"))
 const CopyToClipboardDialog = lazy(() => import("@/components/copy-to-clipboard.tsx"))
 
@@ -85,6 +86,8 @@ const App = memo(() => {
 		return <HAProxyAggregate />
 	} else if (page.route === "lvs") {
 		return <LVS />
+	} else if (page.route === "vector") {
+		return <VectorAggregate />
 	} else if (page.route === "settings") {
 		return <Settings />
 	}

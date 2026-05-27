@@ -2,6 +2,7 @@ import { t } from "@lingui/core/macro"
 import { Trans } from "@lingui/react/macro"
 import { getPagePath } from "@nanostores/router"
 import {
+	ActivityIcon,
 	ContainerIcon,
 	DatabaseBackupIcon,
 	HardDriveIcon,
@@ -114,6 +115,10 @@ export default function Navbar() {
 								<NetworkIcon className="h-4 w-4 me-2.5" strokeWidth={1.5} />
 								<Trans>LVS Aggregate</Trans>
 							</DropdownMenuItem>
+							<DropdownMenuItem onClick={() => navigate(getPagePath($router, "vector"))} className="flex items-center">
+								<ActivityIcon className="h-4 w-4 me-2.5" strokeWidth={1.5} />
+								<Trans>Vector Aggregate</Trans>
+							</DropdownMenuItem>
 							<DropdownMenuItem
 								onClick={() => navigate(getPagePath($router, "settings", { name: "general" }))}
 								className="flex items-center"
@@ -209,6 +214,20 @@ export default function Navbar() {
 					</TooltipTrigger>
 					<TooltipContent>
 						<Trans>LVS Aggregate</Trans>
+					</TooltipContent>
+				</Tooltip>
+				<Tooltip>
+					<TooltipTrigger asChild>
+						<Link
+							href={getPagePath($router, "vector")}
+							className={cn("hidden md:grid", buttonVariants({ variant: "ghost", size: "icon" }))}
+							aria-label="Vector Aggregate"
+						>
+							<ActivityIcon className="h-[1.2rem] w-[1.2rem]" strokeWidth={1.5} />
+						</Link>
+					</TooltipTrigger>
+					<TooltipContent>
+						<Trans>Vector Aggregate</Trans>
 					</TooltipContent>
 				</Tooltip>
 				<LangToggle />

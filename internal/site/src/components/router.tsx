@@ -6,6 +6,7 @@ const routes = {
 	smart: "/smart",
 	haproxyAggregate: "/haproxy-aggregate",
 	lvs: "/lvs",
+	vector: "/vector",
 	system: `/system/:id`,
 	settings: `/settings/:name?`,
 	forgot_password: `/forgot-password`,

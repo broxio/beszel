@@ -13,6 +13,7 @@ import HAProxyPools from "@/components/charts/haproxy-pools"
 import HAProxyActivity from "@/components/charts/haproxy-activity"
 import HAProxyServers from "@/components/charts/haproxy-servers"
 import IPVSPanel from "@/components/charts/ipvs-panel"
+import VectorPanel from "@/components/charts/vector-panel"
 import { ChartCard } from "./system/chart-card"
 import InfoBar from "./system/info-bar"
 import { useSystemData } from "./system/use-system-data"
@@ -77,12 +78,15 @@ export default memo(function SystemDetail({ id }: { id: string }) {
 	const hasHAProxyData = (systemStats.at(-1)?.stats?.hap?.length ?? 0) > 0
 	const ipvsData = systemStats.at(-1)?.stats?.ipvs
 	const hasIPVSData = !!ipvsData
+	const vectorData = systemStats.at(-1)?.stats?.vec
+	const hasVectorData = !!vectorData
 
 	// keep tabsRef in sync for keyboard navigation
 	const tabs = ["core", "disk"]
 	if (hasGpu) tabs.push("gpu")
 	if (hasHAProxyData) tabs.push("haproxy")
 	if (hasIPVSData) tabs.push("ipvs")
+	if (hasVectorData) tabs.push("vector")
 	if (hasContainers) tabs.push("containers")
 	if (hasSystemd) tabs.push("services")
 	tabsRef.current = tabs
@@ -280,6 +284,17 @@ export default memo(function SystemDetail({ id }: { id: string }) {
 					</Card>
 				)}
 
+				{/* Vector panel — shown for any host with VECTOR_API_URL set on the agent */}
+				{hasVectorData && vectorData && (
+					<Card className="p-4">
+						<CardHeader className="pb-4 pt-0 px-0">
+							<CardTitle className="text-xl sm:text-2xl">{t`Vector`}</CardTitle>
+							<CardDescription>{t`Components, throughput, and error counts from the local Vector aggregator`}</CardDescription>
+						</CardHeader>
+						<VectorPanel vec={vectorData} />
+					</Card>
+				)}
+
 				{maybeHasSmartData && <LazySmartTable systemId={system.id} />}
 
 				{hasContainersTable && <LazyContainersTable systemId={system.id} />}
@@ -317,6 +332,12 @@ export default memo(function SystemDetail({ id }: { id: string }) {
 						<TabsTrigger value="ipvs" className="w-full flex items-center gap-2">
 							<NetworkIcon className="size-3.5" />
 							<Trans>LVS</Trans>
+						</TabsTrigger>
+					)}
+					{hasVectorData && (
+						<TabsTrigger value="vector" className="w-full flex items-center gap-2">
+							<NetworkIcon className="size-3.5" />
+							<Trans>Vector</Trans>
 						</TabsTrigger>
 					)}
 					{hasContainers && (
@@ -500,6 +521,20 @@ export default memo(function SystemDetail({ id }: { id: string }) {
 									<CardDescription>{t`Virtual server role, VIPs, and per-service stats`}</CardDescription>
 								</CardHeader>
 								<IPVSPanel ipvs={ipvsData} />
+							</Card>
+						)}
+					</TabsContent>
+				)}
+
+				{hasVectorData && vectorData && (
+					<TabsContent value="vector" forceMount className={activeTab === "vector" ? "contents" : "hidden"}>
+						{mountedTabs.has("vector") && (
+							<Card className="p-4">
+								<CardHeader className="pb-4 pt-0 px-0">
+									<CardTitle className="text-xl sm:text-2xl">{t`Vector`}</CardTitle>
+									<CardDescription>{t`Components, throughput, and error counts from the local Vector aggregator`}</CardDescription>
+								</CardHeader>
+								<VectorPanel vec={vectorData} />
 							</Card>
 						)}
 					</TabsContent>
