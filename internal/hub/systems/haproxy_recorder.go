@@ -5,9 +5,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"log"
 	"os"
 	"path/filepath"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/henrygd/beszel/internal/common"
@@ -81,6 +83,10 @@ func (sm *SystemManager) startHAProxyRecorder() {
 
 	sm.hub.Logger().Info("HAProxy recording enabled",
 		"spool", spoolDir, "interval", r.interval.String(), "probe", r.probeEvery.String())
+	// Also log to stderr so it's visible in `docker logs` (PocketBase app logs go
+	// to the DB Logs table, not stdout).
+	log.Printf("[haproxy-recorder] enabled spool=%s interval=%s probe=%s",
+		spoolDir, r.interval, r.probeEvery)
 	r.run()
 }
 
@@ -110,14 +116,15 @@ func (r *haproxyRecorder) probe() {
 
 	members := make(map[string]struct{})
 	var mu sync.Mutex
-	r.sweep(r.sm.systems.Values(), func(sys *System, cd *system.CombinedData) {
+	var rows int64
+	st := r.sweep(r.sm.systems.Values(), func(sys *System, cd *system.CombinedData) {
 		if len(cd.Stats.HAProxy) == 0 && cd.Stats.HAProxyInfo == nil {
 			return
 		}
 		mu.Lock()
 		members[sys.Id] = struct{}{}
 		mu.Unlock()
-		r.emit(sys.Id, cd)
+		atomic.AddInt64(&rows, int64(r.emit(sys.Id, cd)))
 	})
 
 	r.mu.Lock()
@@ -126,6 +133,12 @@ func (r *haproxyRecorder) probe() {
 
 	r.proxies.flush()
 	r.info.flush()
+
+	// Always log the probe summary (low volume, every probe interval). This is
+	// the main diagnostic: members=0 means no agent returned HAProxy data;
+	// failed>0 with a sample error means the fetch transport is failing.
+	log.Printf("[haproxy-recorder] probe: systems=%d eligible=%d ok=%d failed=%d haproxy_members=%d rows=%d%s",
+		st.total, st.eligible, st.ok, st.failed, len(members), rows, st.errSuffix())
 }
 
 // sample fetches only the known HAProxy members (cheap steady state).
@@ -147,18 +160,46 @@ func (r *haproxyRecorder) sample() {
 		}
 	}
 
-	r.sweep(systems, func(sys *System, cd *system.CombinedData) {
-		r.emit(sys.Id, cd)
+	var rows int64
+	st := r.sweep(systems, func(sys *System, cd *system.CombinedData) {
+		atomic.AddInt64(&rows, int64(r.emit(sys.Id, cd)))
 	})
 	r.proxies.flush()
 	r.info.flush()
+
+	// Quiet on the happy path; only log when something looks wrong (a stall or
+	// fetch failures) so we don't flood docker logs every interval.
+	if st.failed > 0 || rows == 0 {
+		log.Printf("[haproxy-recorder] sample: members=%d ok=%d failed=%d rows=%d%s",
+			len(ids), st.ok, st.failed, rows, st.errSuffix())
+	}
+}
+
+// sweepStats summarizes one sweep for logging.
+type sweepStats struct {
+	total     int
+	eligible  int
+	ok        int
+	failed    int
+	sampleErr string
+}
+
+func (s sweepStats) errSuffix() string {
+	if s.sampleErr == "" {
+		return ""
+	}
+	return " err=\"" + s.sampleErr + "\""
 }
 
 // sweep fetches the given systems concurrently (bounded) and calls fn for each
-// successful response.
-func (r *haproxyRecorder) sweep(systems []*System, fn func(*System, *system.CombinedData)) {
+// successful response, returning counts for diagnostics.
+func (r *haproxyRecorder) sweep(systems []*System, fn func(*System, *system.CombinedData)) sweepStats {
 	sem := make(chan struct{}, haproxyMaxConcurrentFetch)
 	var wg sync.WaitGroup
+	var eligible, ok, failed int64
+	var errMu sync.Mutex
+	var sampleErr string
+
 	for _, sys := range systems {
 		// Skip systems that aren't up or have no usable transport (neither a
 		// connected WebSocket nor an existing SSH client to reuse).
@@ -169,6 +210,7 @@ func (r *haproxyRecorder) sweep(systems []*System, fn func(*System, *system.Comb
 		if !wsUp && sys.client == nil {
 			continue
 		}
+		atomic.AddInt64(&eligible, 1)
 		wg.Add(1)
 		sem <- struct{}{}
 		go func(sys *System) {
@@ -176,12 +218,28 @@ func (r *haproxyRecorder) sweep(systems []*System, fn func(*System, *system.Comb
 			defer func() { <-sem }()
 			cd, err := r.fetch(sys)
 			if err != nil || cd == nil {
+				atomic.AddInt64(&failed, 1)
+				if err != nil {
+					errMu.Lock()
+					if sampleErr == "" {
+						sampleErr = sys.Host + ": " + err.Error()
+					}
+					errMu.Unlock()
+				}
 				return
 			}
+			atomic.AddInt64(&ok, 1)
 			fn(sys, cd)
 		}(sys)
 	}
 	wg.Wait()
+	return sweepStats{
+		total:     len(systems),
+		eligible:  int(eligible),
+		ok:        int(ok),
+		failed:    int(failed),
+		sampleErr: sampleErr,
+	}
 }
 
 // fetch issues a GetData request into a PRIVATE buffer (never the shared
@@ -197,7 +255,7 @@ func (r *haproxyRecorder) fetch(sys *System) (*system.CombinedData, error) {
 // emit writes one NDJSON line per HAProxy proxy entry plus one per-host info
 // line. All fields are always present (no omitempty) so DuckDB's read_json_auto
 // sees a stable schema.
-func (r *haproxyRecorder) emit(systemID string, cd *system.CombinedData) {
+func (r *haproxyRecorder) emit(systemID string, cd *system.CombinedData) int {
 	ts := time.Now().UTC().Format(tsLayout)
 
 	r.mu.Lock()
@@ -207,6 +265,7 @@ func (r *haproxyRecorder) emit(systemID string, cd *system.CombinedData) {
 		host = systemID
 	}
 
+	written := 0
 	for i := range cd.Stats.HAProxy {
 		h := &cd.Stats.HAProxy[i]
 		row := haproxyProxyRow{
@@ -221,7 +280,9 @@ func (r *haproxyRecorder) emit(systemID string, cd *system.CombinedData) {
 			HchkFail: h.HealthCheckFail, ActSrv: h.ActiveServers, BckSrv: h.BackupServers,
 		}
 		if b, err := json.Marshal(&row); err == nil {
-			_ = r.proxies.writeLine(b)
+			if r.proxies.writeLine(b) == nil {
+				written++
+			}
 		}
 	}
 
@@ -239,9 +300,12 @@ func (r *haproxyRecorder) emit(systemID string, cd *system.CombinedData) {
 			BytesOutTot: hi.TotalBytesOut, BytesOutRate: hi.BytesOutRate,
 		}
 		if b, err := json.Marshal(&row); err == nil {
-			_ = r.info.writeLine(b)
+			if r.info.writeLine(b) == nil {
+				written++
+			}
 		}
 	}
+	return written
 }
 
 // refreshNames rebuilds the system ID -> friendly hostname map (one cheap query
