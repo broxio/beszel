@@ -46,6 +46,28 @@ services:
     # BESZEL_URL=http://<hub-service>:8090 in .env. Otherwise omit `networks`.
     # networks: [beszel_default]
 
+  # HAProxy spool loader. Independent of duck-ingest above: no hub URL/creds — it
+  # only reads the NDJSON spool the hub writes (HAPROXY_DUCK_SPOOL on the hub).
+  # Runs as root so it can read the hub's root-owned spool + archive closed files.
+  # Report on demand: docker compose exec haproxy-duck duck-haproxy-report.sh 1 'ha-*'
+  haproxy-duck:
+    image: "${DUCK_IMAGE:-beszel-duck:latest}"
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: beszel-haproxy-duck
+    restart: unless-stopped
+    entrypoint: ["/usr/local/bin/haproxy-entrypoint.sh"]
+    environment:
+      HAPROXY_INGEST_INTERVAL: "${HAPROXY_INGEST_INTERVAL:-300}"   # seconds between loads
+      HAPROXY_RETENTION_DAYS: "${HAPROXY_RETENTION_DAYS:-14}"
+      TZ_OFFSET: "${TZ_OFFSET:-8}"
+      HAPROXY_DUCK_DB: /data/haproxy.duckdb
+      HAPROXY_SPOOL_DIR: /spool
+    volumes:
+      - ./haproxy-data:/data                                       # dedicated haproxy.duckdb (separate from capacity DB)
+      - "${HAPROXY_SPOOL_HOST_DIR:-./haproxy-spool}:/spool"        # MUST match the hub's HAPROXY_DUCK_SPOOL host dir (rw, for archiving)
+
 # Uncomment + match the hub's network name (docker network ls) to use internal DNS:
 # networks:
 #   beszel_default:

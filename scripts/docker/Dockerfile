@@ -26,9 +26,11 @@ RUN apk add --no-cache \
  && rm /tmp/duckdb.zip
 
 # scripts (build context = scripts/)
-COPY duck-ingest.sh duck-report.sh /usr/local/bin/
-COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/duck-ingest.sh /usr/local/bin/duck-report.sh /usr/local/bin/entrypoint.sh
+COPY duck-ingest.sh duck-report.sh duck-haproxy-ingest.sh duck-haproxy-report.sh /usr/local/bin/
+COPY docker/entrypoint.sh docker/haproxy-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/duck-ingest.sh /usr/local/bin/duck-report.sh \
+      /usr/local/bin/duck-haproxy-ingest.sh /usr/local/bin/duck-haproxy-report.sh \
+      /usr/local/bin/entrypoint.sh /usr/local/bin/haproxy-entrypoint.sh
 
 # non-root user; /data holds the DuckDB file (named volume OR host bind mount).
 # We DON'T set USER here: the entrypoint starts as root only to fix bind-mount
