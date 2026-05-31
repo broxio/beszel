@@ -28,13 +28,15 @@ set -euo pipefail
 
 DUCK_DB="${HAPROXY_DUCK_DB:-./haproxy.duckdb}"
 SPOOL_DIR="${HAPROXY_SPOOL_DIR:-./haproxy-spool}"
-RETENTION_DAYS="${HAPROXY_RETENTION_DAYS:-}"
+RETENTION_DAYS="${HAPROXY_RETENTION_DAYS:-}"      # DuckDB row retention (optional)
+SPOOL_KEEP_DAYS="${HAPROXY_SPOOL_KEEP_DAYS:-2}"   # archived NDJSON kept as a safety buffer; redundant with the DB
 
 command -v duckdb >/dev/null || { echo "duck-haproxy-ingest.sh: duckdb not found in PATH" >&2; exit 1; }
 [[ -d "$SPOOL_DIR" ]] || { echo "duck-haproxy-ingest.sh: spool dir not found: $SPOOL_DIR" >&2; exit 1; }
 if [[ -n "$RETENTION_DAYS" ]]; then
   case "$RETENTION_DAYS" in ''|*[!0-9]*) echo "duck-haproxy-ingest.sh: HAPROXY_RETENTION_DAYS must be an integer" >&2; exit 1 ;; esac
 fi
+case "$SPOOL_KEEP_DAYS" in ''|*[!0-9]*) echo "duck-haproxy-ingest.sh: HAPROXY_SPOOL_KEEP_DAYS must be an integer" >&2; exit 1 ;; esac
 
 TODAY="$(date -u +%Y%m%d)"
 mkdir -p "$(dirname "$DUCK_DB")" "$SPOOL_DIR/ingested"
@@ -150,11 +152,15 @@ for f in "${PROXY_FILES[@]}" "${INFO_FILES[@]}"; do
 done
 (( moved > 0 )) && echo "archived $moved closed spool file(s) to $SPOOL_DIR/ingested/"
 
-# Optional retention.
+# Prune the archive aggressively: once a file is in the DB it's redundant, so the
+# raw NDJSON is just a short safety buffer. Decoupled from DB retention so the
+# spool dir stays small even with a long DB history.
+find "$SPOOL_DIR/ingested" -name '*.ndjson' -mtime +"${SPOOL_KEEP_DAYS}" -delete 2>/dev/null || true
+
+# DuckDB row retention (optional, separate knob — the compact, long-term store).
 if [[ -n "$RETENTION_DAYS" ]]; then
   duckdb "$DUCK_DB" <<SQL
 DELETE FROM haproxy_proxies WHERE ts < (now() AT TIME ZONE 'UTC') - INTERVAL '${RETENTION_DAYS} days';
 DELETE FROM haproxy_info    WHERE ts < (now() AT TIME ZONE 'UTC') - INTERVAL '${RETENTION_DAYS} days';
 SQL
-  find "$SPOOL_DIR/ingested" -name '*.ndjson' -mtime +"${RETENTION_DAYS}" -delete 2>/dev/null || true
 fi
