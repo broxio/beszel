@@ -22,3 +22,7 @@ agent/lhm/obj
 agent/lhm/bin
 dockerfile_agent_dev
 .DS_Store
+
+# capacity-reporting scripts: local data artifacts, not source
+*.duckdb
+scripts/peaks.csv

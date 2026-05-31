@@ -1,0 +1,52 @@
+# Runs the DuckDB ingester alongside beszel-hub on the same docker host.
+#
+#   cd scripts/docker
+#   cp .env.example .env      # fill in BESZEL_* (use a dedicated read-only account)
+#   docker compose up -d --build
+#
+# Run a report on demand:
+#   docker compose exec duck-ingest duck-report.sh 24 '*'
+#   docker compose exec duck-ingest duckdb -readonly /data/beszel.duckdb "SELECT count(*) FROM metrics"
+#
+# The DuckDB file lives in the named volume `beszel_duckdata` (survives restarts).
+
+services:
+  duck-ingest:
+    # Local dev: `docker compose up -d --build` builds from ./.. (the scripts/ dir).
+    # Production: set DUCK_IMAGE=<registry>/beszel-duck:<tag> in .env, then
+    #   `docker compose pull && docker compose up -d`  (uses the registry image; the
+    #   build section is ignored because the image is already present locally).
+    image: "${DUCK_IMAGE:-beszel-duck:latest}"
+    build:
+      context: ..                 # scripts/  (so duck-*.sh are in the build context)
+      dockerfile: docker/Dockerfile
+    container_name: beszel-duck-ingest
+    restart: unless-stopped
+    environment:
+      # Point at the hub. If this container shares the hub's docker network, use the
+      # internal service name + port (no TLS hop), e.g. http://beszel:8090.
+      # Otherwise use the public URL.
+      BESZEL_URL: "${BESZEL_URL:?}"
+      BESZEL_EMAIL: "${BESZEL_EMAIL:?}"
+      BESZEL_PASSWORD: "${BESZEL_PASSWORD:?}"
+      GLOB: "${GLOB:-*}"
+      INGEST_INTERVAL: "${INGEST_INTERVAL:-2700}"   # 45 min (loop mode)
+      INGEST_MODE: "${INGEST_MODE:-loop}"           # loop (internal timer) | cron (idle; host drives)
+      LOOKBACK_MIN: "${LOOKBACK_MIN:-70}"
+      TZ_OFFSET: "${TZ_OFFSET:-8}"
+      BESZEL_AUTH_COLLECTION: "${BESZEL_AUTH_COLLECTION:-users}"
+      DUCK_DB: /data/beszel.duckdb
+    volumes:
+      # Host bind mount: the DuckDB file lives in ./data next to this compose file,
+      # so it's visible/back-up-able and independent of the container lifecycle.
+      # The entrypoint chowns it to the container user on start, so a plain
+      # `mkdir data` (or letting compose create it) is enough — no manual chown.
+      - ./data:/data
+    # If reaching the hub over the internal docker network, join it here and set
+    # BESZEL_URL=http://<hub-service>:8090 in .env. Otherwise omit `networks`.
+    # networks: [beszel_default]
+
+# Uncomment + match the hub's network name (docker network ls) to use internal DNS:
+# networks:
+#   beszel_default:
+#     external: true
