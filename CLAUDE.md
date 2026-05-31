@@ -80,11 +80,20 @@ reporting agent and appends an NDJSON spool, loaded into a *dedicated* DuckDB by
 
 #### Concurrency-safety key fact
 A naive loop calling `sys.fetchDataFromAgent()` would **race** the realtime worker — that returns the
-*shared* `sys.data` buffer (`system.go:504/565`). The recorder instead issues its **own** `GetData`
-into a **private** `system.CombinedData` via `transport.NewWebSocketTransport(sys.WsConn).Request(...)`.
-The WS connection multiplexes concurrent in-flight requests by id (`internal/hub/ws/request_manager.go`:
-`nextID atomic.Uint32` + mutexed pending map), so this is race-free. Agent `CacheTimeMs` means an
-overlapping recorder+realtime fetch just shares the cached snapshot — no extra agent load.
+*shared* `sys.data` buffer (`system.go:504/565`). The recorder instead calls `sys.fetchForRecorder()`,
+which issues its **own** `GetData` into a **private** `system.CombinedData`, supporting **both
+transports**:
+- **WebSocket**: `transport.NewWebSocketTransport(sys.WsConn).Request(...)`. The WS connection
+  multiplexes concurrent in-flight requests by id (`internal/hub/ws/request_manager.go`:
+  `nextID atomic.Uint32` + mutexed pending map), so this is race-free.
+- **SSH**: opens a session on the existing `sys.client` via `createSessionWithTimeout` and decodes the
+  `GetData` response into the private buffer. It stays **passive** — never dials or closes the shared SSH
+  connection (so it can't disrupt the updater). SSH multiplexes channels, and API handlers already open
+  concurrent sessions on `sys.client`, so this matches the codebase's existing pattern.
+
+Agent `CacheTimeMs` means an overlapping recorder+realtime fetch just shares the cached snapshot — no
+extra agent load. **Note:** this WS-or-SSH support is why the feature works regardless of how agents
+connect to the hub (early mp.9 was WS-only and silently recorded nothing for SSH-connected fleets).
 
 #### What's captured (per-proxy rows, ALL types — status/sessions/traffic/response)
 - `haproxy_proxies` (one row per FRONTEND/BACKEND/SERVER per sample): `status`, sessions
@@ -292,7 +301,8 @@ curl -s "https://hub.example/api/beszel/ipvs/stats?ids=<system_id>" -H "Authoriz
 | `v0.18.7-mp.6` | Vector collector rewritten on grpc-go using Vector's `observability.proto`. Env var rename `VECTOR_API_URL` → `VECTOR_API_ADDR` (URL form still accepted for back-compat) |
 | `v0.18.7-mp.7` | Client-only fix for `/vector` rate display flapping to 0: skip rate recomputation when polled counters are unchanged from prev sample. 60s polling commit was tried and reverted (5s polling kept). No data-path or hub-endpoint changes. (Second mp.7 attempt — first one that added a hub `Created` field broke Vector display and was reverted.) |
 | `v0.18.7-mp.8` | `/vector` aggregate page now drives live updates from the `rt_metrics` realtime subscription (reuses `system_realtime.go`'s 1s-tick worker — same machinery the `/system/<id>` page uses). HTTP polling retained at 60s as initial-discovery + safety-net fallback. Hub-only deploy; agent unchanged. Set `VECTOR_UPDATE_INTERVAL=1s` on the agent for true sub-second freshness (default 5s cache otherwise). |
-| `v0.18.7-mp.9` | High-resolution HAProxy recording: hub-side always-on collector (`internal/hub/systems/haproxy_recorder.go`, opt-in via `HAPROXY_DUCK_SPOOL`) samples HAProxy from every reporting agent into a daily NDJSON spool; `scripts/duck-haproxy-ingest.sh` loads it into a dedicated `haproxy.duckdb`; `scripts/duck-haproxy-report.sh` reports (incl. "slowest backends/servers" by `rtime`). Pure-Go, no cgo. **Hub-only deploy; agent unchanged.** Disabled by default. See "High-Resolution HAProxy Recording" section. (`qtime`/`ctime`/`ttime` full-latency breakdown deferred — needs an agent change.) |
+| `v0.18.7-mp.9` | High-resolution HAProxy recording: hub-side always-on collector (`internal/hub/systems/haproxy_recorder.go`, opt-in via `HAPROXY_DUCK_SPOOL`) samples HAProxy from every reporting agent into a daily NDJSON spool; `scripts/duck-haproxy-ingest.sh` loads it into a dedicated `haproxy.duckdb`; `scripts/duck-haproxy-report.sh` reports (incl. "slowest backends/servers" by `rtime`). Pure-Go, no cgo. **Hub-only deploy; agent unchanged.** Disabled by default. See "High-Resolution HAProxy Recording" section. (`qtime`/`ctime`/`ttime` full-latency breakdown deferred — needs an agent change.) **Bug: WS-only — recorded nothing for SSH-connected agents; fixed in mp.10.** |
+| `v0.18.7-mp.10` | HAProxy recorder now fetches over **SSH as well as WebSocket** (`sys.fetchForRecorder` adds a passive SSH path on the existing `sys.client`). mp.9 only handled WS, so fleets where agents connect to the hub via SSH (the common case here) got an empty spool. Hub-only; agent unchanged. |
 
 ## Vector Aggregator Monitoring
 

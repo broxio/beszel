@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"sync"
@@ -11,8 +12,11 @@ import (
 
 	"github.com/henrygd/beszel/internal/common"
 	"github.com/henrygd/beszel/internal/entities/system"
-	"github.com/henrygd/beszel/internal/hub/transport"
 )
+
+// errNoRecorderTransport is returned by fetchForRecorder when a system has
+// neither a connected WebSocket nor an existing SSH client to reuse.
+var errNoRecorderTransport = errors.New("no usable transport for recorder")
 
 // HAProxy DuckDB recorder.
 //
@@ -156,8 +160,13 @@ func (r *haproxyRecorder) sweep(systems []*System, fn func(*System, *system.Comb
 	sem := make(chan struct{}, haproxyMaxConcurrentFetch)
 	var wg sync.WaitGroup
 	for _, sys := range systems {
-		conn := sys.WsConn
-		if sys.Status != up || conn == nil || !conn.IsConnected() {
+		// Skip systems that aren't up or have no usable transport (neither a
+		// connected WebSocket nor an existing SSH client to reuse).
+		if sys.Status != up {
+			continue
+		}
+		wsUp := sys.WsConn != nil && sys.WsConn.IsConnected()
+		if !wsUp && sys.client == nil {
 			continue
 		}
 		wg.Add(1)
@@ -175,19 +184,14 @@ func (r *haproxyRecorder) sweep(systems []*System, fn func(*System, *system.Comb
 	wg.Wait()
 }
 
-// fetch issues a GetData request into a PRIVATE buffer so it never races with
-// the realtime worker / updater which mutate the shared sys.data.
+// fetch issues a GetData request into a PRIVATE buffer (never the shared
+// sys.data) via WebSocket or SSH, so it never races the realtime worker/updater.
 func (r *haproxyRecorder) fetch(sys *System) (*system.CombinedData, error) {
-	t := transport.NewWebSocketTransport(sys.WsConn)
 	ctx, cancel := context.WithTimeout(context.Background(), r.interval)
 	defer cancel()
 
 	ms := min(r.interval.Milliseconds(), 65535)
-	var cd system.CombinedData
-	if err := t.Request(ctx, common.GetData, common.DataRequestOptions{CacheTimeMs: uint16(ms)}, &cd); err != nil {
-		return nil, err
-	}
-	return &cd, nil
+	return sys.fetchForRecorder(ctx, common.DataRequestOptions{CacheTimeMs: uint16(ms)})
 }
 
 // emit writes one NDJSON line per HAProxy proxy entry plus one per-host info
