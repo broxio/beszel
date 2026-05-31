@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -39,6 +40,7 @@ var errNoRecorderTransport = errors.New("no usable transport for recorder")
 const (
 	defaultHAProxyRecordInterval = 2 * time.Second
 	defaultHAProxyProbeInterval  = 60 * time.Second
+	defaultHAProxySpoolRotate    = 60 * time.Second
 	// haproxyMaxConcurrentFetch bounds simultaneous agent requests per sweep.
 	haproxyMaxConcurrentFetch = 8
 	// tsLayout is fixed-width millisecond-precision UTC ISO-8601 so DuckDB's
@@ -75,16 +77,20 @@ func (sm *SystemManager) startHAProxyRecorder() {
 		return
 	}
 
+	rotate := parseDurationEnv("HAPROXY_SPOOL_ROTATE", defaultHAProxySpoolRotate)
 	r := &haproxyRecorder{
 		sm:          sm,
 		interval:    parseDurationEnv("HAPROXY_RECORD_INTERVAL", defaultHAProxyRecordInterval),
 		probeEvery:  parseDurationEnv("HAPROXY_PROBE_INTERVAL", defaultHAProxyProbeInterval),
-		proxies:     &spoolStream{dir: spoolDir, prefix: "haproxy_proxies"},
-		info:        &spoolStream{dir: spoolDir, prefix: "haproxy_info"},
+		proxies:     &spoolStream{dir: spoolDir, prefix: "haproxy_proxies", rotateEvery: rotate},
+		info:        &spoolStream{dir: spoolDir, prefix: "haproxy_info", rotateEvery: rotate},
 		recordTypes: parseTypesEnv("HAPROXY_RECORD_TYPES", []string{"FRONTEND", "BACKEND"}),
 		members:     map[string]struct{}{},
 		names:       map[string]string{},
 	}
+	// Seal any live files a previous process left behind so they get ingested.
+	r.proxies.sealOrphan()
+	r.info.sealOrphan()
 
 	types := make([]string, 0, len(r.recordTypes))
 	for t := range r.recordTypes {
@@ -94,11 +100,12 @@ func (sm *SystemManager) startHAProxyRecorder() {
 	typesStr := strings.Join(types, ",")
 
 	sm.hub.Logger().Info("HAProxy recording enabled",
-		"spool", spoolDir, "interval", r.interval.String(), "probe", r.probeEvery.String(), "types", typesStr)
+		"spool", spoolDir, "interval", r.interval.String(), "probe", r.probeEvery.String(),
+		"rotate", rotate.String(), "types", typesStr)
 	// Also log to stderr so it's visible in `docker logs` (PocketBase app logs go
 	// to the DB Logs table, not stdout).
-	log.Printf("[haproxy-recorder] enabled spool=%s interval=%s probe=%s types=%s",
-		spoolDir, r.interval, r.probeEvery, typesStr)
+	log.Printf("[haproxy-recorder] enabled spool=%s interval=%s probe=%s rotate=%s types=%s",
+		spoolDir, r.interval, r.probeEvery, rotate, typesStr)
 	r.run()
 }
 
@@ -437,38 +444,72 @@ type haproxyInfoRow struct {
 	BytesOutRate uint64 `json:"bytes_out_rate"`
 }
 
-// spoolStream is a mutex-guarded, daily-rotated, buffered NDJSON appender.
+// spoolStream is a mutex-guarded, buffered NDJSON appender that the loader can
+// safely consume-and-delete. It writes to a single "<prefix>.live.ndjson" and
+// every rotateEvery seals it: flush, close, and atomically rename to a complete
+// "<prefix>-<UTCstamp>-<seq>.ndjson". The hub NEVER writes a sealed file again,
+// so the loader can ingest sealed files and delete them with zero gap. The live
+// file (which the loader ignores) holds at most rotateEvery of data.
 type spoolStream struct {
-	dir    string
-	prefix string
+	dir         string
+	prefix      string
+	rotateEvery time.Duration
 
-	mu   sync.Mutex
-	date string
-	f    *os.File
-	w    *bufio.Writer
+	mu       sync.Mutex
+	f        *os.File
+	w        *bufio.Writer
+	openedAt time.Time
+	seq      uint64
+}
+
+func (s *spoolStream) livePath() string {
+	return filepath.Join(s.dir, s.prefix+".live.ndjson")
+}
+
+// sealLocked flushes/closes the live file and renames it to a unique sealed name.
+// Caller must hold s.mu.
+func (s *spoolStream) sealLocked() {
+	if s.f == nil {
+		return
+	}
+	_ = s.w.Flush()
+	_ = s.f.Close()
+	s.f, s.w = nil, nil
+	s.seq++
+	sealed := filepath.Join(s.dir, fmt.Sprintf("%s-%s-%d.ndjson",
+		s.prefix, time.Now().UTC().Format("20060102T150405"), s.seq))
+	_ = os.Rename(s.livePath(), sealed)
+}
+
+// sealOrphan seals a stale live file left by a previous process at startup, so it
+// gets ingested rather than lingering.
+func (s *spoolStream) sealOrphan() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if _, err := os.Stat(s.livePath()); err == nil {
+		s.seq++
+		sealed := filepath.Join(s.dir, fmt.Sprintf("%s-%s-orphan%d.ndjson",
+			s.prefix, time.Now().UTC().Format("20060102T150405"), s.seq))
+		_ = os.Rename(s.livePath(), sealed)
+	}
 }
 
 func (s *spoolStream) writeLine(b []byte) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	today := time.Now().UTC().Format("20060102")
-	if today != s.date || s.f == nil {
-		if s.w != nil {
-			_ = s.w.Flush()
-		}
-		if s.f != nil {
-			_ = s.f.Close()
-		}
-		path := filepath.Join(s.dir, s.prefix+"-"+today+".ndjson")
-		f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+	now := time.Now()
+	if s.f != nil && s.rotateEvery > 0 && now.Sub(s.openedAt) >= s.rotateEvery {
+		s.sealLocked()
+	}
+	if s.f == nil {
+		f, err := os.OpenFile(s.livePath(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
 		if err != nil {
-			s.f, s.w = nil, nil
 			return err
 		}
 		s.f = f
 		s.w = bufio.NewWriter(f)
-		s.date = today
+		s.openedAt = now
 	}
 
 	if _, err := s.w.Write(b); err != nil {

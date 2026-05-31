@@ -111,20 +111,29 @@ connect to the hub (early mp.9 was WS-only and silently recorded nothing for SSH
 - `HAPROXY_RECORD_TYPES` — comma list of row types to record, default **`FRONTEND,BACKEND`**. **SERVER rows
   are excluded by default** because they're the volume bomb: HAProxy emits one row *per backend server per
   sample*, so a fleet with many servers can write multiple GB/hour. Set `FRONTEND,BACKEND,SERVER` only if
-  you need per-server drill-down (and then keep the interval high + retention short). The two volume knobs
-  that matter: this type filter and `HAPROXY_RECORD_INTERVAL`.
+  you need per-server drill-down. The two volume knobs that matter: this type filter and `HAPROXY_RECORD_INTERVAL`.
+- `HAPROXY_SPOOL_ROTATE` (default `60s`) — how often the hub **seals** the live spool file (see spool model).
+
+#### Spool model (gap-free consume-and-delete, mp.13+)
+The hub writes a single `<prefix>.live.ndjson` and every `HAPROXY_SPOOL_ROTATE` **seals** it: flush, close,
+atomically rename to a complete `<prefix>-<UTCstamp>-<seq>.ndjson`. The hub NEVER writes a sealed file again.
+The loader ingests **sealed files only** (the live file is excluded by the `-*` glob) and **deletes them after
+a successful DB write** — gap-free, because no row is ever appended to a file the loader is consuming. At any
+moment the only un-ingested data is the live file (≤ one rotate interval). This replaced the earlier
+daily-rotation + dedup-archive model, which let a single day's file grow unbounded and hoarded raw NDJSON.
 
 #### File Structure
-- `internal/hub/systems/haproxy_recorder.go` — recorder loop, private-buffer fetch, daily-rotated spool writer
+- `internal/hub/systems/haproxy_recorder.go` — recorder loop, private-buffer fetch, seal-by-age spool writer
 - `internal/hub/systems/system_manager.go` — `go sm.startHAProxyRecorder()` in `Initialize()` (self-gates on env)
-- `scripts/duck-haproxy-ingest.sh` — NDJSON spool → dedicated `haproxy.duckdb` (idempotent; archives closed daily files; optional `HAPROXY_RETENTION_DAYS`)
-- `scripts/duck-haproxy-report.sh` — troubleshooting report (per-frontend req/5xx/sessions, backend flaps, per-host idle%/conn-rate); reuses `duck-report.sh`'s local-time `[HOURS]` / `'FROM' 'TO'` range mode
+- `scripts/duck-haproxy-ingest.sh` — ingest **sealed** spool files → dedicated `haproxy.duckdb`, then delete them (ON CONFLICT DO NOTHING for crash-safety); optional `HAPROXY_RETENTION_DAYS` DB row retention
+- `scripts/duck-haproxy-report.sh` — troubleshooting report (per-frontend req/5xx/sessions, slowest backends by `rtime`, backend flaps, per-host idle%/conn-rate); reuses `duck-report.sh`'s local-time `[HOURS]` / `'FROM' 'TO'` range mode
+- `scripts/docker/haproxy-entrypoint.sh` + `docker-compose.yml` `haproxy-duck` service — containerized loader loop (no hub creds; runs as root to read the hub's root-owned spool + delete sealed files)
 
 #### Data Flow
 1. Hub recorder ticks every `HAPROXY_RECORD_INTERVAL`; probes all systems every `HAPROXY_PROBE_INTERVAL` to maintain the HAProxy-host membership set
-2. Per tick: bounded-concurrency private-buffer `GetData` per HAProxy host; emits NDJSON rows to `haproxy_proxies-YYYYMMDD.ndjson` + `haproxy_info-YYYYMMDD.ndjson`
-3. `duck-haproxy-ingest.sh` (timer, ~5min) loads the spool with PK dedup into `haproxy.duckdb`; archives non-today files to `ingested/`
-4. `duck-haproxy-report.sh` / ad-hoc SQL reads the dedicated DB (traffic queries FRONTEND-only; all types stored for backend/server drill-down)
+2. Per tick: bounded-concurrency private-buffer `GetData` per HAProxy host; appends NDJSON rows to the live spool file, sealed every `HAPROXY_SPOOL_ROTATE`
+3. `duck-haproxy-ingest.sh` (timer, ~5min) ingests sealed files into `haproxy.duckdb` then deletes them; optional `HAPROXY_RETENTION_DAYS` prunes the DB
+4. `duck-haproxy-report.sh` / ad-hoc SQL reads the dedicated DB (traffic queries FRONTEND-only; backend `rtime` answers which-backend-is-slow)
 
 **Deploy note:** hub-only change (agents unchanged). The spool dir must be reachable by the loader —
 share a volume between the hub container and the duckdb container, or run the loader on the hub host.
@@ -310,6 +319,7 @@ curl -s "https://hub.example/api/beszel/ipvs/stats?ids=<system_id>" -H "Authoriz
 | `v0.18.7-mp.10` | HAProxy recorder now fetches over **SSH as well as WebSocket** (`sys.fetchForRecorder` adds a passive SSH path on the existing `sys.client`). mp.9 only handled WS, so fleets where agents connect to the hub via SSH (the common case here) got an empty spool. Hub-only; agent unchanged. |
 | `v0.18.7-mp.11` | HAProxy recorder **stderr diagnostics** (visible in `docker logs`, since PB app logs go to the DB Logs table): `[haproxy-recorder] enabled ...` on start, a per-probe summary (`systems/eligible/ok/failed/haproxy_members/rows` + a sample error), and a sample-sweep line only on stalls/failures. Added to debug an empty spool. No behavior change. |
 | `v0.18.7-mp.12` | **Volume control: `HAPROXY_RECORD_TYPES` (default `FRONTEND,BACKEND`).** mp.10/11 recorded SERVER rows too — on a fleet with many backend servers that produced multi-GB/hour spool (a real 3.4 GB file in minutes). SERVER rows now excluded by default; opt back in with `FRONTEND,BACKEND,SERVER`. Backend-level `rtime` still answers "which backend is slow." Hub-only. |
+| `v0.18.7-mp.13` | **Gap-free consume-and-delete spool.** Hub now writes a single `<prefix>.live.ndjson` and seals it every `HAPROXY_SPOOL_ROTATE` (default 60s) into `<prefix>-<stamp>-<seq>.ndjson`; the loader ingests sealed files then **deletes** them, so the spool no longer grows all day or hoards archived NDJSON. The previous daily-rotation + dedup-archive model is gone. Loader/image (`duck-haproxy-ingest.sh`) updated to match. Hub + duck-image rebuild. |
 
 ## Vector Aggregator Monitoring
 
