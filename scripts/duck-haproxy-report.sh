@@ -47,6 +47,9 @@ fi
 # shell glob -> SQL LIKE (* -> %, ? -> _)
 LIKE="${GLOB//\%/\\%}"; LIKE="${LIKE//_/\\_}"; LIKE="${LIKE//\*/%}"; LIKE="${LIKE//\?/_}"
 
+# natural host sort: group by alpha prefix, then numeric suffix (ha-bop-2 before ha-bop-10)
+HOST_SORT="regexp_replace(host,'[0-9]+\$',''), TRY_CAST(regexp_extract(host,'([0-9]+)\$',1) AS INTEGER) NULLS FIRST"
+
 echo
 echo "HAProxy troubleshooting (DuckDB) — ${WINDOW_LABEL}  glob=${GLOB}  peak-time=local${TZLABEL}  db=${DUCK_DB}"
 
@@ -71,7 +74,7 @@ SELECT
   round(max(bout_rate)/1e6,2)                                     AS out_mbps_max
 FROM w
 GROUP BY host, proxy
-ORDER BY req_p95 DESC;
+ORDER BY ${HOST_SORT}, proxy;
 "
 
 # ---- SLOWEST backends / servers (avg response time, ms) — the main signal ----
@@ -112,7 +115,7 @@ SELECT
 FROM w
 GROUP BY host, proxy, type
 HAVING min(act_srv) <> max(act_srv) OR count(DISTINCT status) > 1 OR sum(hchk_fail) > 0
-ORDER BY host, proxy;
+ORDER BY ${HOST_SORT}, proxy, type;
 "
 
 # ---- per-host process health (conn rate, idle %, queue) ----
@@ -134,6 +137,6 @@ SELECT
   max(pool_used_mb)                   AS pool_mb_max
 FROM w
 GROUP BY host
-ORDER BY idle_min ASC;
+ORDER BY ${HOST_SORT};
 "
 echo
