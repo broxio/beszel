@@ -16,6 +16,8 @@ single capacity/usage report or building history that outlives PB's retention.
 | `peak-recorder.sh` | REST API (off-host) | harvest **minute-precise** CPU/mem peaks before PB prunes them; append-only CSV |
 | `duck-ingest.sh` | REST API (off-host) | siphon raw **1m** samples into a local **DuckDB** before PB prunes them; idempotent, runs on a timer |
 | `duck-report.sh` | DuckDB (local file) | capacity report from the DuckDB store: true percentiles + **exact** peak time + fleet totals |
+| `duck-haproxy-ingest.sh` | NDJSON spool (from hub) | load the hub's **high-resolution HAProxy** spool into a dedicated DuckDB; idempotent, runs on a timer |
+| `duck-haproxy-report.sh` | DuckDB (local file) | HAProxy troubleshooting report: per-frontend req/5xx/sessions, backend flaps, per-host idle%/conn-rate |
 
 `stats*` and `capacity*` are read-only one-shot reports straight off PB. `peak-recorder.sh`
 and `duck-ingest.sh` run on a timer to build long-term stores that outlive PB retention.
@@ -89,6 +91,47 @@ duckdb $DUCK_DB "SELECT host, quantile_cont(cpu,0.95) p95, arg_max(ts,cpu) peak_
 Schema (`metrics`, PK `(host, ts)`): `ts`(UTC), `host`, `vcpu`, `cpu`, `steal`,
 `mem_used_gb`, `mem_total_gb`, `mem_pct`, `swap_gb`, `net_out_bps`, `net_in_bps`.
 Requires the `duckdb` CLI on the ingest/report host.
+
+### High-resolution HAProxy recording (hub → DuckDB)
+
+Different source from `duck-ingest.sh`. The capacity pipeline above pulls 1m **system**
+stats over REST. For HAProxy troubleshooting we want sub-minute resolution that beszel never
+persists (the per-second data on `/system/<id>` is broadcast live and discarded). So the
+**hub itself** samples HAProxy from every agent reporting it and appends an NDJSON spool;
+this loader ingests the spool into a *dedicated* DuckDB.
+
+**1. Enable recording on the hub** (opt-in via env — unset ⇒ feature off, zero overhead):
+
+```
+HAPROXY_DUCK_SPOOL=/data/haproxy-spool     # enables it; dir the hub appends spool files to
+HAPROXY_RECORD_INTERVAL=2s                  # sample cadence (default 2s); main volume knob
+HAPROXY_PROBE_INTERVAL=60s                  # how often to rescan for new HAProxy hosts
+```
+
+The hub writes daily-rotated `haproxy_proxies-YYYYMMDD.ndjson` (one line per
+frontend/backend/server per sample) and `haproxy_info-YYYYMMDD.ndjson` (per-host process
+info). Pure-Go, append-only — no DB driver in the hub, so it never holds a DuckDB lock.
+
+**2. Load + report** (the spool dir must be reachable by the loader — share a volume between
+the hub and the duckdb container, or run the loader on the hub host):
+
+```bash
+# load on a timer (every ~5 min); idempotent via PK dedup, archives closed daily files
+*/5 * * * * HAPROXY_DUCK_DB=/data/haproxy.duckdb HAPROXY_SPOOL_DIR=/data/haproxy-spool \
+            HAPROXY_RETENTION_DAYS=30 /path/duck-haproxy-ingest.sh >> /var/log/haproxy-duck.log 2>&1
+
+# troubleshoot (same relative [HOURS] / 'FROM' 'TO' local-time range mode as duck-report.sh)
+HAPROXY_DUCK_DB=/data/haproxy.duckdb ./duck-haproxy-report.sh 1 'ha-*'
+HAPROXY_DUCK_DB=/data/haproxy.duckdb ./duck-haproxy-report.sh '2026-06-01 10:00' '2026-06-01 10:30' 'ha-bop*'
+```
+
+Tables: `haproxy_proxies` PK `(system, ts, proxy, type)`, `haproxy_info` PK `(system, ts)`.
+Traffic queries are **FRONTEND-only** (no double-count, per the project rule) but all proxy
+types are stored so you can drill into backends/servers.
+
+**Volume note:** at 2s, ~43.2k samples/day per series. e.g. 20 hosts × ~5 proxies ≈ 100
+series ⇒ ~4.3M proxy rows/day. `HAPROXY_RECORD_INTERVAL=5s` cuts that 2.5×;
+`HAPROXY_RETENTION_DAYS` bounds DB + spool growth.
 
 ### Containerised ingester (`docker/`)
 

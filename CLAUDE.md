@@ -62,6 +62,59 @@ All fetch operations use retry logic: `fetchInfo`, `fetchStats`, `fetchPools`, `
 5. Accumulates traffic history for sparklines
 6. Displays combined data based on zone/group selection
 
+### High-Resolution HAProxy Recording (hub → DuckDB)
+
+**Problem:** The per-second HAProxy data on `/system/<id>` is *ephemeral* — `system_realtime.go`'s
+1s worker only runs while a browser is subscribed and broadcasts without persisting. The durable
+path (`system.go` → `createRecords` → `system_stats`) always runs but only at the ~60s system poll
+`interval` and lands in PocketBase SQLite. So there's no high-resolution HAProxy history for
+troubleshooting.
+
+**Solution:** an always-on, UI-independent recorder in the hub that samples HAProxy from every
+reporting agent and appends an NDJSON spool, loaded into a *dedicated* DuckDB by a script.
+
+#### Why NDJSON spool + loader (not embedded cgo DuckDB)
+- Keeps the hub **pure-Go** (go-duckdb is cgo → breaks the multi-arch build; see Build Notes ARM cgo pain).
+- DuckDB is single-writer-per-process; a spool keeps the hub out of the DB lock so `duck-haproxy-report.sh` reads never contend.
+- Append-only NDJSON is crash-safe and trivial; reuses the existing dockerized duckdb `read_json_auto` + `ON CONFLICT DO NOTHING` ingest pattern.
+
+#### Concurrency-safety key fact
+A naive loop calling `sys.fetchDataFromAgent()` would **race** the realtime worker — that returns the
+*shared* `sys.data` buffer (`system.go:504/565`). The recorder instead issues its **own** `GetData`
+into a **private** `system.CombinedData` via `transport.NewWebSocketTransport(sys.WsConn).Request(...)`.
+The WS connection multiplexes concurrent in-flight requests by id (`internal/hub/ws/request_manager.go`:
+`nextID atomic.Uint32` + mutexed pending map), so this is race-free. Agent `CacheTimeMs` means an
+overlapping recorder+realtime fetch just shares the cached snapshot — no extra agent load.
+
+#### What's captured (per-proxy rows, ALL types — status/sessions/traffic/response)
+- `haproxy_proxies` (one row per FRONTEND/BACKEND/SERVER per sample): `status`, sessions
+  (`scur`/`smax`/`stot`), traffic (`bin`/`bout` + `*_rate`), HTTP responses (`hrsp_1xx..5xx` + rates),
+  `rtime` (avg response time ms), health-check fails, `act_srv`/`bck_srv`. PK `(system, ts, proxy, type)`.
+- `haproxy_info` (per-host process info): version, conn/sess rates, curr/cum conns, `idle_pct`,
+  `run_queue`, tasks, pool MB, SSL. PK `(system, ts)`.
+- **Slow-backend caveat:** the agent currently parses only `rtime` (col 60). HAProxy also exposes
+  `qtime`/`ctime`/`ttime` (cols 58/59/61) per backend/server — adding those (agent-side change) gives the
+  full queue/connect/response/total latency breakdown for pinpointing *which* backend is slow.
+
+#### Config (hub env — opt-in, unset ⇒ disabled, zero overhead)
+- `HAPROXY_DUCK_SPOOL` — spool dir; **enables** the recorder. `HAPROXY_RECORD_INTERVAL` (default `2s`,
+  main volume knob). `HAPROXY_PROBE_INTERVAL` (default `60s`, rescan for new HAProxy hosts).
+
+#### File Structure
+- `internal/hub/systems/haproxy_recorder.go` — recorder loop, private-buffer fetch, daily-rotated spool writer
+- `internal/hub/systems/system_manager.go` — `go sm.startHAProxyRecorder()` in `Initialize()` (self-gates on env)
+- `scripts/duck-haproxy-ingest.sh` — NDJSON spool → dedicated `haproxy.duckdb` (idempotent; archives closed daily files; optional `HAPROXY_RETENTION_DAYS`)
+- `scripts/duck-haproxy-report.sh` — troubleshooting report (per-frontend req/5xx/sessions, backend flaps, per-host idle%/conn-rate); reuses `duck-report.sh`'s local-time `[HOURS]` / `'FROM' 'TO'` range mode
+
+#### Data Flow
+1. Hub recorder ticks every `HAPROXY_RECORD_INTERVAL`; probes all systems every `HAPROXY_PROBE_INTERVAL` to maintain the HAProxy-host membership set
+2. Per tick: bounded-concurrency private-buffer `GetData` per HAProxy host; emits NDJSON rows to `haproxy_proxies-YYYYMMDD.ndjson` + `haproxy_info-YYYYMMDD.ndjson`
+3. `duck-haproxy-ingest.sh` (timer, ~5min) loads the spool with PK dedup into `haproxy.duckdb`; archives non-today files to `ingested/`
+4. `duck-haproxy-report.sh` / ad-hoc SQL reads the dedicated DB (traffic queries FRONTEND-only; all types stored for backend/server drill-down)
+
+**Deploy note:** hub-only change (agents unchanged). The spool dir must be reachable by the loader —
+share a volume between the hub container and the duckdb container, or run the loader on the hub host.
+
 ## Build Notes
 
 ### Docker Multi-Platform Build

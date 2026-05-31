@@ -88,6 +88,9 @@ func (sm *SystemManager) Initialize() error {
 		return err
 	}
 
+	// Start the HAProxy DuckDB recorder (self-gates on HAPROXY_DUCK_SPOOL).
+	go sm.startHAProxyRecorder()
+
 	// Load existing systems from database (excluding paused ones)
 	var systems []*System
 	err = sm.hub.DB().NewQuery("SELECT id, host, port, status FROM systems WHERE status != 'paused'").All(&systems)
