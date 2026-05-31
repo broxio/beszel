@@ -104,8 +104,10 @@ this loader ingests the spool into a *dedicated* DuckDB.
 
 ```
 HAPROXY_DUCK_SPOOL=/data/haproxy-spool     # enables it; dir the hub appends spool files to
-HAPROXY_RECORD_INTERVAL=2s                  # sample cadence (default 2s); main volume knob
+HAPROXY_RECORD_INTERVAL=5s                  # sample cadence; a volume knob
 HAPROXY_PROBE_INTERVAL=60s                  # how often to rescan for new HAProxy hosts
+HAPROXY_RECORD_TYPES=FRONTEND,BACKEND       # row types to record (default); add SERVER for per-server drill-down
+                                            # SERVER is the volume bomb (1 row per backend server per sample) — off by default
 ```
 
 The hub writes daily-rotated `haproxy_proxies-YYYYMMDD.ndjson` (one line per

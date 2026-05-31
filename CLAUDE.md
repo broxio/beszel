@@ -106,8 +106,13 @@ connect to the hub (early mp.9 was WS-only and silently recorded nothing for SSH
   full queue/connect/response/total latency breakdown for pinpointing *which* backend is slow.
 
 #### Config (hub env — opt-in, unset ⇒ disabled, zero overhead)
-- `HAPROXY_DUCK_SPOOL` — spool dir; **enables** the recorder. `HAPROXY_RECORD_INTERVAL` (default `2s`,
-  main volume knob). `HAPROXY_PROBE_INTERVAL` (default `60s`, rescan for new HAProxy hosts).
+- `HAPROXY_DUCK_SPOOL` — spool dir; **enables** the recorder. `HAPROXY_RECORD_INTERVAL` (default `2s`).
+  `HAPROXY_PROBE_INTERVAL` (default `60s`, rescan for new HAProxy hosts).
+- `HAPROXY_RECORD_TYPES` — comma list of row types to record, default **`FRONTEND,BACKEND`**. **SERVER rows
+  are excluded by default** because they're the volume bomb: HAProxy emits one row *per backend server per
+  sample*, so a fleet with many servers can write multiple GB/hour. Set `FRONTEND,BACKEND,SERVER` only if
+  you need per-server drill-down (and then keep the interval high + retention short). The two volume knobs
+  that matter: this type filter and `HAPROXY_RECORD_INTERVAL`.
 
 #### File Structure
 - `internal/hub/systems/haproxy_recorder.go` — recorder loop, private-buffer fetch, daily-rotated spool writer
@@ -304,6 +309,7 @@ curl -s "https://hub.example/api/beszel/ipvs/stats?ids=<system_id>" -H "Authoriz
 | `v0.18.7-mp.9` | High-resolution HAProxy recording: hub-side always-on collector (`internal/hub/systems/haproxy_recorder.go`, opt-in via `HAPROXY_DUCK_SPOOL`) samples HAProxy from every reporting agent into a daily NDJSON spool; `scripts/duck-haproxy-ingest.sh` loads it into a dedicated `haproxy.duckdb`; `scripts/duck-haproxy-report.sh` reports (incl. "slowest backends/servers" by `rtime`). Pure-Go, no cgo. **Hub-only deploy; agent unchanged.** Disabled by default. See "High-Resolution HAProxy Recording" section. (`qtime`/`ctime`/`ttime` full-latency breakdown deferred — needs an agent change.) **Bug: WS-only — recorded nothing for SSH-connected agents; fixed in mp.10.** |
 | `v0.18.7-mp.10` | HAProxy recorder now fetches over **SSH as well as WebSocket** (`sys.fetchForRecorder` adds a passive SSH path on the existing `sys.client`). mp.9 only handled WS, so fleets where agents connect to the hub via SSH (the common case here) got an empty spool. Hub-only; agent unchanged. |
 | `v0.18.7-mp.11` | HAProxy recorder **stderr diagnostics** (visible in `docker logs`, since PB app logs go to the DB Logs table): `[haproxy-recorder] enabled ...` on start, a per-probe summary (`systems/eligible/ok/failed/haproxy_members/rows` + a sample error), and a sample-sweep line only on stalls/failures. Added to debug an empty spool. No behavior change. |
+| `v0.18.7-mp.12` | **Volume control: `HAPROXY_RECORD_TYPES` (default `FRONTEND,BACKEND`).** mp.10/11 recorded SERVER rows too — on a fleet with many backend servers that produced multi-GB/hour spool (a real 3.4 GB file in minutes). SERVER rows now excluded by default; opt back in with `FRONTEND,BACKEND,SERVER`. Backend-level `rtime` still answers "which backend is slow." Hub-only. |
 
 ## Vector Aggregator Monitoring
 

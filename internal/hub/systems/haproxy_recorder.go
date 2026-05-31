@@ -8,6 +8,8 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sort"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -54,6 +56,8 @@ type haproxyRecorder struct {
 	proxies *spoolStream
 	info    *spoolStream
 
+	recordTypes map[string]bool // which HAProxy row types to record (uppercased)
+
 	mu      sync.Mutex
 	members map[string]struct{} // system IDs known to report HAProxy
 	names   map[string]string   // system ID -> friendly hostname (for readable rows)
@@ -72,21 +76,29 @@ func (sm *SystemManager) startHAProxyRecorder() {
 	}
 
 	r := &haproxyRecorder{
-		sm:         sm,
-		interval:   parseDurationEnv("HAPROXY_RECORD_INTERVAL", defaultHAProxyRecordInterval),
-		probeEvery: parseDurationEnv("HAPROXY_PROBE_INTERVAL", defaultHAProxyProbeInterval),
-		proxies:    &spoolStream{dir: spoolDir, prefix: "haproxy_proxies"},
-		info:       &spoolStream{dir: spoolDir, prefix: "haproxy_info"},
-		members:    map[string]struct{}{},
-		names:      map[string]string{},
+		sm:          sm,
+		interval:    parseDurationEnv("HAPROXY_RECORD_INTERVAL", defaultHAProxyRecordInterval),
+		probeEvery:  parseDurationEnv("HAPROXY_PROBE_INTERVAL", defaultHAProxyProbeInterval),
+		proxies:     &spoolStream{dir: spoolDir, prefix: "haproxy_proxies"},
+		info:        &spoolStream{dir: spoolDir, prefix: "haproxy_info"},
+		recordTypes: parseTypesEnv("HAPROXY_RECORD_TYPES", []string{"FRONTEND", "BACKEND"}),
+		members:     map[string]struct{}{},
+		names:       map[string]string{},
 	}
 
+	types := make([]string, 0, len(r.recordTypes))
+	for t := range r.recordTypes {
+		types = append(types, t)
+	}
+	sort.Strings(types)
+	typesStr := strings.Join(types, ",")
+
 	sm.hub.Logger().Info("HAProxy recording enabled",
-		"spool", spoolDir, "interval", r.interval.String(), "probe", r.probeEvery.String())
+		"spool", spoolDir, "interval", r.interval.String(), "probe", r.probeEvery.String(), "types", typesStr)
 	// Also log to stderr so it's visible in `docker logs` (PocketBase app logs go
 	// to the DB Logs table, not stdout).
-	log.Printf("[haproxy-recorder] enabled spool=%s interval=%s probe=%s",
-		spoolDir, r.interval, r.probeEvery)
+	log.Printf("[haproxy-recorder] enabled spool=%s interval=%s probe=%s types=%s",
+		spoolDir, r.interval, r.probeEvery, typesStr)
 	r.run()
 }
 
@@ -268,6 +280,12 @@ func (r *haproxyRecorder) emit(systemID string, cd *system.CombinedData) int {
 	written := 0
 	for i := range cd.Stats.HAProxy {
 		h := &cd.Stats.HAProxy[i]
+		// Volume control: skip row types we're not recording. SERVER rows (one
+		// per backend server, per sample) dominate the spool, so they're off by
+		// default — set HAPROXY_RECORD_TYPES=FRONTEND,BACKEND,SERVER to include.
+		if !r.recordTypes[strings.ToUpper(h.Type)] {
+			continue
+		}
 		row := haproxyProxyRow{
 			TS: ts, System: systemID, Host: host,
 			Proxy: h.Name, Type: h.Type, Status: h.Status,
@@ -326,6 +344,25 @@ func (r *haproxyRecorder) refreshNames() {
 	r.mu.Lock()
 	r.names = names
 	r.mu.Unlock()
+}
+
+// parseTypesEnv parses a comma-separated, case-insensitive list of HAProxy row
+// types (FRONTEND/BACKEND/SERVER) into a set. Empty/unset falls back to def.
+func parseTypesEnv(key string, def []string) map[string]bool {
+	m := map[string]bool{}
+	v := strings.TrimSpace(os.Getenv(key))
+	if v == "" {
+		for _, t := range def {
+			m[strings.ToUpper(t)] = true
+		}
+		return m
+	}
+	for _, t := range strings.Split(v, ",") {
+		if t = strings.ToUpper(strings.TrimSpace(t)); t != "" {
+			m[t] = true
+		}
+	}
+	return m
 }
 
 func parseDurationEnv(key string, def time.Duration) time.Duration {
