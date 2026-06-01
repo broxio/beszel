@@ -26,3 +26,5 @@ dockerfile_agent_dev
 # capacity-reporting scripts: local data artifacts, not source
 *.duckdb
 scripts/peaks.csv
+scripts/ui.htpasswd
+hub
