@@ -1,94 +1,97 @@
-# Runs the DuckDB ingester alongside beszel-hub on the same docker host.
+# DuckDB sidecars for beszel, on the same docker host. One image (beszel-duck),
+# four services grouped by compose PROFILE so you run only what you need:
 #
-#   cd scripts/docker
-#   cp .env.example .env      # fill in BESZEL_* (use a dedicated read-only account)
-#   docker compose up -d --build
+#   docker compose --profile capacity up -d     # capacity ingester (duck-ingest)
+#   docker compose --profile haproxy  up -d      # HAProxy loader + DuckDB UI
+#   docker compose --profile haproxy --profile ui-proxy up -d   # + nginx basic-auth proxy
 #
-# Run a report on demand:
-#   docker compose exec duck-ingest duck-report.sh 24 '*'
-#   docker compose exec duck-ingest duckdb -readonly /data/beszel.duckdb "SELECT count(*) FROM metrics"
+# Production: set DUCK_IMAGE=<registry>/beszel-duck:<tag> in .env, then
+#   docker compose --profile <p> pull && docker compose --profile <p> up -d
+# (the build: sections are ignored when the image is already present.)
 #
-# The DuckDB file lives in the named volume `beszel_duckdata` (survives restarts).
+# Reports on demand:
+#   docker compose exec duck-ingest  duck-report.sh 24 '*'
+#   docker compose exec haproxy-duck duck-haproxy-report.sh 1 'ha-*'
 
 services:
+  # ---- capacity: siphon beszel 1m stats into DuckDB (needs hub URL + creds) ----
   duck-ingest:
-    # Local dev: `docker compose up -d --build` builds from ./.. (the scripts/ dir).
-    # Production: set DUCK_IMAGE=<registry>/beszel-duck:<tag> in .env, then
-    #   `docker compose pull && docker compose up -d`  (uses the registry image; the
-    #   build section is ignored because the image is already present locally).
+    profiles: ["capacity"]
     image: "${DUCK_IMAGE:-beszel-duck:latest}"
     build:
-      context: ..                 # scripts/  (so duck-*.sh are in the build context)
+      context: ..                 # scripts/ (so duck-*.sh are in the build context)
       dockerfile: docker/Dockerfile
     container_name: beszel-duck-ingest
     restart: unless-stopped
+    entrypoint: ["/usr/local/bin/capacity.sh"]
     environment:
-      # Point at the hub. If this container shares the hub's docker network, use the
-      # internal service name + port (no TLS hop), e.g. http://beszel:8090.
-      # Otherwise use the public URL.
       BESZEL_URL: "${BESZEL_URL:?}"
       BESZEL_EMAIL: "${BESZEL_EMAIL:?}"
       BESZEL_PASSWORD: "${BESZEL_PASSWORD:?}"
       GLOB: "${GLOB:-*}"
       INGEST_INTERVAL: "${INGEST_INTERVAL:-2700}"   # 45 min (loop mode)
-      INGEST_MODE: "${INGEST_MODE:-loop}"           # loop (internal timer) | cron (idle; host drives)
+      INGEST_MODE: "${INGEST_MODE:-loop}"
       LOOKBACK_MIN: "${LOOKBACK_MIN:-70}"
       TZ_OFFSET: "${TZ_OFFSET:-8}"
       BESZEL_AUTH_COLLECTION: "${BESZEL_AUTH_COLLECTION:-users}"
       DUCK_DB: /data/beszel.duckdb
     volumes:
-      # Host bind mount: the DuckDB file lives in ./data next to this compose file,
-      # so it's visible/back-up-able and independent of the container lifecycle.
-      # The entrypoint chowns it to the container user on start, so a plain
-      # `mkdir data` (or letting compose create it) is enough — no manual chown.
       - ./data:/data
-    # If reaching the hub over the internal docker network, join it here and set
-    # BESZEL_URL=http://<hub-service>:8090 in .env. Otherwise omit `networks`.
-    # networks: [beszel_default]
+    # networks: [beszel_default]   # join the hub network + set BESZEL_URL=http://<hub>:8090
 
-  # HAProxy spool loader. Independent of duck-ingest above: no hub URL/creds — it
-  # only reads the NDJSON spool the hub writes (HAPROXY_DUCK_SPOOL on the hub).
-  # Runs as root so it can read the hub's root-owned spool + archive closed files.
-  # Report on demand: docker compose exec haproxy-duck duck-haproxy-report.sh 1 'ha-*'
+  # ---- haproxy: load the hub's NDJSON spool into a dedicated DuckDB ----
+  # No hub creds — reads the local spool the hub writes. Runs as root so it can
+  # read the hub's root-owned spool + delete sealed files. Also publishes the
+  # read-only UI snapshot.
   haproxy-duck:
+    profiles: ["haproxy"]
     image: "${DUCK_IMAGE:-beszel-duck:latest}"
     build:
       context: ..
       dockerfile: docker/Dockerfile
     container_name: beszel-haproxy-duck
     restart: unless-stopped
-    entrypoint: ["/usr/local/bin/haproxy-entrypoint.sh"]
+    entrypoint: ["/usr/local/bin/haproxy.sh"]
     environment:
-      HAPROXY_INGEST_INTERVAL: "${HAPROXY_INGEST_INTERVAL:-300}"   # seconds between loads
+      HAPROXY_INGEST_INTERVAL: "${HAPROXY_INGEST_INTERVAL:-300}"
       HAPROXY_RETENTION_DAYS: "${HAPROXY_RETENTION_DAYS:-14}"
       TZ_OFFSET: "${TZ_OFFSET:-8}"
       HAPROXY_DUCK_DB: /data/haproxy.duckdb
       HAPROXY_SPOOL_DIR: /spool
-      HAPROXY_UI_SNAPSHOT: /data/haproxy-ui.duckdb                 # read-only copy for the UI (see haproxy-ui)
-      HAPROXY_UI_SNAPSHOT_EVERY: "${HAPROXY_UI_SNAPSHOT_EVERY:-6}" # refresh every N ingest cycles (6×5min=30min)
+      HAPROXY_UI_SNAPSHOT: /data/haproxy-ui.duckdb
+      HAPROXY_UI_SNAPSHOT_EVERY: "${HAPROXY_UI_SNAPSHOT_EVERY:-2}"   # ×ingest interval (2×5min=10min)
     volumes:
-      - ./haproxy-data:/data                                       # dedicated haproxy.duckdb (separate from capacity DB)
-      - "${HAPROXY_SPOOL_HOST_DIR:-./haproxy-spool}:/spool"        # MUST match the hub's HAPROXY_DUCK_SPOOL host dir (rw, for archiving)
+      - ./data:/data
+      - "${HAPROXY_SPOOL_HOST_DIR:-./haproxy-spool}:/spool"          # the hub's HAPROXY_DUCK_SPOOL host dir (absolute if another stack); rw for deletes
 
-  # DuckDB official UI for the HAProxy store. Serves the read-only snapshot the
-  # loader refreshes (NOT the live DB — a held UI connection blocks ingestion).
-  # The UI has no auth and its frontend loads from ui.duckdb.org, so: publish only
-  # on host localhost and reach it via SSH tunnel, and ensure the container has
-  # outbound internet. Open http://localhost:4213 after `ssh -L 4213:localhost:4213`.
+  # ---- haproxy UI: DuckDB official UI over the read-only snapshot ----
+  # Serves the snapshot, never the live DB (a held UI connection blocks ingestion).
+  # Binds localhost + frontend from ui.duckdb.org -> needs outbound internet; socat
+  # publishes it on 0.0.0.0. NO auth: host-local publish (SSH tunnel) or use ui-proxy.
   haproxy-ui:
+    profiles: ["haproxy"]
     image: "${DUCK_IMAGE:-beszel-duck:latest}"
     container_name: beszel-haproxy-ui
     restart: unless-stopped
-    entrypoint: ["/usr/local/bin/haproxy-ui-entrypoint.sh"]
+    entrypoint: ["/usr/local/bin/haproxy-ui.sh"]
     environment:
       HAPROXY_UI_DB: /data/haproxy-ui.duckdb
       HAPROXY_UI_PORT: "4213"
     volumes:
-      - ./haproxy-data:/data                                       # same dir as haproxy-duck (reads the snapshot)
+      - ./data:/data
     ports:
-      - "127.0.0.1:4213:4213"                                      # host-local only; reach via SSH tunnel (no auth on the UI)
+      - "${HAPROXY_UI_BIND:-127.0.0.1}:4213:4213"                    # default host-local; set HAPROXY_UI_BIND=0.0.0.0 only behind ui-proxy/VPN
 
-# Uncomment + match the hub's network name (docker network ls) to use internal DNS:
-# networks:
-#   beszel_default:
-#     external: true
+  # ---- ui-proxy: nginx basic-auth in front of the UI (opt-in) ----
+  # Keeps haproxy-ui internal; publish THIS instead. Needs config/nginx-ui.conf and
+  # an ui.htpasswd:  docker run --rm httpd:alpine htpasswd -nbB admin 'PASS' > ui.htpasswd
+  ui-proxy:
+    profiles: ["ui-proxy"]
+    image: nginx:alpine
+    container_name: beszel-haproxy-ui-proxy
+    restart: unless-stopped
+    ports:
+      - "${UI_PROXY_PORT:-8080}:8080"
+    volumes:
+      - ./config/nginx-ui.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./ui.htpasswd:/etc/nginx/.htpasswd:ro

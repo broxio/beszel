@@ -136,19 +136,35 @@ types are stored so you can drill into backends/servers.
 series ⇒ ~4.3M proxy rows/day. `HAPROXY_RECORD_INTERVAL=5s` cuts that 2.5×;
 `HAPROXY_RETENTION_DAYS` bounds DB + spool growth.
 
-### Containerised ingester (`docker/`)
+### Containerised sidecars (`docker/`)
 
-Runs the ingester as a long-lived container alongside beszel-hub on the docker host.
-It loops `duck-ingest.sh` every `INGEST_INTERVAL` (default 45 min), logging to stdout.
+One `beszel-duck` image, **four services grouped by compose profile** so you run only
+what you need. Entrypoints live in `docker/entrypoints/`; the proxy config in `docker/config/`.
+
+| Profile | Services | Purpose |
+|---|---|---|
+| `capacity` | `duck-ingest` | loops `duck-ingest.sh` (needs hub URL + read-only creds) |
+| `haproxy` | `haproxy-duck`, `haproxy-ui` | HAProxy spool → DuckDB + the DuckDB UI (no hub creds) |
+| `ui-proxy` | `ui-proxy` | nginx basic-auth in front of the UI (opt-in) |
 
 ```bash
 cd scripts/docker
-cp .env.example .env        # fill BESZEL_URL + a DEDICATED read-only account
-docker compose up -d --build
+cp .env.example .env        # fill BESZEL_URL + a DEDICATED read-only account (capacity only)
 
+# capacity ingester:
+docker compose --profile capacity up -d --build
 docker compose logs -f duck-ingest                       # watch ingests
 docker compose exec duck-ingest duck-report.sh 24 '*'    # report on demand
+
+# HAProxy loader + UI (set HAPROXY_SPOOL_HOST_DIR to the hub's spool dir):
+docker compose --profile haproxy up -d
+docker compose exec haproxy-duck duck-haproxy-report.sh 1 'ha-*'
+
+# add the authenticated UI proxy (needs config/nginx-ui.conf + ui.htpasswd):
+docker compose --profile haproxy --profile ui-proxy up -d
 ```
+**Note:** services are profile-gated, so a bare `docker compose up -d` (no `--profile`)
+starts nothing — always pass the profile(s) you want, on `up`, `pull`, `logs`, and `down`.
 
 - **Use email/password, not a token** — the container re-auths every run, so it never
   expires (a static token would die in ~7 days). A regular **`users`** account works

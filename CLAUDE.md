@@ -127,8 +127,18 @@ daily-rotation + dedup-archive model, which let a single day's file grow unbound
 - `internal/hub/systems/system_manager.go` — `go sm.startHAProxyRecorder()` in `Initialize()` (self-gates on env)
 - `scripts/duck-haproxy-ingest.sh` — ingest **sealed** spool files → dedicated `haproxy.duckdb`, then delete them (ON CONFLICT DO NOTHING for crash-safety); optional `HAPROXY_RETENTION_DAYS` DB row retention
 - `scripts/duck-haproxy-report.sh` — troubleshooting report (per-frontend req/5xx/sessions, slowest backends by `rtime`, backend flaps, per-host idle%/conn-rate); reuses `duck-report.sh`'s local-time `[HOURS]` / `'FROM' 'TO'` range mode
-- `scripts/docker/haproxy-entrypoint.sh` + `docker-compose.yml` `haproxy-duck` service — containerized loader loop (no hub creds; runs as root to read the hub's root-owned spool + delete sealed files). Also publishes a read-only UI snapshot (`HAPROXY_UI_SNAPSHOT`, refreshed every `HAPROXY_UI_SNAPSHOT_EVERY` cycles).
-- `scripts/docker/haproxy-ui-entrypoint.sh` + `haproxy-ui` service — DuckDB **official UI** over the read-only snapshot (NOT the live DB — a held UI connection blocks the loader's writes). UI binds 127.0.0.1 + frontend from ui.duckdb.org, so it needs `socat` (baked into the image) to publish on 0.0.0.0, outbound internet to ui.duckdb.org, and host-local publish + SSH tunnel (no UI auth). Auto-reloads when the snapshot refreshes.
+- `scripts/docker/` — one `beszel-duck` image, four services in a profiled `docker-compose.yml`
+  (profiles: `capacity` = duck-ingest; `haproxy` = haproxy-duck + haproxy-ui; `ui-proxy` = nginx basic-auth).
+  Entrypoints live in `docker/entrypoints/` (`capacity.sh`, `haproxy.sh`, `haproxy-ui.sh`; image keeps
+  back-compat symlinks to the old `*-entrypoint.sh` names). `docker/config/nginx-ui.conf` is the proxy config.
+- `entrypoints/haproxy.sh` (`haproxy-duck` service) — loader loop (no hub creds; runs as root to read the hub's
+  root-owned spool + delete sealed files). Also publishes the read-only UI snapshot (`HAPROXY_UI_SNAPSHOT`,
+  every `HAPROXY_UI_SNAPSHOT_EVERY` cycles).
+- `entrypoints/haproxy-ui.sh` (`haproxy-ui` service) — DuckDB **official UI** over the read-only snapshot (NOT
+  the live DB — a held UI connection blocks the loader's writes). UI binds 127.0.0.1 + frontend from
+  ui.duckdb.org, so it needs `socat` (baked in) to publish on 0.0.0.0, outbound internet, and host-local
+  publish + SSH tunnel (no UI auth; use the `ui-proxy` profile for authenticated exposure). Auto-reloads on
+  snapshot refresh.
 
 #### Data Flow
 1. Hub recorder ticks every `HAPROXY_RECORD_INTERVAL`; probes all systems every `HAPROXY_PROBE_INTERVAL` to maintain the HAProxy-host membership set

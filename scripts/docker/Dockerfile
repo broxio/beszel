@@ -25,13 +25,16 @@ RUN apk add --no-cache \
  && chmod +x /usr/local/bin/duckdb \
  && rm /tmp/duckdb.zip
 
-# scripts (build context = scripts/)
+# report/ingest tools + entrypoints (build context = scripts/)
 COPY duck-ingest.sh duck-report.sh duck-haproxy-ingest.sh duck-haproxy-report.sh /usr/local/bin/
-COPY docker/entrypoint.sh docker/haproxy-entrypoint.sh docker/haproxy-ui-entrypoint.sh /usr/local/bin/
+COPY docker/entrypoints/capacity.sh docker/entrypoints/haproxy.sh docker/entrypoints/haproxy-ui.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/duck-ingest.sh /usr/local/bin/duck-report.sh \
       /usr/local/bin/duck-haproxy-ingest.sh /usr/local/bin/duck-haproxy-report.sh \
-      /usr/local/bin/entrypoint.sh /usr/local/bin/haproxy-entrypoint.sh \
-      /usr/local/bin/haproxy-ui-entrypoint.sh
+      /usr/local/bin/capacity.sh /usr/local/bin/haproxy.sh /usr/local/bin/haproxy-ui.sh \
+ # back-compat aliases for the pre-reorg entrypoint names (drop once compose is migrated)
+ && ln -sf /usr/local/bin/capacity.sh   /usr/local/bin/entrypoint.sh \
+ && ln -sf /usr/local/bin/haproxy.sh    /usr/local/bin/haproxy-entrypoint.sh \
+ && ln -sf /usr/local/bin/haproxy-ui.sh /usr/local/bin/haproxy-ui-entrypoint.sh
 
 # non-root user; /data holds the DuckDB file (named volume OR host bind mount).
 # We DON'T set USER here: the entrypoint starts as root only to fix bind-mount
@@ -47,7 +50,7 @@ VOLUME ["/data"]
 # Smoke-check at build time that the duckdb binary actually runs on this base.
 RUN duckdb -c "SELECT 'duckdb ok' AS check;"
 
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+ENTRYPOINT ["/usr/local/bin/capacity.sh"]
 
 # ---------------------------------------------------------------------------
 # glibc fallback if Alpine+gcompat misbehaves — replace the FROM and apk line:
