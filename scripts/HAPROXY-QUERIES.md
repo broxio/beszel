@@ -26,6 +26,43 @@ docker compose exec haproxy-duck duckdb -readonly /data/haproxy.duckdb "SELECT 1
 duckdb -readonly /home/admin/beszel-duck/data/haproxy.duckdb
 ```
 
+## Querying from Duck-UI (browser DuckDB-WASM) — read this first if using the web UI
+
+Duck-UI does **not** connect to the server-side `haproxy.duckdb`. It runs DuckDB **in the
+browser (WASM)** and reads the rolling **Parquet** the loader exports, served at `/data/`.
+So query with `read_parquet(<url>)` (or make views once):
+
+```sql
+CREATE OR REPLACE VIEW proxies AS
+  SELECT * FROM read_parquet('https://<your-host>/data/haproxy_proxies.parquet');
+CREATE OR REPLACE VIEW info AS
+  SELECT * FROM read_parquet('https://<your-host>/data/haproxy_info.parquet');
+```
+
+Two WASM differences from the CLI examples below (the browser build has **no ICU extension**):
+
+- **No `now() - INTERVAL …`.** `now()` is `TIMESTAMP WITH TIME ZONE`, and tz arithmetic needs ICU →
+  `Binder Error: No function matches '-(TIMESTAMP WITH TIME ZONE, INTERVAL)'`. **Cast it:**
+  `now()::TIMESTAMP - INTERVAL 1 hour` (matches the UTC `ts` column). Or use a literal UTC bound:
+  `ts > TIMESTAMP '2026-06-01 02:00:00'`.
+- **No `AT TIME ZONE`.** For local-time display just add a fixed offset — `ts + INTERVAL 8 hour`
+  (TIMESTAMP + INTERVAL is fine without ICU).
+
+So in Duck-UI, anywhere the CLI cookbook says `(now() AT TIME ZONE 'UTC')`, write `now()::TIMESTAMP`,
+and query the views (or `read_parquet(...)`) instead of the table names. Example:
+
+```sql
+SELECT host, proxy,
+       round(quantile_cont(rtime,0.95),1) AS p95_ms, max(rtime) AS max_ms
+FROM proxies
+WHERE type='BACKEND' AND ts > now()::TIMESTAMP - INTERVAL 1 hour
+GROUP BY host, proxy ORDER BY p95_ms DESC;
+```
+
+**Performance:** the Parquet is a rolling window (default 2 days, ~hundreds of MB). DuckDB-WASM range-fetches
+only the row-groups a query needs **when you filter by `ts`** (data is time-ordered). A query with **no time
+filter** downloads the whole file into the browser — always scope to a window.
+
 ## DuckDB CLI / meta commands (in the REPL)
 
 ```
