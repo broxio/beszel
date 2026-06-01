@@ -143,9 +143,12 @@ what you need. Entrypoints live in `docker/entrypoints/`; the proxy config in `d
 
 | Profile | Services | Purpose |
 |---|---|---|
-| `capacity` | `duck-ingest` | loops `duck-ingest.sh` (needs hub URL + read-only creds) |
+| `capacity` | `duck-ingest` | loops `duck-ingest.sh` (needs hub URL + read-only creds); exports `metrics.parquet` for the UI |
 | `haproxy` | `haproxy-duck` | HAProxy spool → DuckDB + rolling Parquet export (no hub creds) |
 | `ui` | `duck-ui`, `ui-proxy` | Duck-UI (browser DuckDB-WASM) behind nginx basic-auth, querying the Parquet |
+
+Both ingesters export Parquet into the shared `./parquet` dir, which `ui-proxy` serves at `/data/`. In Duck-UI:
+`read_parquet('https://<host>/data/metrics.parquet')` (capacity) and `…/haproxy_proxies.parquet` (HAProxy).
 
 ```bash
 cd scripts/docker

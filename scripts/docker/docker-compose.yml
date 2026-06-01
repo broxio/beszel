@@ -35,8 +35,11 @@ services:
       TZ_OFFSET: "${TZ_OFFSET:-8}"
       BESZEL_AUTH_COLLECTION: "${BESZEL_AUTH_COLLECTION:-users}"
       DUCK_DB: /data/beszel.duckdb
+      CAPACITY_PARQUET_DIR: /parquet                                 # export metrics.parquet for the UI (empty to disable)
+      CAPACITY_PARQUET_DAYS: "${CAPACITY_PARQUET_DAYS:-}"           # rolling window; empty = full history
     volumes:
       - ./data:/data
+      - ./parquet:/parquet                                          # shared with ui-proxy (served at /data/)
     # networks: [beszel_default]   # join the hub network + set BESZEL_URL=http://<hub>:8090
 
   # ---- haproxy: load the hub's NDJSON spool into a dedicated DuckDB ----
