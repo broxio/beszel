@@ -144,8 +144,8 @@ what you need. Entrypoints live in `docker/entrypoints/`; the proxy config in `d
 | Profile | Services | Purpose |
 |---|---|---|
 | `capacity` | `duck-ingest` | loops `duck-ingest.sh` (needs hub URL + read-only creds) |
-| `haproxy` | `haproxy-duck`, `haproxy-ui` | HAProxy spool → DuckDB + the DuckDB UI (no hub creds) |
-| `ui-proxy` | `ui-proxy` | nginx basic-auth in front of the UI (opt-in) |
+| `haproxy` | `haproxy-duck` | HAProxy spool → DuckDB + rolling Parquet export (no hub creds) |
+| `ui` | `duck-ui`, `ui-proxy` | Duck-UI (browser DuckDB-WASM) behind nginx basic-auth, querying the Parquet |
 
 ```bash
 cd scripts/docker
@@ -156,13 +156,20 @@ docker compose --profile capacity up -d --build
 docker compose logs -f duck-ingest                       # watch ingests
 docker compose exec duck-ingest duck-report.sh 24 '*'    # report on demand
 
-# HAProxy loader + UI (set HAPROXY_SPOOL_HOST_DIR to the hub's spool dir):
+# HAProxy loader (set HAPROXY_SPOOL_HOST_DIR to the hub's spool dir):
 docker compose --profile haproxy up -d
 docker compose exec haproxy-duck duck-haproxy-report.sh 1 'ha-*'
 
-# add the authenticated UI proxy (needs config/nginx-ui.conf + ui.htpasswd):
-docker compose --profile haproxy --profile ui-proxy up -d
+# web UI: Duck-UI behind nginx basic-auth (create ui.htpasswd first, chmod 644):
+docker run --rm -it httpd:alpine htpasswd -nB admin > ui.htpasswd && chmod 644 ui.htpasswd
+docker compose --profile haproxy --profile ui up -d
+# then browse the proxy (front with TLS); query in Duck-UI:
+#   SELECT host,proxy,quantile_cont(rtime,0.95) FROM read_parquet('https://<host>/data/haproxy_proxies.parquet')
+#   WHERE type='BACKEND' GROUP BY 1,2 ORDER BY 3 DESC;
 ```
+The **official DuckDB UI doesn't fit** here: the musl DuckDB build has no `ui` extension and it needs runtime
+egress to ui.duckdb.org (the prod box is air-gapped). **Duck-UI** is self-contained and runs DuckDB-WASM in the
+browser, so the loader exports a rolling **Parquet** window it can read over HTTP.
 **Note:** services are profile-gated, so a bare `docker compose up -d` (no `--profile`)
 starts nothing — always pass the profile(s) you want, on `up`, `pull`, `logs`, and `down`.
 

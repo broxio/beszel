@@ -15,26 +15,34 @@ export HAPROXY_DUCK_DB="${HAPROXY_DUCK_DB:-/data/haproxy.duckdb}"
 export HAPROXY_SPOOL_DIR="${HAPROXY_SPOOL_DIR:-/spool}"
 export HAPROXY_RETENTION_DAYS="${HAPROXY_RETENTION_DAYS:-14}"
 
-# Optional read-only snapshot for the DuckDB UI. The UI holds its DB file open,
-# which (per DuckDB's single-writer lock) would block this loader's writes — so
-# the UI must read a SEPARATE snapshot, never the live DB. We refresh it here,
-# where we know no writer is active (our own ingest just finished).
-UI_SNAPSHOT="${HAPROXY_UI_SNAPSHOT:-}"               # e.g. /data/haproxy-ui.duckdb; empty = off
-UI_SNAPSHOT_EVERY="${HAPROXY_UI_SNAPSHOT_EVERY:-6}"  # refresh every N ingest cycles (6×5min = 30min)
+# Optional Parquet export for the web UI (Duck-UI, browser-side DuckDB-WASM).
+# We export a rolling window to version-stable Parquet (not the .duckdb, which a
+# browser can't open across storage-format versions) so the UI can query it over
+# HTTP with predicate pushdown. Done here, where no writer is active (our own
+# ingest just finished); a temp+rename keeps nginx from serving a half-written file.
+PARQUET_DIR="${HAPROXY_PARQUET_DIR:-}"            # e.g. /parquet; empty = off
+PARQUET_DAYS="${HAPROXY_PARQUET_DAYS:-2}"         # rolling window exported to Parquet
+EXPORT_EVERY="${HAPROXY_EXPORT_EVERY:-2}"         # export every N ingest cycles (2×5min = 10min)
 
-refresh_ui_snapshot() {
-  [[ -n "$UI_SNAPSHOT" ]] || return 0
-  # CHECKPOINT folds any WAL into the main file so a plain copy is consistent,
-  # then publish via temp+rename (atomic; the UI keeps serving until it reconnects).
-  duckdb "$HAPROXY_DUCK_DB" "CHECKPOINT;" >/dev/null 2>&1 || true
-  if cp -f "$HAPROXY_DUCK_DB" "${UI_SNAPSHOT}.tmp" && mv -f "${UI_SNAPSHOT}.tmp" "$UI_SNAPSHOT"; then
-    echo "[haproxy-entrypoint] $(date -u +%FT%TZ) refreshed UI snapshot ${UI_SNAPSHOT}"
-  fi
+export_parquet() {
+  [[ -n "$PARQUET_DIR" ]] || return 0
+  mkdir -p "$PARQUET_DIR"
+  local ok=1 t
+  for t in haproxy_proxies haproxy_info; do
+    if duckdb -readonly "$HAPROXY_DUCK_DB" \
+        "COPY (SELECT * FROM ${t} WHERE ts > (now() AT TIME ZONE 'UTC') - INTERVAL '${PARQUET_DAYS} days') TO '${PARQUET_DIR}/${t}.parquet.tmp' (FORMAT PARQUET);" >/dev/null 2>&1 \
+       && mv -f "${PARQUET_DIR}/${t}.parquet.tmp" "${PARQUET_DIR}/${t}.parquet"; then
+      :
+    else
+      ok=0; rm -f "${PARQUET_DIR}/${t}.parquet.tmp"
+    fi
+  done
+  (( ok == 1 )) && echo "[haproxy-entrypoint] $(date -u +%FT%TZ) exported ${PARQUET_DAYS}d Parquet -> ${PARQUET_DIR}"
 }
 
 trap 'echo "[haproxy-entrypoint] stopping"; exit 0' TERM INT
 
-echo "[haproxy-entrypoint] loop: interval=${INTERVAL}s db=${HAPROXY_DUCK_DB} spool=${HAPROXY_SPOOL_DIR} retention=${HAPROXY_RETENTION_DAYS}d ui_snapshot=${UI_SNAPSHOT:-off}"
+echo "[haproxy-entrypoint] loop: interval=${INTERVAL}s db=${HAPROXY_DUCK_DB} spool=${HAPROXY_SPOOL_DIR} retention=${HAPROXY_RETENTION_DAYS}d parquet=${PARQUET_DIR:-off}"
 cycle=0
 while true; do
   echo "[haproxy-entrypoint] $(date -u +%FT%TZ) ingest start"
@@ -44,8 +52,8 @@ while true; do
     echo "[haproxy-entrypoint] $(date -u +%FT%TZ) ingest FAILED rc=$? (will retry next cycle)"
   fi
   cycle=$((cycle + 1))
-  if [[ -n "$UI_SNAPSHOT" ]] && (( cycle % UI_SNAPSHOT_EVERY == 0 )); then
-    refresh_ui_snapshot
+  if [[ -n "$PARQUET_DIR" ]] && (( cycle % EXPORT_EVERY == 0 )); then
+    export_parquet
   fi
   sleep "$INTERVAL" &
   wait $!     # so a TERM during sleep stops promptly
