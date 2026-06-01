@@ -149,6 +149,7 @@ what you need. Entrypoints live in `docker/entrypoints/`; the proxy config in `d
 
 Both ingesters export Parquet into the shared `./parquet` dir, which `ui-proxy` serves at `/data/`. In Duck-UI:
 `read_parquet('https://<host>/data/metrics.parquet')` (capacity) and `…/haproxy_proxies.parquet` (HAProxy).
+Copy-paste Duck-UI queries (incl. ones that reproduce the CLI report's tables): **[DUCK-UI-QUERIES.md](DUCK-UI-QUERIES.md)**.
 
 ```bash
 cd scripts/docker
