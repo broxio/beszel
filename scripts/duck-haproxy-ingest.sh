@@ -29,6 +29,11 @@ command -v duckdb >/dev/null || { echo "duck-haproxy-ingest.sh: duckdb not found
 if [[ -n "$RETENTION_DAYS" ]]; then
   case "$RETENTION_DAYS" in ''|*[!0-9]*) echo "duck-haproxy-ingest.sh: HAPROXY_RETENTION_DAYS must be an integer" >&2; exit 1 ;; esac
 fi
+# Cap files processed per run so a backlog (e.g. after a misconfig) drains in bounded
+# batches instead of one giant transaction/CPU spike. Steady state (~1 sealed/min) is
+# well under this; 0 = unlimited.
+MAX_FILES="${HAPROXY_MAX_FILES:-60}"
+case "$MAX_FILES" in ''|*[!0-9]*) echo "duck-haproxy-ingest.sh: HAPROXY_MAX_FILES must be an integer" >&2; exit 1 ;; esac
 
 mkdir -p "$(dirname "$DUCK_DB")"
 
@@ -39,6 +44,15 @@ shopt -s nullglob
 PROXY_FILES=("$SPOOL_DIR"/haproxy_proxies-*.ndjson)
 INFO_FILES=("$SPOOL_DIR"/haproxy_info-*.ndjson)
 shopt -u nullglob
+
+# Process oldest-first (lexical sort = chronological for the <stamp>-<seq> names),
+# capped to MAX_FILES per run. Anything beyond is left for the next cycle.
+cap_oldest() {
+  (( $# == 0 )) && return 0                       # no files -> emit nothing (empty array)
+  if (( MAX_FILES == 0 )); then printf '%s\n' "$@"; else printf '%s\n' "$@" | sort | head -n "$MAX_FILES"; fi
+}
+mapfile -t PROXY_FILES < <(cap_oldest "${PROXY_FILES[@]}")
+mapfile -t INFO_FILES  < <(cap_oldest "${INFO_FILES[@]}")
 
 if (( ${#PROXY_FILES[@]} == 0 && ${#INFO_FILES[@]} == 0 )); then
   echo "($(date -u +%H:%M) no sealed spool files in $SPOOL_DIR)"; exit 0

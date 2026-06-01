@@ -67,7 +67,7 @@ services:
     volumes:
       - ./data:/data
       - ./parquet:/parquet                                          # shared with ui-proxy (served at /data/)
-      - "${HAPROXY_SPOOL_HOST_DIR:-./haproxy-spool}:/spool"          # the hub's HAPROXY_DUCK_SPOOL host dir (absolute if another stack); rw for deletes
+      - "${HAPROXY_SPOOL_HOST_DIR:?set HAPROXY_SPOOL_HOST_DIR to the hub's HAPROXY_DUCK_SPOOL host dir (absolute, e.g. /home/admin/beszel/haproxy-spool)}:/spool"
 
   # ---- ui: Duck-UI (browser DuckDB-WASM) — self-contained, air-gap friendly ----
   # Queries the rolling Parquet over HTTP (read_parquet); never touches the live DB.
