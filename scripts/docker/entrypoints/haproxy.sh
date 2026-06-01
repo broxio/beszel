@@ -52,7 +52,8 @@ while true; do
     echo "[haproxy-entrypoint] $(date -u +%FT%TZ) ingest FAILED rc=$? (will retry next cycle)"
   fi
   cycle=$((cycle + 1))
-  if [[ -n "$PARQUET_DIR" ]] && (( cycle % EXPORT_EVERY == 0 )); then
+  # export after the very first ingest (so the UI has data fast), then every Nth cycle
+  if [[ -n "$PARQUET_DIR" ]] && { (( cycle == 1 )) || (( cycle % EXPORT_EVERY == 0 )); }; then
     export_parquet
   fi
   sleep "$INTERVAL" &
