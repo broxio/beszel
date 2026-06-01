@@ -64,9 +64,29 @@ services:
       TZ_OFFSET: "${TZ_OFFSET:-8}"
       HAPROXY_DUCK_DB: /data/haproxy.duckdb
       HAPROXY_SPOOL_DIR: /spool
+      HAPROXY_UI_SNAPSHOT: /data/haproxy-ui.duckdb                 # read-only copy for the UI (see haproxy-ui)
+      HAPROXY_UI_SNAPSHOT_EVERY: "${HAPROXY_UI_SNAPSHOT_EVERY:-6}" # refresh every N ingest cycles (6×5min=30min)
     volumes:
       - ./haproxy-data:/data                                       # dedicated haproxy.duckdb (separate from capacity DB)
       - "${HAPROXY_SPOOL_HOST_DIR:-./haproxy-spool}:/spool"        # MUST match the hub's HAPROXY_DUCK_SPOOL host dir (rw, for archiving)
+
+  # DuckDB official UI for the HAProxy store. Serves the read-only snapshot the
+  # loader refreshes (NOT the live DB — a held UI connection blocks ingestion).
+  # The UI has no auth and its frontend loads from ui.duckdb.org, so: publish only
+  # on host localhost and reach it via SSH tunnel, and ensure the container has
+  # outbound internet. Open http://localhost:4213 after `ssh -L 4213:localhost:4213`.
+  haproxy-ui:
+    image: "${DUCK_IMAGE:-beszel-duck:latest}"
+    container_name: beszel-haproxy-ui
+    restart: unless-stopped
+    entrypoint: ["/usr/local/bin/haproxy-ui-entrypoint.sh"]
+    environment:
+      HAPROXY_UI_DB: /data/haproxy-ui.duckdb
+      HAPROXY_UI_PORT: "4213"
+    volumes:
+      - ./haproxy-data:/data                                       # same dir as haproxy-duck (reads the snapshot)
+    ports:
+      - "127.0.0.1:4213:4213"                                      # host-local only; reach via SSH tunnel (no auth on the UI)
 
 # Uncomment + match the hub's network name (docker network ls) to use internal DNS:
 # networks:
