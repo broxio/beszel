@@ -13,7 +13,8 @@
 #   vcpu         provisioned vCPU summed across the group's nodes
 #   cpu_avg/p95/peak   group-wide cpu% over every node's 1-min samples
 #   peak_host/at the node + local time that hit the cpu peak
-#   cores_p95/peak     REAL cores used = sum over nodes of vcpu*cpu%/100 (p95 / max)
+#   cores_avg/p95/peak REAL cores used = sum over nodes of vcpu*cpu%/100 (avg/p95/max).
+#                      cores_avg == duck-report.sh's cores_used_avg (cpu_avg% is the same number as %).
 #   util_p95_pct 100*cores_p95/vcpu — how full the group is at p95
 #   mem_used_gb/mem_tot_gb   used (avg) vs provisioned memory, summed across nodes
 #
@@ -122,6 +123,7 @@ if [[ "$GROUP_MODE" == "auto" ]]; then
   ha AS (
     SELECT grp, host,
            any_value(vcpu)                                  AS vcpu,
+           any_value(vcpu)*avg(cpu)/100                      AS c_avg,
            any_value(vcpu)*quantile_cont(cpu,0.95)/100      AS c_p95,
            any_value(vcpu)*max(cpu)/100                     AS c_peak,
            any_value(mem_total_gb)                          AS mem_tot,
@@ -131,6 +133,7 @@ if [[ "$GROUP_MODE" == "auto" ]]; then
   cores AS (
     SELECT grp,
            sum(vcpu)                                        AS vcpu,
+           round(sum(c_avg),2)                              AS cores_avg,
            round(sum(c_p95),2)                              AS cores_p95,
            round(sum(c_peak),2)                             AS cores_peak,
            round(100*sum(c_p95)/nullif(sum(vcpu),0),1)      AS util_p95_pct,
@@ -139,7 +142,7 @@ if [[ "$GROUP_MODE" == "auto" ]]; then
     FROM ha GROUP BY grp
   )
   SELECT gm.grp AS group, gm.nodes, c.vcpu, gm.cpu_avg, gm.cpu_p95, gm.cpu_peak,
-         gm.peak_host, gm.peak_at, c.cores_p95, c.cores_peak, c.util_p95_pct,
+         gm.peak_host, gm.peak_at, c.cores_avg, c.cores_p95, c.cores_peak, c.util_p95_pct,
          c.mem_used_gb, c.mem_tot_gb
   FROM gm JOIN cores c USING (grp)
   ORDER BY regexp_replace(gm.grp,'[0-9]+\$',''),
@@ -167,6 +170,7 @@ else
   ha AS (
     SELECT g.seq AS seq, m.host AS host,
            any_value(m.vcpu)                                  AS vcpu,
+           any_value(m.vcpu)*avg(m.cpu)/100                    AS c_avg,
            any_value(m.vcpu)*quantile_cont(m.cpu,0.95)/100    AS c_p95,
            any_value(m.vcpu)*max(m.cpu)/100                   AS c_peak,
            any_value(m.mem_total_gb)                          AS mem_tot,
@@ -177,6 +181,7 @@ else
   cores AS (
     SELECT seq,
            sum(vcpu)                                          AS vcpu,
+           round(sum(c_avg),2)                                AS cores_avg,
            round(sum(c_p95),2)                                AS cores_p95,
            round(sum(c_peak),2)                               AS cores_peak,
            round(100*sum(c_p95)/nullif(sum(vcpu),0),1)        AS util_p95_pct,
@@ -188,7 +193,7 @@ else
     gm.seq        AS \"#\",
     gm.label      AS group,
     gm.nodes, c.vcpu, gm.cpu_avg, gm.cpu_p95, gm.cpu_peak,
-    gm.peak_host, gm.peak_at, c.cores_p95, c.cores_peak, c.util_p95_pct,
+    gm.peak_host, gm.peak_at, c.cores_avg, c.cores_p95, c.cores_peak, c.util_p95_pct,
     c.mem_used_gb, c.mem_tot_gb
   FROM gm LEFT JOIN cores c USING (seq)
   ORDER BY gm.seq;
