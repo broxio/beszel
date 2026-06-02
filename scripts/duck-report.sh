@@ -12,6 +12,8 @@
 #   DUCK_DB      DuckDB file (default: ./beszel.duckdb)
 #   TZ_OFFSET    local-time offset in hours, used for BOTH peak-time display and
 #                the FROM/TO range args (default: 8 = UTC+8; 0 = UTC)
+#   EXCLUDE_HOST comma-separated host globs dropped from the report (case-insensitive).
+#                Default 'ha-uat*,ha-pre*' (non-prod zones). EXCLUDE_HOST='' includes everything.
 #
 # Examples:
 #   ./duck-report.sh 6 'ha-bop*'
@@ -56,14 +58,27 @@ fi
 # shell glob -> SQL LIKE (* -> %, ? -> _)
 LIKE="${GLOB//\%/\\%}"; LIKE="${LIKE//_/\\_}"; LIKE="${LIKE//\*/%}"; LIKE="${LIKE//\?/_}"
 
+# Exclude non-prod host zones by default (comma-separated globs, case-insensitive; '' disables).
+EXCLUDE_HOST="${EXCLUDE_HOST-ha-uat*,ha-pre*}"
+EXCL_HOST_SQL=""; EXCL_HOST_LABEL=""
+if [[ -n "$EXCLUDE_HOST" ]]; then
+  hconds=(); IFS=',' read -ra _hpats <<<"$EXCLUDE_HOST"
+  for p in "${_hpats[@]}"; do
+    read -r p <<<"$p"; [[ -z "$p" ]] && continue
+    hl="${p//\%/\\%}"; hl="${hl//_/\\_}"; hl="${hl//\*/%}"; hl="${hl//\?/_}"
+    hconds+=("host ILIKE '${hl}' ESCAPE '\\'")
+  done
+  (( ${#hconds[@]} )) && { hj="$(printf ' OR %s' "${hconds[@]}")"; EXCL_HOST_SQL=" AND NOT (${hj# OR })"; EXCL_HOST_LABEL="  exclude-host=${EXCLUDE_HOST}"; }
+fi
+
 echo
-echo "beszel capacity (DuckDB) — ${WINDOW_LABEL}  glob=${GLOB}  peak-time=local${TZLABEL}  db=${DUCK_DB}"
+echo "beszel capacity (DuckDB) — ${WINDOW_LABEL}  glob=${GLOB}${EXCL_HOST_LABEL}  peak-time=local${TZLABEL}  db=${DUCK_DB}"
 
 # ---- per-host: percentiles + exact peak time + real cores ----
 duckdb -readonly -box "$DUCK_DB" "
 WITH w AS (
   SELECT * FROM metrics
-  WHERE host LIKE '${LIKE}' ESCAPE '\\'
+  WHERE host LIKE '${LIKE}' ESCAPE '\\'${EXCL_HOST_SQL}
     AND ${WINDOW_SQL}
 )
 SELECT
@@ -96,7 +111,7 @@ ORDER BY regexp_replace(host,'[0-9]+\$',''),
 duckdb -readonly -box "$DUCK_DB" "
 WITH w AS (
   SELECT * FROM metrics
-  WHERE host LIKE '${LIKE}' ESCAPE '\\'
+  WHERE host LIKE '${LIKE}' ESCAPE '\\'${EXCL_HOST_SQL}
     AND ${WINDOW_SQL}
 ),
 per_host AS (
