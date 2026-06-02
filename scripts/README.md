@@ -16,6 +16,7 @@ single capacity/usage report or building history that outlives PB's retention.
 | `peak-recorder.sh` | REST API (off-host) | harvest **minute-precise** CPU/mem peaks before PB prunes them; append-only CSV |
 | `duck-ingest.sh` | REST API (off-host) | siphon raw **1m** samples into a local **DuckDB** before PB prunes them; idempotent, runs on a timer |
 | `duck-report.sh` | DuckDB (local file) | capacity report from the DuckDB store: true percentiles + **exact** peak time + fleet totals |
+| `duck-daily-summary.sh` | DuckDB (local file) | capacity rolled up **per host-group** (+ optional `fe_*` request/throughput from the HAProxy DB); `usage` or cloud-`forecast` views |
 | `duck-haproxy-ingest.sh` | NDJSON spool (from hub) | load the hub's **high-resolution HAProxy** spool into a dedicated DuckDB; idempotent, runs on a timer |
 | `duck-haproxy-report.sh` | DuckDB (local file) | HAProxy troubleshooting report: per-frontend req/5xx/sessions, backend flaps, per-host idle%/conn-rate |
 
@@ -271,6 +272,56 @@ already present). If you copy *only* `docker-compose.yml` + `.env` to prod (no `
 build context), that's fine for the pull flow; just don't pass `--build` there.
 Validated: multi-arch build produces a working amd64 image (the build runs the duckdb smoke
 test per-arch, so a broken arch fails the build, not prod).
+
+### Running the reports (in the duck container)
+
+Three read-only report scripts ship in the image. The `*-ingest.sh` scripts are loaders
+(driven by the entrypoints/timers), not reports. Two DBs back the reports:
+
+- **Capacity** (`metrics`: CPU/mem) → `/data/beszel.duckdb` — the `duck-ingest` service
+- **HAProxy** (`haproxy_proxies`/`haproxy_info`) → `/data/haproxy.duckdb` — the `haproxy-duck` service
+
+Run each from the service that owns its DB (or either if your `./data` volume is shared — just
+point the env at the right file). Both invocation forms match across all three:
+`<HOURS>` (relative) or `'FROM' 'TO'` (explicit **local** range).
+
+```bash
+# 1) Capacity per-host + fleet total
+docker compose exec duck-ingest duck-report.sh 6 'ha-bop*'
+docker compose exec duck-ingest duck-report.sh '2026-06-02 13:00' '2026-06-02 19:00' 'ha-*'
+
+# 2) Capacity by host-GROUP (+ fe_* requests/throughput if the HAProxy DB is present)
+docker compose exec duck-ingest duck-daily-summary.sh 6
+docker compose exec -e HAPROXY_DUCK_DB=/data/haproxy.duckdb duck-ingest duck-daily-summary.sh 6
+docker compose exec -e FORMAT=csv duck-ingest duck-daily-summary.sh '2026-06-02' '2026-06-03'   # Excel
+
+# 3) HAProxy troubleshooting (per-frontend, slowest backends, flaps, host health, fe_* by group)
+docker compose exec haproxy-duck duck-haproxy-report.sh 6 'ha-*'
+docker compose exec haproxy-duck duck-haproxy-report.sh '2026-06-02 13:00' '2026-06-02 19:00' 'ha-bop*'
+```
+
+Knobs are **env vars — pass them with `-e` BEFORE the service name** (anything after the script
+name is a positional arg, not an env var):
+
+| Env | Default | Applies to |
+|---|---|---|
+| `EXCLUDE_HOST` | `ha-uat*,ha-pre*` | all three (comma globs, case-insensitive; `''` = include) |
+| `EXCLUDE_PROXY` | `admin,stats` | `duck-haproxy-report.sh` (mgmt/stats frontends; `''` = include) |
+| `TZ_OFFSET` | `8` (UTC+8) | all (peak times + range args) |
+| `FORMAT` | `box` | `duck-daily-summary.sh` (`csv` for Excel); `duck-report`/haproxy are box-only |
+| `GROUP_MODE` | `sheet` | `duck-daily-summary.sh` (`auto` = group every host by name) |
+| `VIEW` | `usage` | `duck-daily-summary.sh` (`forecast` = cloud right-sizing) |
+| `SORT` | `name` | `duck-daily-summary.sh` (`seq` = fixed spreadsheet order) |
+| `HAPROXY_DUCK_DB` | `./haproxy.duckdb` | `duck-daily-summary.sh` fe_* section |
+
+```bash
+# include the non-prod zones / mgmt frontends that are hidden by default:
+docker compose exec -e EXCLUDE_HOST='' -e EXCLUDE_PROXY='' haproxy-duck duck-haproxy-report.sh 6 'ha-*'
+# cloud capacity forecast over ~30 days, CSV, every host auto-grouped:
+docker compose exec -e VIEW=forecast -e GROUP_MODE=auto -e FORMAT=csv duck-ingest duck-daily-summary.sh 720
+```
+
+(Service names `duck-ingest`/`haproxy-duck` assume the bundled compose — adjust for yours.)
 
 ---
 
