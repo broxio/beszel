@@ -26,12 +26,13 @@ RUN apk add --no-cache \
  && rm /tmp/duckdb.zip
 
 # report/ingest tools + entrypoints (build context = scripts/)
-COPY duck-ingest.sh duck-report.sh duck-haproxy-ingest.sh duck-haproxy-report.sh duck-daily-summary.sh /usr/local/bin/
-COPY docker/entrypoints/capacity.sh docker/entrypoints/haproxy.sh /usr/local/bin/
+COPY duck-ingest.sh duck-report.sh duck-haproxy-ingest.sh duck-haproxy-report.sh duck-daily-summary.sh duck-conntrack-ingest.sh duck-conntrack-report.sh /usr/local/bin/
+COPY docker/entrypoints/capacity.sh docker/entrypoints/haproxy.sh docker/entrypoints/conntrack.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/duck-ingest.sh /usr/local/bin/duck-report.sh \
       /usr/local/bin/duck-haproxy-ingest.sh /usr/local/bin/duck-haproxy-report.sh \
       /usr/local/bin/duck-daily-summary.sh \
-      /usr/local/bin/capacity.sh /usr/local/bin/haproxy.sh \
+      /usr/local/bin/duck-conntrack-ingest.sh /usr/local/bin/duck-conntrack-report.sh \
+      /usr/local/bin/capacity.sh /usr/local/bin/haproxy.sh /usr/local/bin/conntrack.sh \
  # back-compat aliases for the pre-reorg entrypoint names (drop once compose is migrated)
  && ln -sf /usr/local/bin/capacity.sh /usr/local/bin/entrypoint.sh \
  && ln -sf /usr/local/bin/haproxy.sh  /usr/local/bin/haproxy-entrypoint.sh

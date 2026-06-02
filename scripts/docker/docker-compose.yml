@@ -1,8 +1,9 @@
 # DuckDB sidecars for beszel, on the same docker host. Services grouped by compose
 # PROFILE so you run only what you need:
 #
-#   docker compose --profile capacity up -d              # capacity ingester (duck-ingest)
-#   docker compose --profile haproxy  up -d              # HAProxy spool loader (+ Parquet export)
+#   docker compose --profile capacity  up -d             # capacity ingester (duck-ingest)
+#   docker compose --profile haproxy   up -d             # HAProxy spool loader (+ Parquet export)
+#   docker compose --profile conntrack up -d             # conntrack spool loader (CLI report only)
 #   docker compose --profile haproxy --profile ui up -d  # + Duck-UI web UI behind nginx basic-auth
 #
 # Production: set DUCK_IMAGE=<registry>/beszel-duck:<tag> in .env, then
@@ -10,8 +11,9 @@
 # (the build: sections are ignored when the image is already present.)
 #
 # Reports on demand:
-#   docker compose exec duck-ingest  duck-report.sh 24 '*'
-#   docker compose exec haproxy-duck duck-haproxy-report.sh 1 'ha-*'
+#   docker compose exec duck-ingest    duck-report.sh 24 '*'
+#   docker compose exec haproxy-duck   duck-haproxy-report.sh 1 'ha-*'
+#   docker compose exec conntrack-duck duck-conntrack-report.sh 6 'lvs-*'
 
 services:
   # ---- capacity: siphon beszel 1m stats into DuckDB (needs hub URL + creds) ----
@@ -68,6 +70,26 @@ services:
       - ./data:/data
       - ./parquet:/parquet                                          # shared with ui-proxy (served at /data/)
       - "${HAPROXY_SPOOL_HOST_DIR:?set HAPROXY_SPOOL_HOST_DIR to the hub's HAPROXY_DUCK_SPOOL host dir (absolute, e.g. /home/admin/beszel/haproxy-spool)}:/spool"
+
+  # ---- conntrack: hub conntrack spool -> dedicated DuckDB (CLI report only, no UI) ----
+  conntrack-duck:
+    profiles: ["conntrack"]
+    image: "${DUCK_IMAGE:-beszel-duck:latest}"
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: beszel-conntrack-duck
+    restart: unless-stopped
+    entrypoint: ["/usr/local/bin/conntrack.sh"]
+    environment:
+      CONNTRACK_INGEST_INTERVAL: "${CONNTRACK_INGEST_INTERVAL:-300}"
+      CONNTRACK_RETENTION_DAYS: "${CONNTRACK_RETENTION_DAYS:-14}"
+      TZ_OFFSET: "${TZ_OFFSET:-8}"
+      CONNTRACK_DUCK_DB: /data/conntrack.duckdb
+      CONNTRACK_SPOOL_DIR: /spool
+    volumes:
+      - ./data:/data
+      - "${CONNTRACK_SPOOL_HOST_DIR:?set CONNTRACK_SPOOL_HOST_DIR to the hub's CONNTRACK_DUCK_SPOOL host dir (absolute, e.g. /home/admin/beszel/conntrack-spool)}:/spool"
 
   # ---- ui: Duck-UI (browser DuckDB-WASM) — self-contained, air-gap friendly ----
   # Queries the rolling Parquet over HTTP (read_parquet); never touches the live DB.
