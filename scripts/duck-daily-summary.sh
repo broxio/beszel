@@ -8,11 +8,13 @@
 #   ./duck-daily-summary.sh [HOURS]              # relative: last N hours (default 24)
 #   ./duck-daily-summary.sh 'FROM' 'TO'          # explicit range (LOCAL time, per TZ_OFFSET)
 #
-# VIEW=usage (default) — duck-report.sh column style, one row per GROUP:
-#   nodes vcpu smpl  cpu_avg/p95/p99/max(%) steal  c_avg/c_p95/c_peak  cpu_max_at peak_host  mem_avg/p95/max/tot
-#     cpu_*  = pooled over the group's samples (a single node's %, NOT a sum); cpu_max is the worst node-minute,
-#              cpu_max_at/peak_host say when & which node. c_*  = REAL cores = sum over nodes of vcpu*cpu%/100
-#              (c_avg==duck-report cores_used_avg). mem_* are GROUP TOTAL GB (summed across nodes).
+# VIEW=usage (default) — one row per GROUP, capacity-style columns:
+#   nodes vcpu smpl  cpu_avg/p95/p99/max(%) steal  cores_avg/p95/peak  cpu_max_at peak_host  mem_avg/p95/max/tot
+#     cpu_*    = pooled over the group's samples (a single node's %, NOT a sum); cpu_max is the worst node-minute,
+#                cpu_max_at/peak_host say when & which node.
+#     cores_*  = TOTAL CPU CORES USED by the group = sum over nodes of vcpu*cpu%/100 (cores_avg==duck-report
+#                cores_used_avg). The CPU analog of mem usage: cores_* (used) vs vcpu (provisioned total),
+#                like mem_avg/p95/max (used) vs mem_tot (provisioned). mem_* are GROUP TOTAL GB.
 #
 # VIEW=forecast columns — "what to provision in cloud":
 #   nodes  vcpu_prov  cores_p95 cores_peak  cpu_util_p95   provisioned vs CONSUMED cpu
@@ -152,7 +154,7 @@ else
   # group's samples; c_*/mem_* summed across nodes like duck-report's fleet total).
   COLS="${SEQCOL}gf.label AS \"group\", gf.nodes, gf.vcpu, gf.smpl,
         gf.cpu_avg, gf.cpu_p95, gf.cpu_p99, gf.cpu_max, gf.steal,
-        gf.cores_avg AS c_avg, gf.cores_p95 AS c_p95, gf.cores_peak AS c_peak,
+        gf.cores_avg, gf.cores_p95, gf.cores_peak,
         gf.cpu_max_at, gf.peak_host,
         gf.mem_used_gb AS mem_avg, gf.mem_p95_gb AS mem_p95, gf.mem_peak_gb AS mem_max, gf.mem_tot_gb AS mem_tot"
 fi
