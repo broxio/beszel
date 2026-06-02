@@ -104,6 +104,38 @@ GROUP BY host, proxy
 ORDER BY ${HOST_SORT}, proxy;
 "
 
+# ---- per-host TOTAL requests + peak throughput (fe_* frontends only) ----
+# total_req from the cumulative req_tot counter (max-min over the window; a HAProxy
+# restart mid-window would undercount). req/throughput peaks combine all fe_* frontends
+# per sample instant. out_mbps_max = peak egress to clients in megabits/sec.
+duckdb -readonly -box "$DUCK_DB" "
+WITH w AS (
+  SELECT host, proxy, ts, req_rate, req_tot, bout_rate
+  FROM haproxy_proxies
+  WHERE host LIKE '${LIKE}' ESCAPE '\\' AND type='FRONTEND' AND starts_with(proxy,'fe_') AND ${WINDOW_SQL}
+),
+per_fe AS (
+  SELECT host, proxy, max(req_tot) - min(req_tot) AS reqs FROM w GROUP BY host, proxy
+),
+tot AS (
+  SELECT host, count(*) AS fe, sum(reqs) AS total_req FROM per_fe GROUP BY host
+),
+per_ts AS (
+  SELECT host, ts, sum(req_rate) AS req_all, sum(bout_rate) AS bout_all FROM w GROUP BY host, ts
+),
+agg AS (
+  SELECT host,
+         round(avg(req_all),1)                                            AS req_avg,
+         max(req_all)                                                     AS req_peak,
+         strftime(arg_max(ts,req_all) + INTERVAL '${OFF_MIN} minutes','%m-%d %H:%M') AS max_req_at,
+         round(max(bout_all)*8/1e6,1)                                     AS out_mbps_max
+  FROM per_ts GROUP BY host
+)
+SELECT t.host, t.fe, t.total_req, a.req_avg, a.req_peak, a.max_req_at, a.out_mbps_max
+FROM tot t JOIN agg a USING (host)
+ORDER BY ${HOST_SORT};
+"
+
 # ---- SLOWEST backends / servers (avg response time, ms) — the main signal ----
 duckdb -readonly -box "$DUCK_DB" "
 WITH w AS (
