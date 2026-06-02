@@ -21,6 +21,10 @@
 #   DUCK_DB     DuckDB file (default: ./beszel.duckdb)   # in the duck container: /data/beszel.duckdb
 #   TZ_OFFSET   local-time offset in hours (default: 8 = UTC+8). Used for the FROM/TO args + peak time.
 #   FORMAT      box (default, pretty) | csv (paste into Excel)
+#   GROUP_MODE  sheet (default) = the 19 fixed spreadsheet rows below;
+#               auto           = derive the group from EVERY host name (strip trailing -N, so
+#                                ha-bop-1/ha-bop-2 -> ha-bop) and aggregate all servers. Use this
+#                                when your hosts don't match the fixed list, or to discover groups.
 #
 # Examples:
 #   ./duck-daily-summary.sh 6                                  # last 6 hours
@@ -38,6 +42,7 @@ set -euo pipefail
 DUCK_DB="${DUCK_DB:-./beszel.duckdb}"
 TZ_OFFSET="${TZ_OFFSET:-8}"
 FORMAT="${FORMAT:-box}"
+GROUP_MODE="${GROUP_MODE:-sheet}"
 
 command -v duckdb >/dev/null || { echo "duck-daily-summary.sh: duckdb not found in PATH" >&2; exit 1; }
 [[ -f "$DUCK_DB" ]] || { echo "duck-daily-summary.sh: $DUCK_DB not found (run duck-ingest.sh first)" >&2; exit 1; }
@@ -88,65 +93,105 @@ GROUPS_SQL="VALUES
 FLAG="-box"; [[ "$FORMAT" == "csv" ]] && FLAG="-csv"
 
 [[ "$FORMAT" == "box" ]] && echo && \
-  echo "beszel capacity by group — ${WINDOW_LABEL}  peak-time=local${TZLABEL}  db=${DUCK_DB}"
+  echo "beszel capacity by group — mode=${GROUP_MODE} ${WINDOW_LABEL}  peak-time=local${TZLABEL}  db=${DUCK_DB}"
 
-# gm  = group-wide stats on raw samples (cpu% + which node/when peaked)
-# ha  = per-host aggregation, then cores = SUM across the group's nodes (true capacity math,
-#       matching duck-report.sh's fleet total). LEFT JOIN gm->cores keeps empty groups (nodes=0).
-duckdb -readonly "$FLAG" "$DUCK_DB" "
-WITH groups(seq,label,pat) AS (
-  ${GROUPS_SQL}
-),
-w AS (
-  SELECT host, vcpu, cpu, mem_used_gb, mem_total_gb, ts FROM metrics WHERE ${WINDOW_SQL}
-),
-gm AS (
-  SELECT g.seq, g.label,
-         count(DISTINCT m.host)                                       AS nodes,
-         round(avg(m.cpu),1)                                          AS cpu_avg,
-         round(quantile_cont(m.cpu,0.95),1)                           AS cpu_p95,
-         round(max(m.cpu),1)                                          AS cpu_peak,
-         arg_max(m.host, m.cpu)                                       AS peak_host,
-         strftime(arg_max(m.ts, m.cpu) + INTERVAL '${OFF_MIN} minutes','%m-%d %H:%M') AS peak_at
-  FROM groups g LEFT JOIN w m ON m.host LIKE g.pat
-  GROUP BY g.seq, g.label
-),
-ha AS (
-  SELECT g.seq AS seq, m.host AS host,
-         any_value(m.vcpu)                                  AS vcpu,
-         any_value(m.vcpu)*quantile_cont(m.cpu,0.95)/100    AS c_p95,
-         any_value(m.vcpu)*max(m.cpu)/100                   AS c_peak,
-         any_value(m.mem_total_gb)                          AS mem_tot,
-         avg(m.mem_used_gb)                                 AS mem_used
-  FROM groups g JOIN w m ON m.host LIKE g.pat
-  GROUP BY g.seq, m.host
-),
-cores AS (
-  SELECT seq,
-         sum(vcpu)                                          AS vcpu,
-         round(sum(c_p95),2)                                AS cores_p95,
-         round(sum(c_peak),2)                               AS cores_peak,
-         round(100*sum(c_p95)/nullif(sum(vcpu),0),1)        AS util_p95_pct,
-         round(sum(mem_used),1)                             AS mem_used_gb,
-         round(sum(mem_tot),1)                              AS mem_tot_gb
-  FROM ha GROUP BY seq
-)
-SELECT
-  gm.seq        AS \"#\",
-  gm.label      AS group,
-  gm.nodes,
-  c.vcpu,
-  gm.cpu_avg,
-  gm.cpu_p95,
-  gm.cpu_peak,
-  gm.peak_host,
-  gm.peak_at,
-  c.cores_p95,
-  c.cores_peak,
-  c.util_p95_pct,
-  c.mem_used_gb,
-  c.mem_tot_gb
-FROM gm LEFT JOIN cores c USING (seq)
-ORDER BY gm.seq;
-"
+# Two CTEs in both modes:
+#   gm  = group-wide stats on raw samples (cpu% + which node/when peaked)
+#   ha  = per-host aggregation, then cores = SUM across the group's nodes (true capacity math,
+#         matching duck-report.sh's fleet total).
+# Difference is only how a host maps to a group:
+#   sheet -> LIKE-join against the fixed GROUPS table (keeps empty rows via LEFT JOIN)
+#   auto  -> grp = regexp_replace(host,'-[0-9]+$','')  (every host, no fixed list)
+if [[ "$GROUP_MODE" == "auto" ]]; then
+  duckdb -readonly "$FLAG" "$DUCK_DB" "
+  WITH w AS (
+    SELECT host, vcpu, cpu, mem_used_gb, mem_total_gb, ts,
+           regexp_replace(host,'-[0-9]+\$','') AS grp
+    FROM metrics WHERE ${WINDOW_SQL}
+  ),
+  gm AS (
+    SELECT grp,
+           count(DISTINCT host)                                      AS nodes,
+           round(avg(cpu),1)                                         AS cpu_avg,
+           round(quantile_cont(cpu,0.95),1)                          AS cpu_p95,
+           round(max(cpu),1)                                         AS cpu_peak,
+           arg_max(host, cpu)                                        AS peak_host,
+           strftime(arg_max(ts, cpu) + INTERVAL '${OFF_MIN} minutes','%m-%d %H:%M') AS peak_at
+    FROM w GROUP BY grp
+  ),
+  ha AS (
+    SELECT grp, host,
+           any_value(vcpu)                                  AS vcpu,
+           any_value(vcpu)*quantile_cont(cpu,0.95)/100      AS c_p95,
+           any_value(vcpu)*max(cpu)/100                     AS c_peak,
+           any_value(mem_total_gb)                          AS mem_tot,
+           avg(mem_used_gb)                                 AS mem_used
+    FROM w GROUP BY grp, host
+  ),
+  cores AS (
+    SELECT grp,
+           sum(vcpu)                                        AS vcpu,
+           round(sum(c_p95),2)                              AS cores_p95,
+           round(sum(c_peak),2)                             AS cores_peak,
+           round(100*sum(c_p95)/nullif(sum(vcpu),0),1)      AS util_p95_pct,
+           round(sum(mem_used),1)                           AS mem_used_gb,
+           round(sum(mem_tot),1)                            AS mem_tot_gb
+    FROM ha GROUP BY grp
+  )
+  SELECT gm.grp AS group, gm.nodes, c.vcpu, gm.cpu_avg, gm.cpu_p95, gm.cpu_peak,
+         gm.peak_host, gm.peak_at, c.cores_p95, c.cores_peak, c.util_p95_pct,
+         c.mem_used_gb, c.mem_tot_gb
+  FROM gm JOIN cores c USING (grp)
+  ORDER BY regexp_replace(gm.grp,'[0-9]+\$',''),
+           TRY_CAST(regexp_extract(gm.grp,'([0-9]+)\$',1) AS INTEGER) NULLS FIRST, gm.grp;
+  "
+else
+  duckdb -readonly "$FLAG" "$DUCK_DB" "
+  WITH groups(seq,label,pat) AS (
+    ${GROUPS_SQL}
+  ),
+  w AS (
+    SELECT host, vcpu, cpu, mem_used_gb, mem_total_gb, ts FROM metrics WHERE ${WINDOW_SQL}
+  ),
+  gm AS (
+    SELECT g.seq, g.label,
+           count(DISTINCT m.host)                                       AS nodes,
+           round(avg(m.cpu),1)                                          AS cpu_avg,
+           round(quantile_cont(m.cpu,0.95),1)                           AS cpu_p95,
+           round(max(m.cpu),1)                                          AS cpu_peak,
+           arg_max(m.host, m.cpu)                                       AS peak_host,
+           strftime(arg_max(m.ts, m.cpu) + INTERVAL '${OFF_MIN} minutes','%m-%d %H:%M') AS peak_at
+    FROM groups g LEFT JOIN w m ON m.host LIKE g.pat
+    GROUP BY g.seq, g.label
+  ),
+  ha AS (
+    SELECT g.seq AS seq, m.host AS host,
+           any_value(m.vcpu)                                  AS vcpu,
+           any_value(m.vcpu)*quantile_cont(m.cpu,0.95)/100    AS c_p95,
+           any_value(m.vcpu)*max(m.cpu)/100                   AS c_peak,
+           any_value(m.mem_total_gb)                          AS mem_tot,
+           avg(m.mem_used_gb)                                 AS mem_used
+    FROM groups g JOIN w m ON m.host LIKE g.pat
+    GROUP BY g.seq, m.host
+  ),
+  cores AS (
+    SELECT seq,
+           sum(vcpu)                                          AS vcpu,
+           round(sum(c_p95),2)                                AS cores_p95,
+           round(sum(c_peak),2)                               AS cores_peak,
+           round(100*sum(c_p95)/nullif(sum(vcpu),0),1)        AS util_p95_pct,
+           round(sum(mem_used),1)                             AS mem_used_gb,
+           round(sum(mem_tot),1)                              AS mem_tot_gb
+    FROM ha GROUP BY seq
+  )
+  SELECT
+    gm.seq        AS \"#\",
+    gm.label      AS group,
+    gm.nodes, c.vcpu, gm.cpu_avg, gm.cpu_p95, gm.cpu_peak,
+    gm.peak_host, gm.peak_at, c.cores_p95, c.cores_peak, c.util_p95_pct,
+    c.mem_used_gb, c.mem_tot_gb
+  FROM gm LEFT JOIN cores c USING (seq)
+  ORDER BY gm.seq;
+  "
+fi
 [[ "$FORMAT" == "box" ]] && echo || true
