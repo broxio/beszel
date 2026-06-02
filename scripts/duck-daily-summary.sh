@@ -33,6 +33,7 @@
 #   TARGET_CPU_UTIL CPU headroom for rec_vcpu — how full to run cloud instances (default 0.7 = 70%)
 #   MEM_HEADROOM    RAM multiplier for rec_mem_gb (default 1.2 = +20% over peak)
 #   REC_BASIS       size rec_vcpu off 'p95' (default) or 'peak' cores
+#   SORT            row order: name (default, by group name) | seq (the fixed spreadsheet order, sheet mode)
 #
 # Examples:
 #   ./duck-daily-summary.sh 6                                       # last 6h, usage
@@ -53,6 +54,7 @@ VIEW="${VIEW:-usage}"
 TARGET_CPU_UTIL="${TARGET_CPU_UTIL:-0.7}"
 MEM_HEADROOM="${MEM_HEADROOM:-1.2}"
 REC_BASIS="${REC_BASIS:-p95}"
+SORT="${SORT:-name}"
 
 command -v duckdb >/dev/null || { echo "duck-daily-summary.sh: duckdb not found in PATH" >&2; exit 1; }
 [[ -f "$DUCK_DB" ]] || { echo "duck-daily-summary.sh: $DUCK_DB not found (run duck-ingest.sh first)" >&2; exit 1; }
@@ -116,7 +118,6 @@ member AS (
          host, vcpu, cpu, steal, mem_used_gb, mem_total_gb, ts
   FROM w
 )"
-  ORDER_SQL="regexp_replace(gf.label,'[0-9]+\$',''), TRY_CAST(regexp_extract(gf.label,'([0-9]+)\$',1) AS INTEGER) NULLS FIRST, gf.label"
 else
   MEMBER_CTE="
 groups(seq,label,pat) AS (${GROUPS_SQL}),
@@ -126,7 +127,13 @@ member AS (
          m.host, m.vcpu, m.cpu, m.steal, m.mem_used_gb, m.mem_total_gb, m.ts
   FROM groups g LEFT JOIN w m ON m.host LIKE g.pat
 )"
+fi
+
+# Row order: by group name (default, natural sort) or the fixed spreadsheet seq (SORT=seq, sheet mode only).
+if [[ "$SORT" == "seq" && "$GROUP_MODE" != "auto" ]]; then
   ORDER_SQL="gf.ord"
+else
+  ORDER_SQL="regexp_replace(gf.label,'[0-9]+\$',''), TRY_CAST(regexp_extract(gf.label,'([0-9]+)\$',1) AS INTEGER) NULLS FIRST, gf.label"
 fi
 
 # Column list differs by VIEW; the leading "#" only in sheet mode.
