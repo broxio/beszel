@@ -16,6 +16,9 @@
 #                    plain names = exact match). Default 'admin,stats' (HAProxy mgmt/stats frontends,
 #                    not externally exposed). Filters by proxy name, NOT host — the ha-admin-* host
 #                    tier is unaffected. Set EXCLUDE_PROXY='' to include everything.
+#   EXCLUDE_HOST     comma-separated HOST globs dropped from the whole report (case-insensitive).
+#                    Default 'ha-uat*,ha-pre*' (non-prod zones). Set EXCLUDE_HOST='' to include them,
+#                    e.g. EXCLUDE_HOST='' ./duck-haproxy-report.sh 1 'ha-uat*' to inspect UAT.
 #
 # Examples:
 #   ./duck-haproxy-report.sh 1 'ha-bop*'
@@ -74,17 +77,37 @@ if [[ -n "$EXCLUDE_PROXY" ]]; then
   fi
 fi
 
+# Exclude non-prod host zones (UAT / pre-prod) from the whole report by default.
+# Comma-separated host globs (case-insensitive). '' disables (e.g. to inspect ha-uat*).
+EXCLUDE_HOST="${EXCLUDE_HOST-ha-uat*,ha-pre*}"
+EXCL_HOST_SQL=""; EXCL_HOST_LABEL=""
+if [[ -n "$EXCLUDE_HOST" ]]; then
+  hconds=()
+  IFS=',' read -ra _hpats <<<"$EXCLUDE_HOST"
+  for p in "${_hpats[@]}"; do
+    read -r p <<<"$p"
+    [[ -z "$p" ]] && continue
+    hl="${p//\%/\\%}"; hl="${hl//_/\\_}"; hl="${hl//\*/%}"; hl="${hl//\?/_}"
+    hconds+=("host ILIKE '${hl}' ESCAPE '\\'")
+  done
+  if (( ${#hconds[@]} )); then
+    hjoined="$(printf ' OR %s' "${hconds[@]}")"; hjoined="${hjoined# OR }"
+    EXCL_HOST_SQL=" AND NOT (${hjoined})"
+    EXCL_HOST_LABEL="  exclude-host=${EXCLUDE_HOST}"
+  fi
+fi
+
 # natural host sort: group by alpha prefix, then numeric suffix (ha-bop-2 before ha-bop-10)
 HOST_SORT="regexp_replace(host,'[0-9]+\$',''), TRY_CAST(regexp_extract(host,'([0-9]+)\$',1) AS INTEGER) NULLS FIRST"
 
 echo
-echo "HAProxy troubleshooting (DuckDB) — ${WINDOW_LABEL}  glob=${GLOB}${EXCL_LABEL}  peak-time=local${TZLABEL}  db=${DUCK_DB}"
+echo "HAProxy troubleshooting (DuckDB) — ${WINDOW_LABEL}  glob=${GLOB}${EXCL_LABEL}${EXCL_HOST_LABEL}  peak-time=local${TZLABEL}  db=${DUCK_DB}"
 
 # ---- per-frontend traffic & errors (FRONTEND only — no double-count) ----
 duckdb -readonly -box "$DUCK_DB" "
 WITH w AS (
   SELECT * FROM haproxy_proxies
-  WHERE host LIKE '${LIKE}' ESCAPE '\\' AND type = 'FRONTEND' AND ${WINDOW_SQL}${EXCL_SQL}
+  WHERE host LIKE '${LIKE}' ESCAPE '\\'${EXCL_HOST_SQL} AND type = 'FRONTEND' AND ${WINDOW_SQL}${EXCL_SQL}
 )
 SELECT
   host, proxy,
@@ -104,43 +127,45 @@ GROUP BY host, proxy
 ORDER BY ${HOST_SORT}, proxy;
 "
 
-# ---- per-host TOTAL requests + peak throughput (fe_* frontends only) ----
-# total_req from the cumulative req_tot counter (max-min over the window; a HAProxy
-# restart mid-window would undercount). req/throughput peaks combine all fe_* frontends
-# per sample instant. out_mbps_max = peak egress to clients in megabits/sec.
+# ---- per-GROUP TOTAL requests + peak throughput (fe_* frontends only) ----
+# group = host with trailing -N stripped (ha-bop-1,ha-bop-2 -> ha-bop). total_req from the
+# cumulative req_tot counter (max-min per frontend over the window; a HAProxy restart mid-window
+# would undercount). req/throughput peaks combine ALL fe_* frontends across the group's hosts per
+# sample instant. out_mbps_max = peak egress to clients in megabits/sec.
 duckdb -readonly -box "$DUCK_DB" "
 WITH w AS (
-  SELECT host, proxy, ts, req_rate, req_tot, bout_rate
+  SELECT regexp_replace(host,'-[0-9]+\$','') AS grp, host, proxy, ts, req_rate, req_tot, bout_rate
   FROM haproxy_proxies
-  WHERE host LIKE '${LIKE}' ESCAPE '\\' AND type='FRONTEND' AND starts_with(proxy,'fe_') AND ${WINDOW_SQL}
+  WHERE host LIKE '${LIKE}' ESCAPE '\\'${EXCL_HOST_SQL} AND type='FRONTEND' AND starts_with(proxy,'fe_') AND ${WINDOW_SQL}
 ),
 per_fe AS (
-  SELECT host, proxy, max(req_tot) - min(req_tot) AS reqs FROM w GROUP BY host, proxy
+  SELECT grp, host, proxy, max(req_tot) - min(req_tot) AS reqs FROM w GROUP BY grp, host, proxy
 ),
 tot AS (
-  SELECT host, count(*) AS fe, sum(reqs) AS total_req FROM per_fe GROUP BY host
+  SELECT grp, count(DISTINCT host) AS nodes, count(DISTINCT proxy) AS fe, sum(reqs) AS total_req
+  FROM per_fe GROUP BY grp
 ),
 per_ts AS (
-  SELECT host, ts, sum(req_rate) AS req_all, sum(bout_rate) AS bout_all FROM w GROUP BY host, ts
+  SELECT grp, ts, sum(req_rate) AS req_all, sum(bout_rate) AS bout_all FROM w GROUP BY grp, ts
 ),
 agg AS (
-  SELECT host,
+  SELECT grp,
          round(avg(req_all),1)                                            AS req_avg,
          max(req_all)                                                     AS req_peak,
          strftime(arg_max(ts,req_all) + INTERVAL '${OFF_MIN} minutes','%m-%d %H:%M') AS max_req_at,
          round(max(bout_all)*8/1e6,1)                                     AS out_mbps_max
-  FROM per_ts GROUP BY host
+  FROM per_ts GROUP BY grp
 )
-SELECT t.host, t.fe, t.total_req, a.req_avg, a.req_peak, a.max_req_at, a.out_mbps_max
-FROM tot t JOIN agg a USING (host)
-ORDER BY ${HOST_SORT};
+SELECT t.grp AS \"group\", t.nodes, t.fe, t.total_req, a.req_avg, a.req_peak, a.max_req_at, a.out_mbps_max
+FROM tot t JOIN agg a USING (grp)
+ORDER BY regexp_replace(t.grp,'[0-9]+\$',''), TRY_CAST(regexp_extract(t.grp,'([0-9]+)\$',1) AS INTEGER) NULLS FIRST, t.grp;
 "
 
 # ---- SLOWEST backends / servers (avg response time, ms) — the main signal ----
 duckdb -readonly -box "$DUCK_DB" "
 WITH w AS (
   SELECT * FROM haproxy_proxies
-  WHERE host LIKE '${LIKE}' ESCAPE '\\' AND type IN ('BACKEND','SERVER')
+  WHERE host LIKE '${LIKE}' ESCAPE '\\'${EXCL_HOST_SQL} AND type IN ('BACKEND','SERVER')
         AND ${WINDOW_SQL} AND rtime > 0${EXCL_SQL}
 )
 SELECT
@@ -162,7 +187,7 @@ LIMIT 25;
 duckdb -readonly -box "$DUCK_DB" "
 WITH w AS (
   SELECT * FROM haproxy_proxies
-  WHERE host LIKE '${LIKE}' ESCAPE '\\' AND type IN ('BACKEND','SERVER') AND ${WINDOW_SQL}${EXCL_SQL}
+  WHERE host LIKE '${LIKE}' ESCAPE '\\'${EXCL_HOST_SQL} AND type IN ('BACKEND','SERVER') AND ${WINDOW_SQL}${EXCL_SQL}
 )
 SELECT
   host, proxy, type,
@@ -181,7 +206,7 @@ ORDER BY ${HOST_SORT}, proxy, type;
 duckdb -readonly -box "$DUCK_DB" "
 WITH w AS (
   SELECT * FROM haproxy_info
-  WHERE host LIKE '${LIKE}' ESCAPE '\\' AND ${WINDOW_SQL}
+  WHERE host LIKE '${LIKE}' ESCAPE '\\'${EXCL_HOST_SQL} AND ${WINDOW_SQL}
 )
 SELECT
   host,

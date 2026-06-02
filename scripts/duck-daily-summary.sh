@@ -26,8 +26,9 @@
 #
 # Env:
 #   DUCK_DB         DuckDB file (default: ./beszel.duckdb)   # in the duck container: /data/beszel.duckdb
-#   HAPROXY_DUCK_DB HAProxy DuckDB (default: ./haproxy.duckdb). If present, a per-host fe_* frontend
+#   HAPROXY_DUCK_DB HAProxy DuckDB (default: ./haproxy.duckdb). If present, a per-GROUP fe_* frontend
 #                   request/throughput summary is appended (total_req, req peak + max_req_at, out_mbps_max).
+#   EXCLUDE_HOST    comma-separated host globs dropped from the fe_* section (default ha-uat*,ha-pre*; '' = all).
 #   TZ_OFFSET       local-time offset in hours (default: 8 = UTC+8). Used for FROM/TO args + peak time.
 #   FORMAT          box (default, pretty) | csv (paste into Excel)
 #   GROUP_MODE      sheet (default) = the 19 fixed spreadsheet rows below;
@@ -227,40 +228,52 @@ ORDER BY ${ORDER_SQL};
 "
 [[ "$FORMAT" == "box" ]] && echo || true
 
-# ---- fe_* frontend requests + peak throughput per host (from the HAProxy DB) ----
-# Separate DB (haproxy.duckdb); shown only if present. total_req from the cumulative
-# req_tot counter (max-min over window); peaks combine all fe_* frontends per instant;
-# out_mbps_max = peak client egress in megabits/sec.
+# ---- fe_* frontend requests + peak throughput per GROUP (from the HAProxy DB) ----
+# Separate DB (haproxy.duckdb); shown only if present. group = host with trailing -N stripped.
+# total_req from the cumulative req_tot counter (max-min per frontend over window); req/throughput
+# peaks combine all fe_* frontends across the group's hosts per instant; out_mbps_max = peak client
+# egress (megabits/sec). Non-prod zones excluded via EXCLUDE_HOST (default ha-uat*,ha-pre*; '' = all).
 HAPROXY_DUCK_DB="${HAPROXY_DUCK_DB:-./haproxy.duckdb}"
 if [[ -f "$HAPROXY_DUCK_DB" ]]; then
-  HOST_SORT="regexp_replace(host,'[0-9]+\$',''), TRY_CAST(regexp_extract(host,'([0-9]+)\$',1) AS INTEGER) NULLS FIRST"
-  [[ "$FORMAT" == "box" ]] && echo "fe_* frontend requests by host — ${WINDOW_LABEL}  throughput=out Mbps  db=${HAPROXY_DUCK_DB}"
+  EXCLUDE_HOST="${EXCLUDE_HOST-ha-uat*,ha-pre*}"
+  EXCL_HOST_SQL=""
+  if [[ -n "$EXCLUDE_HOST" ]]; then
+    hconds=(); IFS=',' read -ra _hpats <<<"$EXCLUDE_HOST"
+    for p in "${_hpats[@]}"; do
+      read -r p <<<"$p"; [[ -z "$p" ]] && continue
+      hl="${p//\%/\\%}"; hl="${hl//_/\\_}"; hl="${hl//\*/%}"; hl="${hl//\?/_}"
+      hconds+=("host ILIKE '${hl}' ESCAPE '\\'")
+    done
+    (( ${#hconds[@]} )) && { hj="$(printf ' OR %s' "${hconds[@]}")"; EXCL_HOST_SQL=" AND NOT (${hj# OR })"; }
+  fi
+  [[ "$FORMAT" == "box" ]] && echo "fe_* frontend requests by group — ${WINDOW_LABEL}  throughput=out Mbps  db=${HAPROXY_DUCK_DB}"
   duckdb -readonly "$FLAG" "$HAPROXY_DUCK_DB" "
   WITH w AS (
-    SELECT host, proxy, ts, req_rate, req_tot, bout_rate
+    SELECT regexp_replace(host,'-[0-9]+\$','') AS grp, host, proxy, ts, req_rate, req_tot, bout_rate
     FROM haproxy_proxies
-    WHERE type='FRONTEND' AND starts_with(proxy,'fe_') AND ${WINDOW_SQL}
+    WHERE type='FRONTEND' AND starts_with(proxy,'fe_') AND ${WINDOW_SQL}${EXCL_HOST_SQL}
   ),
   per_fe AS (
-    SELECT host, proxy, max(req_tot) - min(req_tot) AS reqs FROM w GROUP BY host, proxy
+    SELECT grp, host, proxy, max(req_tot) - min(req_tot) AS reqs FROM w GROUP BY grp, host, proxy
   ),
   tot AS (
-    SELECT host, count(*) AS fe, sum(reqs) AS total_req FROM per_fe GROUP BY host
+    SELECT grp, count(DISTINCT host) AS nodes, count(DISTINCT proxy) AS fe, sum(reqs) AS total_req
+    FROM per_fe GROUP BY grp
   ),
   per_ts AS (
-    SELECT host, ts, sum(req_rate) AS req_all, sum(bout_rate) AS bout_all FROM w GROUP BY host, ts
+    SELECT grp, ts, sum(req_rate) AS req_all, sum(bout_rate) AS bout_all FROM w GROUP BY grp, ts
   ),
   agg AS (
-    SELECT host,
+    SELECT grp,
            round(avg(req_all),1)                                            AS req_avg,
            max(req_all)                                                     AS req_peak,
            strftime(arg_max(ts,req_all) + INTERVAL '${OFF_MIN} minutes','%m-%d %H:%M') AS max_req_at,
            round(max(bout_all)*8/1e6,1)                                     AS out_mbps_max
-    FROM per_ts GROUP BY host
+    FROM per_ts GROUP BY grp
   )
-  SELECT t.host, t.fe, t.total_req, a.req_avg, a.req_peak, a.max_req_at, a.out_mbps_max
-  FROM tot t JOIN agg a USING (host)
-  ORDER BY ${HOST_SORT};
+  SELECT t.grp AS \"group\", t.nodes, t.fe, t.total_req, a.req_avg, a.req_peak, a.max_req_at, a.out_mbps_max
+  FROM tot t JOIN agg a USING (grp)
+  ORDER BY regexp_replace(t.grp,'[0-9]+\$',''), TRY_CAST(regexp_extract(t.grp,'([0-9]+)\$',1) AS INTEGER) NULLS FIRST, t.grp;
   "
   [[ "$FORMAT" == "box" ]] && echo || true
 fi
