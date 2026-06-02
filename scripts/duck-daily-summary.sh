@@ -9,12 +9,12 @@
 #   ./duck-daily-summary.sh 'FROM' 'TO'          # explicit range (LOCAL time, per TZ_OFFSET)
 #
 # VIEW=usage (default) — one row per GROUP:
-#   group nodes sampl vcpu_provisioned  cpu_avg/p95/p99/peak(%) steal  cores_avg/p95/peak  cpu_peak_at peak_host
-#     mem_provisioned  mem_avg/p95/p99/peak
+#   group nodes sampl vcpu  cpu_avg/p95/p99/peak(%) steal  cores_avg/p95/peak  cpu_peak_at peak_host
+#     mem_total  mem_avg/p95/p99/peak
 #     cpu_*    = pooled over the group's samples (a single node's %, NOT a sum); cpu_peak is the worst node-minute,
 #                cpu_peak_at/peak_host say when & which node.
 #     cores_*  = TOTAL CPU CORES USED by the group = sum over nodes of vcpu*cpu%/100. CPU analog of memory:
-#                cores_* (used) vs vcpu_provisioned, like mem_avg/p95/p99/peak (used GB) vs mem_provisioned.
+#                cores_* (used) vs vcpu (provisioned), like mem_avg/p95/p99/peak (used GB) vs mem_total.
 #
 # VIEW=forecast columns — "what to provision in cloud":
 #   nodes  vcpu_prov  cores_p95 cores_peak  cpu_util_p95   provisioned vs CONSUMED cpu
@@ -141,21 +141,21 @@ fi
 # Column list differs by VIEW.
 if [[ "$VIEW" == "forecast" ]]; then
   COLS="gf.label AS \"group\", gf.nodes,
-        gf.vcpu          AS vcpu_provisioned,
+        gf.vcpu,
         gf.cores_p95, gf.cores_peak,
         gf.util_p95_pct  AS cpu_util_p95,
-        gf.mem_tot_gb    AS mem_provisioned,
+        gf.mem_tot_gb    AS mem_total,
         gf.mem_p95_gb, gf.mem_peak_gb,
         gf.mem_util_p95_pct AS mem_util_p95,
         gf.rec_vcpu, gf.rec_mem_gb"
 else
   # usage view — one row per GROUP. cpu_* pooled over the group's samples (a node's %);
-  # cores_*/mem_* summed across nodes (cores/GB used) vs vcpu_provisioned/mem_provisioned.
-  COLS="gf.label AS \"group\", gf.nodes, gf.smpl AS sampl, gf.vcpu AS vcpu_provisioned,
+  # cores_*/mem_* summed across nodes (cores/GB used) vs vcpu/mem_total.
+  COLS="gf.label AS \"group\", gf.nodes, gf.smpl AS sampl, gf.vcpu,
         gf.cpu_avg, gf.cpu_p95, gf.cpu_p99, gf.cpu_max AS cpu_peak, gf.steal,
         gf.cores_avg, gf.cores_p95, gf.cores_peak,
         gf.cpu_max_at AS cpu_peak_at, gf.peak_host,
-        gf.mem_tot_gb AS mem_provisioned, gf.mem_used_gb AS mem_avg, gf.mem_p95_gb AS mem_p95,
+        gf.mem_tot_gb AS mem_total, gf.mem_used_gb AS mem_avg, gf.mem_p95_gb AS mem_p95,
         gf.mem_p99_gb AS mem_p99, gf.mem_peak_gb AS mem_peak"
 fi
 
