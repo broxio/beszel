@@ -68,22 +68,24 @@ WITH w AS (
 )
 SELECT
   host,
-  any_value(vcpu)                                              AS vcpu,
-  count(*)                                                     AS smpl,
+  count(*)                                                     AS sampl,
+  any_value(vcpu)                                              AS vcpu_provisioned,
   round(avg(cpu),1)                                            AS cpu_avg,
   round(quantile_cont(cpu,0.95),1)                            AS cpu_p95,
   round(quantile_cont(cpu,0.99),1)                            AS cpu_p99,
-  round(max(cpu),1)                                            AS cpu_max,
+  round(max(cpu),1)                                            AS cpu_peak,
   round(max(steal),1)                                          AS steal,
-  round(any_value(vcpu)*avg(cpu)/100,2)                       AS c_avg,
-  round(any_value(vcpu)*quantile_cont(cpu,0.95)/100,2)        AS c_p95,
-  round(any_value(vcpu)*max(cpu)/100,2)                       AS c_peak,
-  strftime(arg_max(ts,cpu)        + INTERVAL '${OFF_MIN} minutes','%Y-%m-%d %H:%M') AS cpu_max_at,
+  round(any_value(vcpu)*avg(cpu)/100,2)                       AS cores_avg,
+  round(any_value(vcpu)*quantile_cont(cpu,0.95)/100,2)        AS cores_p95,
+  round(any_value(vcpu)*quantile_cont(cpu,0.99)/100,2)        AS cores_p99,
+  round(any_value(vcpu)*max(cpu)/100,2)                       AS cores_peak,
+  strftime(arg_max(ts,cpu)        + INTERVAL '${OFF_MIN} minutes','%Y-%m-%d %H:%M') AS cpu_peak_at,
+  round(any_value(mem_total_gb),1)                            AS mem_provisioned,
   round(avg(mem_used_gb),1)                                    AS mem_avg,
   round(quantile_cont(mem_used_gb,0.95),1)                    AS mem_p95,
-  round(max(mem_used_gb),1)                                    AS mem_max,
-  round(any_value(mem_total_gb),1)                            AS mem_tot,
-  strftime(arg_max(ts,mem_used_gb) + INTERVAL '${OFF_MIN} minutes','%Y-%m-%d %H:%M') AS mem_max_at
+  round(quantile_cont(mem_used_gb,0.99),1)                    AS mem_p99,
+  round(max(mem_used_gb),1)                                    AS mem_peak,
+  strftime(arg_max(ts,mem_used_gb) + INTERVAL '${OFF_MIN} minutes','%Y-%m-%d %H:%M') AS mem_peak_at
 FROM w
 GROUP BY host
 ORDER BY regexp_replace(host,'[0-9]+\$',''),
@@ -101,6 +103,7 @@ per_host AS (
   SELECT host, any_value(vcpu) v,
          any_value(vcpu)*avg(cpu)/100 ca,
          any_value(vcpu)*quantile_cont(cpu,0.95)/100 cp,
+         any_value(vcpu)*quantile_cont(cpu,0.99)/100 cq,
          any_value(vcpu)*max(cpu)/100 ck,
          any_value(mem_total_gb) mt, avg(mem_used_gb) mu
   FROM w GROUP BY host
@@ -108,12 +111,13 @@ per_host AS (
 SELECT
   count(*)                              AS hosts,
   sum(v)                                AS vcpu_provisioned,
-  round(sum(ca),2)                      AS cores_used_avg,
-  round(sum(cp),2)                      AS cores_used_p95,
-  round(sum(ck),2)                      AS cores_used_peak,
+  round(sum(ca),2)                      AS cores_avg,
+  round(sum(cp),2)                      AS cores_p95,
+  round(sum(cq),2)                      AS cores_p99,
+  round(sum(ck),2)                      AS cores_peak,
   round(100*sum(cp)/nullif(sum(v),0),1) AS fleet_util_p95_pct,
-  round(sum(mt),1)                      AS mem_total_gb,
-  round(sum(mu),1)                      AS mem_used_avg_gb
+  round(sum(mt),1)                      AS mem_provisioned,
+  round(sum(mu),1)                      AS mem_avg
 FROM per_host;
 "
 echo

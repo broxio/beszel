@@ -8,13 +8,13 @@
 #   ./duck-daily-summary.sh [HOURS]              # relative: last N hours (default 24)
 #   ./duck-daily-summary.sh 'FROM' 'TO'          # explicit range (LOCAL time, per TZ_OFFSET)
 #
-# VIEW=usage (default) — one row per GROUP, capacity-style columns:
-#   nodes vcpu smpl  cpu_avg/p95/p99/max(%) steal  cores_avg/p95/peak  cpu_max_at peak_host  mem_avg/p95/max/tot
-#     cpu_*    = pooled over the group's samples (a single node's %, NOT a sum); cpu_max is the worst node-minute,
-#                cpu_max_at/peak_host say when & which node.
-#     cores_*  = TOTAL CPU CORES USED by the group = sum over nodes of vcpu*cpu%/100 (cores_avg==duck-report
-#                cores_used_avg). The CPU analog of mem usage: cores_* (used) vs vcpu (provisioned total),
-#                like mem_avg/p95/max (used) vs mem_tot (provisioned). mem_* are GROUP TOTAL GB.
+# VIEW=usage (default) — one row per GROUP:
+#   group nodes sampl vcpu_provisioned  cpu_avg/p95/p99/peak(%) steal  cores_avg/p95/peak  cpu_peak_at peak_host
+#     mem_provisioned  mem_avg/p95/p99/peak
+#     cpu_*    = pooled over the group's samples (a single node's %, NOT a sum); cpu_peak is the worst node-minute,
+#                cpu_peak_at/peak_host say when & which node.
+#     cores_*  = TOTAL CPU CORES USED by the group = sum over nodes of vcpu*cpu%/100. CPU analog of memory:
+#                cores_* (used) vs vcpu_provisioned, like mem_avg/p95/p99/peak (used GB) vs mem_provisioned.
 #
 # VIEW=forecast columns — "what to provision in cloud":
 #   nodes  vcpu_prov  cores_p95 cores_peak  cpu_util_p95   provisioned vs CONSUMED cpu
@@ -138,25 +138,25 @@ else
   ORDER_SQL="regexp_replace(gf.label,'[0-9]+\$',''), TRY_CAST(regexp_extract(gf.label,'([0-9]+)\$',1) AS INTEGER) NULLS FIRST, gf.label"
 fi
 
-# Column list differs by VIEW; the leading "#" only in sheet mode.
-SEQCOL=""; [[ "$GROUP_MODE" != "auto" ]] && SEQCOL="gf.ord AS \"#\", "
+# Column list differs by VIEW.
 if [[ "$VIEW" == "forecast" ]]; then
-  COLS="${SEQCOL}gf.label AS \"group\", gf.nodes,
-        gf.vcpu          AS vcpu_prov,
+  COLS="gf.label AS \"group\", gf.nodes,
+        gf.vcpu          AS vcpu_provisioned,
         gf.cores_p95, gf.cores_peak,
         gf.util_p95_pct  AS cpu_util_p95,
-        gf.mem_tot_gb    AS mem_prov_gb,
+        gf.mem_tot_gb    AS mem_provisioned,
         gf.mem_p95_gb, gf.mem_peak_gb,
         gf.mem_util_p95_pct AS mem_util_p95,
         gf.rec_vcpu, gf.rec_mem_gb"
 else
-  # usage view — duck-report.sh column style, but one row per GROUP (cpu% pooled over the
-  # group's samples; c_*/mem_* summed across nodes like duck-report's fleet total).
-  COLS="${SEQCOL}gf.label AS \"group\", gf.nodes, gf.vcpu, gf.smpl,
-        gf.cpu_avg, gf.cpu_p95, gf.cpu_p99, gf.cpu_max, gf.steal,
+  # usage view — one row per GROUP. cpu_* pooled over the group's samples (a node's %);
+  # cores_*/mem_* summed across nodes (cores/GB used) vs vcpu_provisioned/mem_provisioned.
+  COLS="gf.label AS \"group\", gf.nodes, gf.smpl AS sampl, gf.vcpu AS vcpu_provisioned,
+        gf.cpu_avg, gf.cpu_p95, gf.cpu_p99, gf.cpu_max AS cpu_peak, gf.steal,
         gf.cores_avg, gf.cores_p95, gf.cores_peak,
-        gf.cpu_max_at, gf.peak_host,
-        gf.mem_used_gb AS mem_avg, gf.mem_p95_gb AS mem_p95, gf.mem_peak_gb AS mem_max, gf.mem_tot_gb AS mem_tot"
+        gf.cpu_max_at AS cpu_peak_at, gf.peak_host,
+        gf.mem_tot_gb AS mem_provisioned, gf.mem_used_gb AS mem_avg, gf.mem_p95_gb AS mem_p95,
+        gf.mem_p99_gb AS mem_p99, gf.mem_peak_gb AS mem_peak"
 fi
 
 [[ "$FORMAT" == "box" ]] && echo && \
@@ -191,6 +191,7 @@ ha AS (
          any_value(mem_total_gb)                           AS mem_tot,
          avg(mem_used_gb)                                  AS mem_avg,
          quantile_cont(mem_used_gb,0.95)                   AS mem_p95,
+         quantile_cont(mem_used_gb,0.99)                   AS mem_p99,
          max(mem_used_gb)                                  AS mem_peak
   FROM member WHERE host IS NOT NULL GROUP BY label, host
 ),
@@ -203,6 +204,7 @@ agg AS (
          round(100*sum(c_p95)/nullif(sum(vcpu),0),1)       AS util_p95_pct,
          round(sum(mem_avg),1)                             AS mem_used_gb,
          round(sum(mem_p95),1)                             AS mem_p95_gb,
+         round(sum(mem_p99),1)                             AS mem_p99_gb,
          round(sum(mem_peak),1)                            AS mem_peak_gb,
          round(sum(mem_tot),1)                             AS mem_tot_gb
   FROM ha GROUP BY label
@@ -211,7 +213,7 @@ gf AS (
   SELECT gm.ord, gm.label, gm.nodes, gm.smpl,
          gm.cpu_avg, gm.cpu_p95, gm.cpu_p99, gm.cpu_max, gm.steal, gm.peak_host, gm.cpu_max_at,
          a.vcpu, a.cores_avg, a.cores_p95, a.cores_peak, a.util_p95_pct,
-         a.mem_used_gb, a.mem_p95_gb, a.mem_peak_gb, a.mem_tot_gb,
+         a.mem_used_gb, a.mem_p95_gb, a.mem_p99_gb, a.mem_peak_gb, a.mem_tot_gb,
          round(100*a.mem_p95_gb/nullif(a.mem_tot_gb,0),1)                                   AS mem_util_p95_pct,
          CEIL((CASE WHEN '${REC_BASIS}'='peak' THEN a.cores_peak ELSE a.cores_p95 END)/${TARGET_CPU_UTIL}) AS rec_vcpu,
          CEIL(a.mem_peak_gb * ${MEM_HEADROOM})                                              AS rec_mem_gb
