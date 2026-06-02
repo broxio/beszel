@@ -12,10 +12,16 @@
 # Env:
 #   HAPROXY_DUCK_DB  dedicated DuckDB file (default: ./haproxy.duckdb)
 #   TZ_OFFSET        local-time offset in hours for peak display + range args (default: 8 = UTC+8)
+#   EXCLUDE_PROXY    comma-separated PROXY-name globs to drop from the proxy tables (case-insensitive;
+#                    plain names = exact match). Default 'admin,stats' (HAProxy mgmt/stats frontends,
+#                    not externally exposed). Filters by proxy name, NOT host — the ha-admin-* host
+#                    tier is unaffected. Set EXCLUDE_PROXY='' to include everything.
 #
 # Examples:
 #   ./duck-haproxy-report.sh 1 'ha-bop*'
 #   ./duck-haproxy-report.sh '2026-06-01 10:00' '2026-06-01 10:30' 'ha-*'
+#   EXCLUDE_PROXY='admin,stats,health' ./duck-haproxy-report.sh 1 'ha-*'   # drop extra mgmt frontends
+#   EXCLUDE_PROXY='' ./duck-haproxy-report.sh 1 'ha-*'                      # include admin/stats too
 
 set -euo pipefail
 
@@ -47,17 +53,38 @@ fi
 # shell glob -> SQL LIKE (* -> %, ? -> _)
 LIKE="${GLOB//\%/\\%}"; LIKE="${LIKE//_/\\_}"; LIKE="${LIKE//\*/%}"; LIKE="${LIKE//\?/_}"
 
+# Exclude mgmt-only frontends (HAProxy stats/admin listeners, not externally exposed) from the
+# proxy tables — matched by PROXY name, not host, so the ha-admin-* host tier is unaffected.
+# Comma-separated globs (case-insensitive); plain names = exact match. '' disables.
+EXCLUDE_PROXY="${EXCLUDE_PROXY-admin,stats}"
+EXCL_SQL=""; EXCL_LABEL=""
+if [[ -n "$EXCLUDE_PROXY" ]]; then
+  conds=()
+  IFS=',' read -ra _pats <<<"$EXCLUDE_PROXY"
+  for p in "${_pats[@]}"; do
+    read -r p <<<"$p"                                              # trim surrounding whitespace
+    [[ -z "$p" ]] && continue
+    xl="${p//\%/\\%}"; xl="${xl//_/\\_}"; xl="${xl//\*/%}"; xl="${xl//\?/_}"  # glob -> LIKE
+    conds+=("proxy ILIKE '${xl}' ESCAPE '\\'")
+  done
+  if (( ${#conds[@]} )); then
+    joined="$(printf ' OR %s' "${conds[@]}")"; joined="${joined# OR }"
+    EXCL_SQL=" AND NOT (${joined})"
+    EXCL_LABEL="  exclude-proxy=${EXCLUDE_PROXY}"
+  fi
+fi
+
 # natural host sort: group by alpha prefix, then numeric suffix (ha-bop-2 before ha-bop-10)
 HOST_SORT="regexp_replace(host,'[0-9]+\$',''), TRY_CAST(regexp_extract(host,'([0-9]+)\$',1) AS INTEGER) NULLS FIRST"
 
 echo
-echo "HAProxy troubleshooting (DuckDB) — ${WINDOW_LABEL}  glob=${GLOB}  peak-time=local${TZLABEL}  db=${DUCK_DB}"
+echo "HAProxy troubleshooting (DuckDB) — ${WINDOW_LABEL}  glob=${GLOB}${EXCL_LABEL}  peak-time=local${TZLABEL}  db=${DUCK_DB}"
 
 # ---- per-frontend traffic & errors (FRONTEND only — no double-count) ----
 duckdb -readonly -box "$DUCK_DB" "
 WITH w AS (
   SELECT * FROM haproxy_proxies
-  WHERE host LIKE '${LIKE}' ESCAPE '\\' AND type = 'FRONTEND' AND ${WINDOW_SQL}
+  WHERE host LIKE '${LIKE}' ESCAPE '\\' AND type = 'FRONTEND' AND ${WINDOW_SQL}${EXCL_SQL}
 )
 SELECT
   host, proxy,
@@ -82,7 +109,7 @@ duckdb -readonly -box "$DUCK_DB" "
 WITH w AS (
   SELECT * FROM haproxy_proxies
   WHERE host LIKE '${LIKE}' ESCAPE '\\' AND type IN ('BACKEND','SERVER')
-        AND ${WINDOW_SQL} AND rtime > 0
+        AND ${WINDOW_SQL} AND rtime > 0${EXCL_SQL}
 )
 SELECT
   host, proxy, type,
@@ -103,7 +130,7 @@ LIMIT 25;
 duckdb -readonly -box "$DUCK_DB" "
 WITH w AS (
   SELECT * FROM haproxy_proxies
-  WHERE host LIKE '${LIKE}' ESCAPE '\\' AND type IN ('BACKEND','SERVER') AND ${WINDOW_SQL}
+  WHERE host LIKE '${LIKE}' ESCAPE '\\' AND type IN ('BACKEND','SERVER') AND ${WINDOW_SQL}${EXCL_SQL}
 )
 SELECT
   host, proxy, type,
