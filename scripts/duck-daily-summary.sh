@@ -84,8 +84,8 @@ fi
 # ---- GROUPS: (seq, label, host LIKE pattern) — spreadsheet row order ----
 # '%' = wildcard suffix, so 'ha-bop%' covers ha-bop, ha-bop-1, ha-bop-2, ...
 GROUPS_SQL="VALUES
-  ( 1, 'Credit Lvs',          'lvs-credit%'),
-  ( 2, 'Credit Haproxy',      'ha-credit%'),
+  ( 1, 'lvs-credit',          'lvs-credit%'),
+  ( 2, 'ha-credit',           'ha-credit%'),
   ( 3, 'lvs-lic',             'lvs-lic%'),
   ( 4, 'lvs-bop',             'lvs-bop%'),
   ( 5, 'lvs-sgs',             'lvs-sgs%'),
