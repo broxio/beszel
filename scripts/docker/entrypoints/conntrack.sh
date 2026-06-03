@@ -6,7 +6,7 @@
 # Runs as root (does NOT drop to 'duck') so it can read + delete the hub's
 # root-owned sealed spool files. Local-only loader, no network exposure.
 #
-# duck-conntrack-report.sh is run on demand via `docker exec`. No Parquet export
+# duck-report-conntrack.sh is run on demand via `docker exec`. No Parquet export
 # (conntrack is queried via the CLI report, not Duck-UI).
 set -uo pipefail
 

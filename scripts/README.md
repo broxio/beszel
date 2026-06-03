@@ -15,10 +15,10 @@ single capacity/usage report or building history that outlives PB's retention.
 | `capacity-api.sh` | REST API (off-host) | same as `capacity.sh`, over HTTP |
 | `peak-recorder.sh` | REST API (off-host) | harvest **minute-precise** CPU/mem peaks before PB prunes them; append-only CSV |
 | `duck-ingest.sh` | REST API (off-host) | siphon raw **1m** samples into a local **DuckDB** before PB prunes them; idempotent, runs on a timer |
-| `duck-report.sh` | DuckDB (local file) | capacity report from the DuckDB store: true percentiles + **exact** peak time + fleet totals |
-| `duck-daily-summary.sh` | DuckDB (local file) | capacity rolled up **per host-group** (+ optional `fe_*` request/throughput from the HAProxy DB); `usage` or cloud-`forecast` views |
+| `duck-report-capacity.sh` | DuckDB (local file) | capacity report from the DuckDB store: true percentiles + **exact** peak time + fleet totals |
+| `duck-report-summary.sh` | DuckDB (local file) | capacity rolled up **per host-group** (+ optional `fe_*` request/throughput from the HAProxy DB); `usage` or cloud-`forecast` views |
 | `duck-haproxy-ingest.sh` | NDJSON spool (from hub) | load the hub's **high-resolution HAProxy** spool into a dedicated DuckDB; idempotent, runs on a timer |
-| `duck-haproxy-report.sh` | DuckDB (local file) | HAProxy troubleshooting report: per-frontend req/5xx/sessions, backend flaps, per-host idle%/conn-rate |
+| `duck-report-haproxy.sh` | DuckDB (local file) | HAProxy troubleshooting report: per-frontend req/5xx/sessions, backend flaps, per-host idle%/conn-rate |
 
 `stats*` and `capacity*` are read-only one-shot reports straight off PB. `peak-recorder.sh`
 and `duck-ingest.sh` run on a timer to build long-term stores that outlive PB retention.
@@ -82,7 +82,7 @@ beszel's own rollups keep only the peak *value*, not its time (see Findings #3).
              /path/duck-ingest.sh '*' >> /var/log/beszel-duck.log 2>&1
 
 # 2. report any time (TZ_OFFSET controls peak-time display, default UTC+8)
-DUCK_DB=/var/lib/beszel/beszel.duckdb ./duck-report.sh 168 'ha-bop*'   # last 7 days
+DUCK_DB=/var/lib/beszel/beszel.duckdb ./duck-report-capacity.sh 168 'ha-bop*'   # last 7 days
 
 # 3. or just write SQL — native percentiles, arg_max, time-bucketing
 duckdb $DUCK_DB "SELECT host, quantile_cont(cpu,0.95) p95, arg_max(ts,cpu) peak_at
@@ -124,9 +124,9 @@ the hub and the duckdb container, or run the loader on the hub host):
 */5 * * * * HAPROXY_DUCK_DB=/data/haproxy.duckdb HAPROXY_SPOOL_DIR=/data/haproxy-spool \
             HAPROXY_RETENTION_DAYS=30 /path/duck-haproxy-ingest.sh >> /var/log/haproxy-duck.log 2>&1
 
-# troubleshoot (same relative [HOURS] / 'FROM' 'TO' local-time range mode as duck-report.sh)
-HAPROXY_DUCK_DB=/data/haproxy.duckdb ./duck-haproxy-report.sh 1 'ha-*'
-HAPROXY_DUCK_DB=/data/haproxy.duckdb ./duck-haproxy-report.sh '2026-06-01 10:00' '2026-06-01 10:30' 'ha-bop*'
+# troubleshoot (same relative [HOURS] / 'FROM' 'TO' local-time range mode as duck-report-capacity.sh)
+HAPROXY_DUCK_DB=/data/haproxy.duckdb ./duck-report-haproxy.sh 1 'ha-*'
+HAPROXY_DUCK_DB=/data/haproxy.duckdb ./duck-report-haproxy.sh '2026-06-01 10:00' '2026-06-01 10:30' 'ha-bop*'
 ```
 
 Tables: `haproxy_proxies` PK `(system, ts, proxy, type)`, `haproxy_info` PK `(system, ts)`.
@@ -159,11 +159,11 @@ cp .env.example .env        # fill BESZEL_URL + a DEDICATED read-only account (c
 # capacity ingester:
 docker compose --profile capacity up -d --build
 docker compose logs -f duck-ingest                       # watch ingests
-docker compose exec duck-ingest duck-report.sh 24 '*'    # report on demand
+docker compose exec duck-ingest duck-report-capacity.sh 24 '*'    # report on demand
 
 # HAProxy loader (set HAPROXY_SPOOL_HOST_DIR to the hub's spool dir):
 docker compose --profile haproxy up -d
-docker compose exec haproxy-duck duck-haproxy-report.sh 1 'ha-*'
+docker compose exec haproxy-duck duck-report-haproxy.sh 1 'ha-*'
 
 # web UI: Duck-UI behind nginx basic-auth (create ui.htpasswd first, chmod 644):
 docker run --rm -it httpd:alpine htpasswd -nB admin > ui.htpasswd && chmod 644 ui.htpasswd
@@ -221,7 +221,7 @@ trigger runs by `exec`-ing into it:
 ```
 
 Use one or the other, not both (the cron-mode container does not self-ingest). Either way the
-DuckDB file is the same volume, and `duck-report.sh` works unchanged.
+DuckDB file is the same volume, and `duck-report-capacity.sh` works unchanged.
 
 #### Polling cadence (freshness vs load)
 
@@ -287,26 +287,26 @@ point the env at the right file). Both invocation forms match across all three:
 
 ```bash
 # 1) Capacity per-host + fleet total
-docker compose exec duck-ingest duck-report.sh 6 'ha-bop*'
-docker compose exec duck-ingest duck-report.sh '2026-06-02 13:00' '2026-06-02 19:00' 'ha-*'
+docker compose exec duck-ingest duck-report-capacity.sh 6 'ha-bop*'
+docker compose exec duck-ingest duck-report-capacity.sh '2026-06-02 13:00' '2026-06-02 19:00' 'ha-*'
 
 # 2) Capacity by host-GROUP (+ fe_* requests/throughput if the HAProxy DB is present)
-docker compose exec duck-ingest duck-daily-summary.sh 6
-docker compose exec -e HAPROXY_DUCK_DB=/data/haproxy.duckdb duck-ingest duck-daily-summary.sh 6
-docker compose exec -e FORMAT=csv duck-ingest duck-daily-summary.sh '2026-06-02' '2026-06-03'   # Excel
+docker compose exec duck-ingest duck-report-summary.sh 6
+docker compose exec -e HAPROXY_DUCK_DB=/data/haproxy.duckdb duck-ingest duck-report-summary.sh 6
+docker compose exec -e FORMAT=csv duck-ingest duck-report-summary.sh '2026-06-02' '2026-06-03'   # Excel
 
 # 3) HAProxy troubleshooting (per-frontend, slowest backends, flaps, host health, fe_* by group)
-docker compose exec haproxy-duck duck-haproxy-report.sh 6 'ha-*'
-docker compose exec haproxy-duck duck-haproxy-report.sh '2026-06-02 13:00' '2026-06-02 19:00' 'ha-bop*'
+docker compose exec haproxy-duck duck-report-haproxy.sh 6 'ha-*'
+docker compose exec haproxy-duck duck-report-haproxy.sh '2026-06-02 13:00' '2026-06-02 19:00' 'ha-bop*'
 
 # 4) Conntrack table pressure (per-host util% + drop deltas) — needs the conntrack profile
-docker compose exec conntrack-duck duck-conntrack-report.sh 6 'lvs-*'
+docker compose exec conntrack-duck duck-report-conntrack.sh 6 'lvs-*'
 
 # 5) Cross-correlation: conntrack util <-> HAProxy 5xx <-> CPU steal, joined per-minute on (host,minute).
 #    ATTACHes all three DuckDB stores read-only (conntrack required; haproxy/capacity optional). Run from
 #    a container whose /data holds all three .duckdb files. UTIL_THRESHOLD (default 80) sets the "hot bucket" cutoff.
-docker compose exec conntrack-duck duck-cross-report.sh 6 'lvs-*'
-docker compose exec -e UTIL_THRESHOLD=70 conntrack-duck duck-cross-report.sh '2026-06-03 09:00' '2026-06-03 12:00' 'ha-bop*'
+docker compose exec conntrack-duck duck-report-cross.sh 6 'lvs-*'
+docker compose exec -e UTIL_THRESHOLD=70 conntrack-duck duck-report-cross.sh '2026-06-03 09:00' '2026-06-03 12:00' 'ha-bop*'
 ```
 
 Knobs are **env vars — pass them with `-e` BEFORE the service name** (anything after the script
@@ -315,19 +315,19 @@ name is a positional arg, not an env var):
 | Env | Default | Applies to |
 |---|---|---|
 | `EXCLUDE_HOST` | `ha-uat*,ha-pre*` | all three (comma globs, case-insensitive; `''` = include) |
-| `EXCLUDE_PROXY` | `admin,stats` | `duck-haproxy-report.sh` (mgmt/stats frontends; `''` = include) |
+| `EXCLUDE_PROXY` | `admin,stats` | `duck-report-haproxy.sh` (mgmt/stats frontends; `''` = include) |
 | `TZ_OFFSET` | `8` (UTC+8) | all (peak times + range args) |
-| `FORMAT` | `box` | `duck-daily-summary.sh` (`csv` for Excel); `duck-report`/haproxy are box-only |
-| `GROUP_MODE` | `sheet` | `duck-daily-summary.sh` (`auto` = group every host by name) |
-| `VIEW` | `usage` | `duck-daily-summary.sh` (`forecast` = cloud right-sizing) |
-| `SORT` | `name` | `duck-daily-summary.sh` (`seq` = fixed spreadsheet order) |
-| `HAPROXY_DUCK_DB` | `./haproxy.duckdb` | `duck-daily-summary.sh` fe_* section |
+| `FORMAT` | `box` | `duck-report-summary.sh` (`csv` for Excel); `duck-report`/haproxy are box-only |
+| `GROUP_MODE` | `sheet` | `duck-report-summary.sh` (`auto` = group every host by name) |
+| `VIEW` | `usage` | `duck-report-summary.sh` (`forecast` = cloud right-sizing) |
+| `SORT` | `name` | `duck-report-summary.sh` (`seq` = fixed spreadsheet order) |
+| `HAPROXY_DUCK_DB` | `./haproxy.duckdb` | `duck-report-summary.sh` fe_* section |
 
 ```bash
 # include the non-prod zones / mgmt frontends that are hidden by default:
-docker compose exec -e EXCLUDE_HOST='' -e EXCLUDE_PROXY='' haproxy-duck duck-haproxy-report.sh 6 'ha-*'
+docker compose exec -e EXCLUDE_HOST='' -e EXCLUDE_PROXY='' haproxy-duck duck-report-haproxy.sh 6 'ha-*'
 # cloud capacity forecast over ~30 days, CSV, every host auto-grouped:
-docker compose exec -e VIEW=forecast -e GROUP_MODE=auto -e FORMAT=csv duck-ingest duck-daily-summary.sh 720
+docker compose exec -e VIEW=forecast -e GROUP_MODE=auto -e FORMAT=csv duck-ingest duck-report-summary.sh 720
 ```
 
 (Service names `duck-ingest`/`haproxy-duck` assume the bundled compose — adjust for yours.)
@@ -419,7 +419,7 @@ The agent pushes one value per minute; there's no instantaneous spike captured. 
   Overlapping fetch windows are safe, so it just pulls the last `LOOKBACK_MIN` each run (no
   watermark bookkeeping). Same cadence rule: run more often than the 1h `1m` retention.
   DuckDB is single-writer — one cron job is fine; don't let runs overlap (a flock) and run
-  analysis read-only. `ts` is stored UTC; `duck-report.sh` shifts to local via `TZ_OFFSET`.
+  analysis read-only. `ts` is stored UTC; `duck-report-capacity.sh` shifts to local via `TZ_OFFSET`.
   Percentiles/peak-time use DuckDB natives (`quantile_cont`, `arg_max`) — accurate because
   the store holds raw 1m, unlike bucket-averaged reports off PB.
 
@@ -439,7 +439,7 @@ The agent pushes one value per minute; there's no instantaneous spike captured. 
    harvesting `1m` data before the 1-hour purge; correlate spikes with deploys/incidents
    and keep an all-time peak log forever.
 6. **Full analytical store (recommended for serious analysis)** — `duck-ingest.sh` on a
-   cron into DuckDB keeps *every* raw 1m sample forever. `duck-report.sh` (or plain SQL)
+   cron into DuckDB keeps *every* raw 1m sample forever. `duck-report-capacity.sh` (or plain SQL)
    then gives accurate percentiles, exact peak times, hourly/daily rollups, and fleet
    totals. This is the superset of #4 and #5 — only skip it if you specifically want a
    zero-dependency (no DuckDB) setup.

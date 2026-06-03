@@ -22,7 +22,7 @@
 #   */15 * * * * BESZEL_URL=https://hub BESZEL_TOKEN=xxx DUCK_DB=/var/lib/beszel/beszel.duckdb \
 #                /path/duck-ingest.sh '*' >> /var/log/beszel-duck.log 2>&1
 #
-# Then query with duck-report.sh, or any DuckDB client:
+# Then query with duck-report-capacity.sh, or any DuckDB client:
 #   duckdb /var/lib/beszel/beszel.duckdb "SELECT host, quantile_cont(cpu,0.95) FROM metrics GROUP BY host"
 
 set -euo pipefail

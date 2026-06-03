@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# duck-daily-summary.sh — capacity rolled up per host "group" (NOT per host), over a
+# duck-report-summary.sh — capacity rolled up per host "group" (NOT per host), over a
 # chosen window. Reads the capacity DuckDB built by duck-ingest.sh (the `metrics`
 # table: per-host 1-min cpu%/mem). Group = a host-name prefix (ha-bop-1, ha-bop-2 ->
 # ha-bop). Two views: current usage, or a cloud capacity-planning forecast.
 #
-# Window args (same as duck-report.sh):
-#   ./duck-daily-summary.sh [HOURS]              # relative: last N hours (default 24)
-#   ./duck-daily-summary.sh 'FROM' 'TO'          # explicit range (LOCAL time, per TZ_OFFSET)
+# Window args (same as duck-report-capacity.sh):
+#   ./duck-report-summary.sh [HOURS]              # relative: last N hours (default 24)
+#   ./duck-report-summary.sh 'FROM' 'TO'          # explicit range (LOCAL time, per TZ_OFFSET)
 #
 # VIEW=usage (default) — one row per GROUP:
 #   group nodes sampl vcpu  cpu_avg/p95/p99/peak(%) steal  cores_avg/p95/peak  cpu_peak_at peak_host
@@ -43,11 +43,11 @@
 #   SORT            row order: name (default, by group name) | seq (the fixed spreadsheet order, sheet mode)
 #
 # Examples:
-#   ./duck-daily-summary.sh 6                                       # last 6h, usage
-#   VIEW=forecast ./duck-daily-summary.sh '2026-05-01' '2026-06-01' # 1-month cloud forecast (sheet rows)
-#   VIEW=forecast GROUP_MODE=auto FORMAT=csv ./duck-daily-summary.sh '2026-05-01' '2026-06-01' > plan.csv
+#   ./duck-report-summary.sh 6                                       # last 6h, usage
+#   VIEW=forecast ./duck-report-summary.sh '2026-05-01' '2026-06-01' # 1-month cloud forecast (sheet rows)
+#   VIEW=forecast GROUP_MODE=auto FORMAT=csv ./duck-report-summary.sh '2026-05-01' '2026-06-01' > plan.csv
 #   docker compose exec -T duck-ingest sh -lc \
-#     'DUCK_DB=/data/beszel.duckdb VIEW=forecast duck-daily-summary.sh 720'   # ~30d
+#     'DUCK_DB=/data/beszel.duckdb VIEW=forecast duck-report-summary.sh 720'   # ~30d
 #
 # Edit the GROUPS table below to add/rename rows or fix a prefix.
 
@@ -63,25 +63,25 @@ MEM_HEADROOM="${MEM_HEADROOM:-1.2}"
 REC_BASIS="${REC_BASIS:-p95}"
 SORT="${SORT:-name}"
 
-command -v duckdb >/dev/null || { echo "duck-daily-summary.sh: duckdb not found in PATH" >&2; exit 1; }
-[[ -f "$DUCK_DB" ]] || { echo "duck-daily-summary.sh: $DUCK_DB not found (run duck-ingest.sh first)" >&2; exit 1; }
-[[ "$TARGET_CPU_UTIL" =~ ^[0-9]*\.?[0-9]+$ ]] || { echo "duck-daily-summary.sh: TARGET_CPU_UTIL must be a number (e.g. 0.7)" >&2; exit 1; }
-[[ "$MEM_HEADROOM"    =~ ^[0-9]*\.?[0-9]+$ ]] || { echo "duck-daily-summary.sh: MEM_HEADROOM must be a number (e.g. 1.2)" >&2; exit 1; }
+command -v duckdb >/dev/null || { echo "duck-report-summary.sh: duckdb not found in PATH" >&2; exit 1; }
+[[ -f "$DUCK_DB" ]] || { echo "duck-report-summary.sh: $DUCK_DB not found (run duck-ingest.sh first)" >&2; exit 1; }
+[[ "$TARGET_CPU_UTIL" =~ ^[0-9]*\.?[0-9]+$ ]] || { echo "duck-report-summary.sh: TARGET_CPU_UTIL must be a number (e.g. 0.7)" >&2; exit 1; }
+[[ "$MEM_HEADROOM"    =~ ^[0-9]*\.?[0-9]+$ ]] || { echo "duck-report-summary.sh: MEM_HEADROOM must be a number (e.g. 1.2)" >&2; exit 1; }
 
 OFF_MIN="$(awk "BEGIN{print int(${TZ_OFFSET}*60)}")"
 TZLABEL="$(awk "BEGIN{o=${TZ_OFFSET}+0; printf (o>=0?\"+%g\":\"%g\"), o}")"
 
-# Window: same two forms as duck-report.sh (arg1 integer => relative hours; else FROM/TO local range).
+# Window: same two forms as duck-report-capacity.sh (arg1 integer => relative hours; else FROM/TO local range).
 if [[ "${1:-24}" =~ ^[0-9]+$ ]]; then
   HOURS="${1:-24}"
   WINDOW_SQL="ts >= (now() AT TIME ZONE 'UTC') - INTERVAL '${HOURS} hours'"
   WINDOW_LABEL="window=${HOURS}h"
 else
   FROM="$1"; TO="${2:-}"
-  [[ -n "$TO" ]] || { echo "duck-daily-summary.sh: range mode needs FROM and TO, e.g. '2026-05-01' '2026-06-01'" >&2; exit 1; }
+  [[ -n "$TO" ]] || { echo "duck-report-summary.sh: range mode needs FROM and TO, e.g. '2026-05-01' '2026-06-01'" >&2; exit 1; }
   for t in "$FROM" "$TO"; do
     [[ "$t" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}([\ T][0-9]{2}:[0-9]{2}(:[0-9]{2})?)?$ ]] || \
-      { echo "duck-daily-summary.sh: bad timestamp '$t' (use 'YYYY-MM-DD' or 'YYYY-MM-DD HH:MM')" >&2; exit 1; }
+      { echo "duck-report-summary.sh: bad timestamp '$t' (use 'YYYY-MM-DD' or 'YYYY-MM-DD HH:MM')" >&2; exit 1; }
   done
   # args are local time -> convert to the UTC stored in `ts` by subtracting the offset
   WINDOW_SQL="ts >= TIMESTAMP '${FROM}' - INTERVAL '${OFF_MIN} minutes' AND ts < TIMESTAMP '${TO}' - INTERVAL '${OFF_MIN} minutes'"

@@ -11,10 +11,10 @@
 # (the build: sections are ignored when the image is already present.)
 #
 # Reports on demand:
-#   docker compose exec duck-ingest    duck-report.sh 24 '*'
-#   docker compose exec haproxy-duck   duck-haproxy-report.sh 1 'ha-*'
-#   docker compose exec conntrack-duck duck-conntrack-report.sh 6 'lvs-*'
-#   docker compose exec conntrack-duck duck-cross-report.sh 6 'lvs-*'   # conntrack <-> haproxy <-> cpu (needs all 3 DBs in /data)
+#   docker compose exec duck-ingest    duck-report-capacity.sh 24 '*'
+#   docker compose exec haproxy-duck   duck-report-haproxy.sh 1 'ha-*'
+#   docker compose exec conntrack-duck duck-report-conntrack.sh 6 'lvs-*'
+#   docker compose exec conntrack-duck duck-report-cross.sh 6 'lvs-*'   # conntrack <-> haproxy <-> cpu (needs all 3 DBs in /data)
 
 services:
   # ---- capacity: siphon beszel 1m stats into DuckDB (needs hub URL + creds) ----
@@ -38,7 +38,7 @@ services:
       TZ_OFFSET: "${TZ_OFFSET:-8}"
       BESZEL_AUTH_COLLECTION: "${BESZEL_AUTH_COLLECTION:-users}"
       DUCK_DB: /data/beszel.duckdb
-      # so duck-daily-summary.sh appends the fe_* + conntrack by-group sections when those DBs exist in /data
+      # so duck-report-summary.sh appends the fe_* + conntrack by-group sections when those DBs exist in /data
       HAPROXY_DUCK_DB: /data/haproxy.duckdb
       CONNTRACK_DUCK_DB: /data/conntrack.duckdb
       CAPACITY_PARQUET_DIR: /parquet                                 # export metrics.parquet for the UI (empty to disable)
@@ -91,7 +91,7 @@ services:
       TZ_OFFSET: "${TZ_OFFSET:-8}"
       CONNTRACK_DUCK_DB: /data/conntrack.duckdb
       CONNTRACK_SPOOL_DIR: /spool
-      # so duck-cross-report.sh finds the other two stores in /data (no cwd guessing)
+      # so duck-report-cross.sh finds the other two stores in /data (no cwd guessing)
       HAPROXY_DUCK_DB: /data/haproxy.duckdb
       DUCK_DB: /data/beszel.duckdb
     volumes:

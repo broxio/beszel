@@ -301,8 +301,8 @@ COPY (SELECT * FROM haproxy_proxies) TO '/data/haproxy_proxies.parquet' (FORMAT 
 
 ## The canned report (no SQL needed)
 ```bash
-docker compose exec haproxy-duck duck-haproxy-report.sh 1 'ha-*'                       # last hour
-docker compose exec haproxy-duck duck-haproxy-report.sh '2026-06-01 02:00' '2026-06-01 03:00' 'ha-bop*'
+docker compose exec haproxy-duck duck-report-haproxy.sh 1 'ha-*'                       # last hour
+docker compose exec haproxy-duck duck-report-haproxy.sh '2026-06-01 02:00' '2026-06-01 03:00' 'ha-bop*'
 ```
 Prints: per-frontend traffic/5xx/sessions, slowest backends by `rtime`, backend flaps, per-host
 process health — over the window (relative `[HOURS]` or explicit local `'FROM' 'TO'`).

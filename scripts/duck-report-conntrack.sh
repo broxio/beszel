@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# duck-conntrack-report.sh — netfilter conntrack troubleshooting report over the
+# duck-report-conntrack.sh — netfilter conntrack troubleshooting report over the
 # dedicated DuckDB built by duck-conntrack-ingest.sh (high-resolution per-host
 # samples recorded by the hub). The headline signal is table utilization
 # (conns / conns_max); the cumulative drop counters (pkt_drop / insert_failed /
 # early_drop) show whether the table actually overflowed in the window.
 #
 # Two invocation forms (auto-selected by whether arg 1 is a bare integer),
-# matching duck-haproxy-report.sh:
-#   relative:  ./duck-conntrack-report.sh [HOURS] [HOST_GLOB]
-#   range:     ./duck-conntrack-report.sh 'FROM' 'TO' [HOST_GLOB]   (timestamps LOCAL, per TZ_OFFSET)
+# matching duck-report-haproxy.sh:
+#   relative:  ./duck-report-conntrack.sh [HOURS] [HOST_GLOB]
+#   range:     ./duck-report-conntrack.sh 'FROM' 'TO' [HOST_GLOB]   (timestamps LOCAL, per TZ_OFFSET)
 #
 # Env:
 #   CONNTRACK_DUCK_DB  dedicated DuckDB file (default: ./conntrack.duckdb)
@@ -16,31 +16,31 @@
 #   EXCLUDE_HOST       comma-separated host globs to drop (default 'ha-uat*,ha-pre*'; '' = all)
 #
 # Examples:
-#   ./duck-conntrack-report.sh 6 'lvs-*'
-#   ./duck-conntrack-report.sh '2026-06-02 13:00' '2026-06-02 19:00' 'ha-bop*'
+#   ./duck-report-conntrack.sh 6 'lvs-*'
+#   ./duck-report-conntrack.sh '2026-06-02 13:00' '2026-06-02 19:00' 'ha-bop*'
 
 set -euo pipefail
 
 DUCK_DB="${CONNTRACK_DUCK_DB:-./conntrack.duckdb}"
 TZ_OFFSET="${TZ_OFFSET:-8}"
 
-command -v duckdb >/dev/null || { echo "duck-conntrack-report.sh: duckdb not found in PATH" >&2; exit 1; }
-[[ -f "$DUCK_DB" ]] || { echo "duck-conntrack-report.sh: $DUCK_DB not found (run duck-conntrack-ingest.sh first)" >&2; exit 1; }
+command -v duckdb >/dev/null || { echo "duck-report-conntrack.sh: duckdb not found in PATH" >&2; exit 1; }
+[[ -f "$DUCK_DB" ]] || { echo "duck-report-conntrack.sh: $DUCK_DB not found (run duck-conntrack-ingest.sh first)" >&2; exit 1; }
 
 OFF_MIN="$(awk "BEGIN{print int(${TZ_OFFSET}*60)}")"
 TZLABEL="$(awk "BEGIN{o=${TZ_OFFSET}+0; printf (o>=0?\"+%g\":\"%g\"), o}")"
 
-# relative [HOURS] vs explicit 'FROM' 'TO' (local), mirrors duck-haproxy-report.sh
+# relative [HOURS] vs explicit 'FROM' 'TO' (local), mirrors duck-report-haproxy.sh
 if [[ "${1:-6}" =~ ^[0-9]+$ ]]; then
   HOURS="${1:-6}"; GLOB="${2:-*}"
   WINDOW_SQL="ts >= (now() AT TIME ZONE 'UTC') - INTERVAL '${HOURS} hours'"
   WINDOW_LABEL="window=${HOURS}h"
 else
   FROM="$1"; TO="${2:-}"; GLOB="${3:-*}"
-  [[ -n "$TO" ]] || { echo "duck-conntrack-report.sh: range mode needs FROM and TO" >&2; exit 1; }
+  [[ -n "$TO" ]] || { echo "duck-report-conntrack.sh: range mode needs FROM and TO" >&2; exit 1; }
   for t in "$FROM" "$TO"; do
     [[ "$t" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}([\ T][0-9]{2}:[0-9]{2}(:[0-9]{2})?)?$ ]] || \
-      { echo "duck-conntrack-report.sh: bad timestamp '$t' (use 'YYYY-MM-DD' or 'YYYY-MM-DD HH:MM')" >&2; exit 1; }
+      { echo "duck-report-conntrack.sh: bad timestamp '$t' (use 'YYYY-MM-DD' or 'YYYY-MM-DD HH:MM')" >&2; exit 1; }
   done
   WINDOW_SQL="ts >= TIMESTAMP '${FROM}' - INTERVAL '${OFF_MIN} minutes' AND ts < TIMESTAMP '${TO}' - INTERVAL '${OFF_MIN} minutes'"
   WINDOW_LABEL="from='${FROM}' to='${TO}' local${TZLABEL}"

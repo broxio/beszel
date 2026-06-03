@@ -73,12 +73,12 @@ GROUP BY host ORDER BY mem_pct_max DESC LIMIT 25;
 
 ---
 
-## HAProxy — same output as `duck-haproxy-report.sh`
+## HAProxy — same output as `duck-report-haproxy.sh`
 
 These reproduce the CLI report's four tables (identical columns) so the **Parquet/Duck-UI output matches
 the CLI**. Edit the window (`INTERVAL 1 hour`) and host filter (`host LIKE 'ha-%'`) to taste. Peak-time
 columns are local UTC+8 via `+ INTERVAL 8 hour` (change `8` to your offset). The CLI equivalent of each is
-`docker compose exec haproxy-duck duck-haproxy-report.sh <hours> '<glob>'`.
+`docker compose exec haproxy-duck duck-report-haproxy.sh <hours> '<glob>'`.
 
 **① Per-frontend traffic / sessions / 5xx** (FRONTEND only):
 ```sql
@@ -144,7 +144,7 @@ ORDER BY regexp_replace(host,'[0-9]+$',''), TRY_CAST(regexp_extract(host,'([0-9]
 
 > Difference from the CLI: the CLI sees the **full DB** (14-day retention) and uses real timezone handling;
 > Duck-UI reads the **rolling ~2-day Parquet** with the WASM offset trick. For windows beyond ~2 days, or
-> exact local-time ranges, use the CLI: `duck-haproxy-report.sh '2026-06-01 02:00' '2026-06-01 03:00' 'ha-*'`.
+> exact local-time ranges, use the CLI: `duck-report-haproxy.sh '2026-06-01 02:00' '2026-06-01 03:00' 'ha-*'`.
 
 ---
 
@@ -153,5 +153,5 @@ ORDER BY regexp_replace(host,'[0-9]+$',''), TRY_CAST(regexp_extract(host,'([0-9]
   `ORDER BY regexp_replace(host,'[0-9]+$',''), TRY_CAST(regexp_extract(host,'([0-9]+)$',1) AS INTEGER) NULLS FIRST`
 - **Charts:** return a time column (e.g. `ts + INTERVAL 8 hour`) + a numeric column and use Duck-UI's chart view.
 - **Window limits:** the HAProxy Parquet is the last ~2 days, capacity is full history (or `CAPACITY_PARQUET_DAYS`).
-  For older/longer HAProxy windows, use the CLI: `docker compose exec haproxy-duck duck-haproxy-report.sh …`
+  For older/longer HAProxy windows, use the CLI: `docker compose exec haproxy-duck duck-report-haproxy.sh …`
   (full DB + proper timezone handling). Full CLI cookbooks: `HAPROXY-QUERIES.md`, `QUERIES.md`.

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Container entrypoint: run duck-ingest.sh on a loop, logging to stdout (docker logs).
 # A loop (not cron) keeps logs in the container's stream and lets the restart policy
-# handle crashes. duck-report.sh is run on demand via `docker exec`.
+# handle crashes. duck-report-capacity.sh is run on demand via `docker exec`.
 set -uo pipefail
 
 # Started as root only to fix ownership of a freshly-created host bind mount,

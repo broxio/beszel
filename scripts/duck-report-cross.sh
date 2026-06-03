@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# duck-cross-report.sh — correlate conntrack table pressure with HAProxy errors and
+# duck-report-cross.sh — correlate conntrack table pressure with HAProxy errors and
 # CPU steal across the THREE dedicated DuckDB stores, joined per-minute on (host,
 # minute). Answers "when conntrack filled up, what else was happening on the box?"
 #
@@ -8,8 +8,8 @@
 # required; haproxy + capacity are optional — their columns are NULL if absent.
 #
 # Two invocation forms (matching the other reports):
-#   relative:  ./duck-cross-report.sh [HOURS] [HOST_GLOB]
-#   range:     ./duck-cross-report.sh 'FROM' 'TO' [HOST_GLOB]   (timestamps LOCAL, per TZ_OFFSET)
+#   relative:  ./duck-report-cross.sh [HOURS] [HOST_GLOB]
+#   range:     ./duck-report-cross.sh 'FROM' 'TO' [HOST_GLOB]   (timestamps LOCAL, per TZ_OFFSET)
 #
 # Env:
 #   CONNTRACK_DUCK_DB  conntrack store (default: ./conntrack.duckdb)   [required]
@@ -20,8 +20,8 @@
 #   UTIL_THRESHOLD     conntrack util%% a minute must hit to be a "hot bucket" (default 80)
 #
 # Examples:
-#   ./duck-cross-report.sh 6 'lvs-*'
-#   UTIL_THRESHOLD=70 ./duck-cross-report.sh '2026-06-03 09:00' '2026-06-03 12:00' 'ha-bop*'
+#   ./duck-report-cross.sh 6 'lvs-*'
+#   UTIL_THRESHOLD=70 ./duck-report-cross.sh '2026-06-03 09:00' '2026-06-03 12:00' 'ha-bop*'
 
 set -euo pipefail
 
@@ -31,9 +31,9 @@ CAP_DB="${DUCK_DB:-./beszel.duckdb}"
 TZ_OFFSET="${TZ_OFFSET:-8}"
 UTIL_THRESHOLD="${UTIL_THRESHOLD:-80}"
 
-command -v duckdb >/dev/null || { echo "duck-cross-report.sh: duckdb not found in PATH" >&2; exit 1; }
-[[ -f "$CT_DB" ]] || { echo "duck-cross-report.sh: $CT_DB not found (conntrack store required)" >&2; exit 1; }
-case "$UTIL_THRESHOLD" in ''|*[!0-9]*) echo "duck-cross-report.sh: UTIL_THRESHOLD must be an integer" >&2; exit 1 ;; esac
+command -v duckdb >/dev/null || { echo "duck-report-cross.sh: duckdb not found in PATH" >&2; exit 1; }
+[[ -f "$CT_DB" ]] || { echo "duck-report-cross.sh: $CT_DB not found (conntrack store required)" >&2; exit 1; }
+case "$UTIL_THRESHOLD" in ''|*[!0-9]*) echo "duck-report-cross.sh: UTIL_THRESHOLD must be an integer" >&2; exit 1 ;; esac
 
 OFF_MIN="$(awk "BEGIN{print int(${TZ_OFFSET}*60)}")"
 TZLABEL="$(awk "BEGIN{o=${TZ_OFFSET}+0; printf (o>=0?\"+%g\":\"%g\"), o}")"
@@ -45,10 +45,10 @@ if [[ "${1:-6}" =~ ^[0-9]+$ ]]; then
   WINDOW_LABEL="window=${HOURS}h"
 else
   FROM="$1"; TO="${2:-}"; GLOB="${3:-*}"
-  [[ -n "$TO" ]] || { echo "duck-cross-report.sh: range mode needs FROM and TO" >&2; exit 1; }
+  [[ -n "$TO" ]] || { echo "duck-report-cross.sh: range mode needs FROM and TO" >&2; exit 1; }
   for t in "$FROM" "$TO"; do
     [[ "$t" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}([\ T][0-9]{2}:[0-9]{2}(:[0-9]{2})?)?$ ]] || \
-      { echo "duck-cross-report.sh: bad timestamp '$t' (use 'YYYY-MM-DD' or 'YYYY-MM-DD HH:MM')" >&2; exit 1; }
+      { echo "duck-report-cross.sh: bad timestamp '$t' (use 'YYYY-MM-DD' or 'YYYY-MM-DD HH:MM')" >&2; exit 1; }
   done
   WINDOW_SQL="ts >= TIMESTAMP '${FROM}' - INTERVAL '${OFF_MIN} minutes' AND ts < TIMESTAMP '${TO}' - INTERVAL '${OFF_MIN} minutes'"
   WINDOW_LABEL="from='${FROM}' to='${TO}' local${TZLABEL}"

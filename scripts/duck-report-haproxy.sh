@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# duck-haproxy-report.sh — troubleshooting report over the dedicated HAProxy
+# duck-report-haproxy.sh — troubleshooting report over the dedicated HAProxy
 # DuckDB built by duck-haproxy-ingest.sh (high-resolution per-proxy samples
 # recorded by the hub). Honors the project's FRONTEND-only traffic rule at
 # query time; backend/server detail is still stored for drill-down.
 #
 # Two invocation forms (auto-selected by whether arg 1 is a bare integer),
-# matching duck-report.sh:
-#   relative:  ./duck-haproxy-report.sh [HOURS] [HOST_GLOB]
-#   range:     ./duck-haproxy-report.sh 'FROM' 'TO' [HOST_GLOB]   (timestamps LOCAL, per TZ_OFFSET)
+# matching duck-report-capacity.sh:
+#   relative:  ./duck-report-haproxy.sh [HOURS] [HOST_GLOB]
+#   range:     ./duck-report-haproxy.sh 'FROM' 'TO' [HOST_GLOB]   (timestamps LOCAL, per TZ_OFFSET)
 #
 # Env:
 #   HAPROXY_DUCK_DB  dedicated DuckDB file (default: ./haproxy.duckdb)
@@ -18,36 +18,36 @@
 #                    tier is unaffected. Set EXCLUDE_PROXY='' to include everything.
 #   EXCLUDE_HOST     comma-separated HOST globs dropped from the whole report (case-insensitive).
 #                    Default 'ha-uat*,ha-pre*' (non-prod zones). Set EXCLUDE_HOST='' to include them,
-#                    e.g. EXCLUDE_HOST='' ./duck-haproxy-report.sh 1 'ha-uat*' to inspect UAT.
+#                    e.g. EXCLUDE_HOST='' ./duck-report-haproxy.sh 1 'ha-uat*' to inspect UAT.
 #
 # Examples:
-#   ./duck-haproxy-report.sh 1 'ha-bop*'
-#   ./duck-haproxy-report.sh '2026-06-01 10:00' '2026-06-01 10:30' 'ha-*'
-#   EXCLUDE_PROXY='admin,stats,health' ./duck-haproxy-report.sh 1 'ha-*'   # drop extra mgmt frontends
-#   EXCLUDE_PROXY='' ./duck-haproxy-report.sh 1 'ha-*'                      # include admin/stats too
+#   ./duck-report-haproxy.sh 1 'ha-bop*'
+#   ./duck-report-haproxy.sh '2026-06-01 10:00' '2026-06-01 10:30' 'ha-*'
+#   EXCLUDE_PROXY='admin,stats,health' ./duck-report-haproxy.sh 1 'ha-*'   # drop extra mgmt frontends
+#   EXCLUDE_PROXY='' ./duck-report-haproxy.sh 1 'ha-*'                      # include admin/stats too
 
 set -euo pipefail
 
 DUCK_DB="${HAPROXY_DUCK_DB:-./haproxy.duckdb}"
 TZ_OFFSET="${TZ_OFFSET:-8}"
 
-command -v duckdb >/dev/null || { echo "duck-haproxy-report.sh: duckdb not found in PATH" >&2; exit 1; }
-[[ -f "$DUCK_DB" ]] || { echo "duck-haproxy-report.sh: $DUCK_DB not found (run duck-haproxy-ingest.sh first)" >&2; exit 1; }
+command -v duckdb >/dev/null || { echo "duck-report-haproxy.sh: duckdb not found in PATH" >&2; exit 1; }
+[[ -f "$DUCK_DB" ]] || { echo "duck-report-haproxy.sh: $DUCK_DB not found (run duck-haproxy-ingest.sh first)" >&2; exit 1; }
 
 OFF_MIN="$(awk "BEGIN{print int(${TZ_OFFSET}*60)}")"
 TZLABEL="$(awk "BEGIN{o=${TZ_OFFSET}+0; printf (o>=0?\"+%g\":\"%g\"), o}")"
 
-# relative [HOURS] vs explicit 'FROM' 'TO' (local), mirrors duck-report.sh
+# relative [HOURS] vs explicit 'FROM' 'TO' (local), mirrors duck-report-capacity.sh
 if [[ "${1:-1}" =~ ^[0-9]+$ ]]; then
   HOURS="${1:-1}"; GLOB="${2:-*}"
   WINDOW_SQL="ts >= (now() AT TIME ZONE 'UTC') - INTERVAL '${HOURS} hours'"
   WINDOW_LABEL="window=${HOURS}h"
 else
   FROM="$1"; TO="${2:-}"; GLOB="${3:-*}"
-  [[ -n "$TO" ]] || { echo "duck-haproxy-report.sh: range mode needs FROM and TO" >&2; exit 1; }
+  [[ -n "$TO" ]] || { echo "duck-report-haproxy.sh: range mode needs FROM and TO" >&2; exit 1; }
   for t in "$FROM" "$TO"; do
     [[ "$t" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}([\ T][0-9]{2}:[0-9]{2}(:[0-9]{2})?)?$ ]] || \
-      { echo "duck-haproxy-report.sh: bad timestamp '$t' (use 'YYYY-MM-DD' or 'YYYY-MM-DD HH:MM')" >&2; exit 1; }
+      { echo "duck-report-haproxy.sh: bad timestamp '$t' (use 'YYYY-MM-DD' or 'YYYY-MM-DD HH:MM')" >&2; exit 1; }
   done
   WINDOW_SQL="ts >= TIMESTAMP '${FROM}' - INTERVAL '${OFF_MIN} minutes' AND ts < TIMESTAMP '${TO}' - INTERVAL '${OFF_MIN} minutes'"
   WINDOW_LABEL="from='${FROM}' to='${TO}' local${TZLABEL}"

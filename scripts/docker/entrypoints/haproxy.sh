@@ -7,7 +7,7 @@
 # files and archive closed daily files into <spool>/ingested/. It's a local-only
 # loader with no network exposure, so root here is low-risk.
 #
-# duck-haproxy-report.sh is run on demand via `docker exec`.
+# duck-report-haproxy.sh is run on demand via `docker exec`.
 set -uo pipefail
 
 INTERVAL="${HAPROXY_INGEST_INTERVAL:-300}"   # seconds between runs (default 5 min)
