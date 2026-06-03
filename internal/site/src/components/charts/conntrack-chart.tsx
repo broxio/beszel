@@ -7,6 +7,12 @@ import { useYAxisWidth } from "./hooks"
 
 type ConntrackChartType = "utilization" | "connections"
 
+// Explicit color (not hsl(var(--chart-N)) — in this theme --chart-N already wraps
+// hsl(), so the var form double-wraps and renders grey). Amber reads as table
+// load/pressure and stays distinct from CPU (blue) and memory (teal).
+// Alternatives: teal "hsl(190 80% 42%)", violet "hsl(262 70% 58%)".
+const CONNTRACK_COLOR = "hsl(35 92% 50%)"
+
 interface ConntrackChartProps {
 	chartData: ChartData
 	chartType: ConntrackChartType
@@ -73,9 +79,9 @@ export default memo(function ConntrackChart({ chartData, chartType }: ConntrackC
 						dataKey={({ stats }) => value(stats?.ct)}
 						name={chartType === "utilization" ? "Utilization" : "Connections"}
 						type="monotoneX"
-						fill="hsl(var(--chart-1))"
+						fill={CONNTRACK_COLOR}
 						fillOpacity={0.4}
-						stroke="hsl(var(--chart-1))"
+						stroke={CONNTRACK_COLOR}
 						activeDot={{ opacity: 1 }}
 					/>
 				</AreaChart>
