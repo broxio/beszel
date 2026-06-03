@@ -2,7 +2,7 @@
 set -e
 
 # Configuration
-VERSION="${VERSION:-0.18.7-mp.16}"
+VERSION="${VERSION:-0.18.7-mp.17}"
 RELEASE="${RELEASE:-emp}"
 REGISTRY="${REGISTRY:-}"  # e.g., ghcr.io/yourusername or docker.io/yourusername
 PACKAGE="${1:-all}"  # agent, hub, agent-alpine, or all

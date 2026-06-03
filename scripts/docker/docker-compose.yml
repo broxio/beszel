@@ -14,6 +14,7 @@
 #   docker compose exec duck-ingest    duck-report.sh 24 '*'
 #   docker compose exec haproxy-duck   duck-haproxy-report.sh 1 'ha-*'
 #   docker compose exec conntrack-duck duck-conntrack-report.sh 6 'lvs-*'
+#   docker compose exec conntrack-duck duck-cross-report.sh 6 'lvs-*'   # conntrack <-> haproxy <-> cpu (needs all 3 DBs in /data)
 
 services:
   # ---- capacity: siphon beszel 1m stats into DuckDB (needs hub URL + creds) ----

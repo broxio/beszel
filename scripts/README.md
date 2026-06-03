@@ -298,6 +298,15 @@ docker compose exec -e FORMAT=csv duck-ingest duck-daily-summary.sh '2026-06-02'
 # 3) HAProxy troubleshooting (per-frontend, slowest backends, flaps, host health, fe_* by group)
 docker compose exec haproxy-duck duck-haproxy-report.sh 6 'ha-*'
 docker compose exec haproxy-duck duck-haproxy-report.sh '2026-06-02 13:00' '2026-06-02 19:00' 'ha-bop*'
+
+# 4) Conntrack table pressure (per-host util% + drop deltas) — needs the conntrack profile
+docker compose exec conntrack-duck duck-conntrack-report.sh 6 'lvs-*'
+
+# 5) Cross-correlation: conntrack util <-> HAProxy 5xx <-> CPU steal, joined per-minute on (host,minute).
+#    ATTACHes all three DuckDB stores read-only (conntrack required; haproxy/capacity optional). Run from
+#    a container whose /data holds all three .duckdb files. UTIL_THRESHOLD (default 80) sets the "hot bucket" cutoff.
+docker compose exec conntrack-duck duck-cross-report.sh 6 'lvs-*'
+docker compose exec -e UTIL_THRESHOLD=70 conntrack-duck duck-cross-report.sh '2026-06-03 09:00' '2026-06-03 12:00' 'ha-bop*'
 ```
 
 Knobs are **env vars — pass them with `-e` BEFORE the service name** (anything after the script
