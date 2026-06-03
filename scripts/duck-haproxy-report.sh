@@ -130,8 +130,9 @@ ORDER BY ${HOST_SORT}, proxy;
 # ---- per-GROUP TOTAL requests + peak throughput (fe_* frontends only) ----
 # group = host with trailing -N stripped (ha-bop-1,ha-bop-2 -> ha-bop). total_req from the
 # cumulative req_tot counter (max-min per frontend over the window; a HAProxy restart mid-window
-# would undercount). req/throughput peaks combine ALL fe_* frontends across the group's hosts per
-# sample instant. out_mbps_max = peak egress to clients in megabits/sec.
+# would undercount). GROUP AGGREGATE across nodes: req_avg = sum of per-node avg rates (exact group
+# rate); req_peak & out_mbps_max = sum of per-node peaks (envelope — per-node peaks may not coincide);
+# max_req_at = when the hottest node peaked. out_mbps_max in megabits/sec.
 duckdb -readonly -box "$DUCK_DB" "
 WITH w AS (
   SELECT regexp_replace(host,'-[0-9]+\$','') AS grp, host, proxy, ts, req_rate, req_tot, bout_rate
@@ -145,19 +146,26 @@ tot AS (
   SELECT grp, count(DISTINCT host) AS nodes, count(DISTINCT proxy) AS fe, sum(reqs) AS total_req
   FROM per_fe GROUP BY grp
 ),
-per_ts AS (
-  SELECT grp, ts, sum(req_rate) AS req_all, sum(bout_rate) AS bout_all FROM w GROUP BY grp, ts
+per_host_ts AS (
+  SELECT grp, host, ts, sum(req_rate) AS req_h, sum(bout_rate) AS bout_h FROM w GROUP BY grp, host, ts
+),
+per_host AS (
+  SELECT grp, host, avg(req_h) AS req_avg_h, max(req_h) AS req_peak_h, max(bout_h) AS bout_peak_h
+  FROM per_host_ts GROUP BY grp, host
 ),
 agg AS (
   SELECT grp,
-         round(avg(req_all),1)                                            AS req_avg,
-         max(req_all)                                                     AS req_peak,
-         strftime(arg_max(ts,req_all) + INTERVAL '${OFF_MIN} minutes','%m-%d %H:%M') AS max_req_at,
-         round(max(bout_all)*8/1e6,1)                                     AS out_mbps_max
-  FROM per_ts GROUP BY grp
+         round(sum(req_avg_h),1)         AS req_avg,
+         sum(req_peak_h)                 AS req_peak,
+         round(sum(bout_peak_h)*8/1e6,1) AS out_mbps_max
+  FROM per_host GROUP BY grp
+),
+peak_at AS (
+  SELECT grp, strftime(arg_max(ts, req_h) + INTERVAL '${OFF_MIN} minutes','%m-%d %H:%M') AS max_req_at
+  FROM per_host_ts GROUP BY grp
 )
-SELECT t.grp AS \"group\", t.nodes, t.fe, t.total_req, a.req_avg, a.req_peak, a.max_req_at, a.out_mbps_max
-FROM tot t JOIN agg a USING (grp)
+SELECT t.grp AS \"group\", t.nodes, t.fe, t.total_req, a.req_avg, a.req_peak, p.max_req_at, a.out_mbps_max
+FROM tot t JOIN agg a USING (grp) JOIN peak_at p USING (grp)
 ORDER BY regexp_replace(t.grp,'[0-9]+\$',''), TRY_CAST(regexp_extract(t.grp,'([0-9]+)\$',1) AS INTEGER) NULLS FIRST, t.grp;
 "
 
