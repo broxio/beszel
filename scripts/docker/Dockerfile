@@ -36,13 +36,7 @@ RUN chmod +x /usr/local/bin/duck-ingest.sh /usr/local/bin/duck-report-capacity.s
       /usr/local/bin/capacity.sh /usr/local/bin/haproxy.sh /usr/local/bin/conntrack.sh \
  # back-compat aliases for the pre-reorg entrypoint names (drop once compose is migrated)
  && ln -sf /usr/local/bin/capacity.sh /usr/local/bin/entrypoint.sh \
- && ln -sf /usr/local/bin/haproxy.sh  /usr/local/bin/haproxy-entrypoint.sh \
- # back-compat aliases for the old report names (duck-<domain>-report.sh -> duck-report-<domain>.sh)
- && ln -sf /usr/local/bin/duck-report-capacity.sh  /usr/local/bin/duck-report.sh \
- && ln -sf /usr/local/bin/duck-report-haproxy.sh   /usr/local/bin/duck-haproxy-report.sh \
- && ln -sf /usr/local/bin/duck-report-conntrack.sh /usr/local/bin/duck-conntrack-report.sh \
- && ln -sf /usr/local/bin/duck-report-cross.sh     /usr/local/bin/duck-cross-report.sh \
- && ln -sf /usr/local/bin/duck-report-summary.sh   /usr/local/bin/duck-daily-summary.sh
+ && ln -sf /usr/local/bin/haproxy.sh  /usr/local/bin/haproxy-entrypoint.sh
 
 # non-root user; /data holds the DuckDB file (named volume OR host bind mount).
 # We DON'T set USER here: the entrypoint starts as root only to fix bind-mount
