@@ -29,6 +29,8 @@ set -euo pipefail
 
 DUCK_DB="${DUCK_DB:-./beszel.duckdb}"
 TZ_OFFSET="${TZ_OFFSET:-8}"
+FORMAT="${FORMAT:-box}"                       # box (pretty) | csv (for Excel/pipe)
+FLAG="-box"; [[ "$FORMAT" == "csv" ]] && FLAG="-csv"
 
 command -v duckdb >/dev/null || { echo "duck-report-capacity.sh: duckdb not found in PATH" >&2; exit 1; }
 [[ -f "$DUCK_DB" ]] || { echo "duck-report-capacity.sh: $DUCK_DB not found (run duck-ingest.sh first)" >&2; exit 1; }
@@ -71,11 +73,10 @@ if [[ -n "$EXCLUDE_HOST" ]]; then
   (( ${#hconds[@]} )) && { hj="$(printf ' OR %s' "${hconds[@]}")"; EXCL_HOST_SQL=" AND NOT (${hj# OR })"; EXCL_HOST_LABEL="  exclude-host=${EXCLUDE_HOST}"; }
 fi
 
-echo
-echo "beszel capacity (DuckDB) — ${WINDOW_LABEL}  glob=${GLOB}${EXCL_HOST_LABEL}  peak-time=local${TZLABEL}  db=${DUCK_DB}"
+[[ "$FORMAT" == "box" ]] && { echo; echo "beszel capacity (DuckDB) — ${WINDOW_LABEL}  glob=${GLOB}${EXCL_HOST_LABEL}  peak-time=local${TZLABEL}  db=${DUCK_DB}"; } || true
 
 # ---- per-host: percentiles + exact peak time + real cores ----
-duckdb -readonly -box "$DUCK_DB" "
+duckdb -readonly "$FLAG" "$DUCK_DB" "
 WITH w AS (
   SELECT * FROM metrics
   WHERE host LIKE '${LIKE}' ESCAPE '\\'${EXCL_HOST_SQL}
@@ -108,7 +109,7 @@ ORDER BY regexp_replace(host,'[0-9]+\$',''),
 "
 
 # ---- fleet total: provisioned vs real cores used ----
-duckdb -readonly -box "$DUCK_DB" "
+duckdb -readonly "$FLAG" "$DUCK_DB" "
 WITH w AS (
   SELECT * FROM metrics
   WHERE host LIKE '${LIKE}' ESCAPE '\\'${EXCL_HOST_SQL}
@@ -135,4 +136,4 @@ SELECT
   round(sum(mu),1)                      AS mem_avg
 FROM per_host;
 "
-echo
+[[ "$FORMAT" == "box" ]] && echo || true

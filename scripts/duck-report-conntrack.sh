@@ -23,6 +23,8 @@ set -euo pipefail
 
 DUCK_DB="${CONNTRACK_DUCK_DB:-./conntrack.duckdb}"
 TZ_OFFSET="${TZ_OFFSET:-8}"
+FORMAT="${FORMAT:-box}"                       # box (pretty) | csv (for Excel/pipe)
+FLAG="-box"; [[ "$FORMAT" == "csv" ]] && FLAG="-csv"
 
 command -v duckdb >/dev/null || { echo "duck-report-conntrack.sh: duckdb not found in PATH" >&2; exit 1; }
 [[ -f "$DUCK_DB" ]] || { echo "duck-report-conntrack.sh: $DUCK_DB not found (run duck-conntrack-ingest.sh first)" >&2; exit 1; }
@@ -64,13 +66,12 @@ fi
 
 HOST_SORT="regexp_replace(host,'[0-9]+\$',''), TRY_CAST(regexp_extract(host,'([0-9]+)\$',1) AS INTEGER) NULLS FIRST"
 
-echo
-echo "conntrack troubleshooting (DuckDB) — ${WINDOW_LABEL}  glob=${GLOB}${EXCL_HOST_LABEL}  peak-time=local${TZLABEL}  db=${DUCK_DB}"
+[[ "$FORMAT" == "box" ]] && { echo; echo "conntrack troubleshooting (DuckDB) — ${WINDOW_LABEL}  glob=${GLOB}${EXCL_HOST_LABEL}  peak-time=local${TZLABEL}  db=${DUCK_DB}"; } || true
 
 # ---- per-host table utilization + drops ----
 # util_pct = 100*conns/conns_max (the headline). Drop counters are cumulative, so
 # the in-window delta (max-min) is how many packets/inserts were dropped during it.
-duckdb -readonly -box "$DUCK_DB" "
+duckdb -readonly "$FLAG" "$DUCK_DB" "
 WITH w AS (
   SELECT * FROM conntrack
   WHERE host LIKE '${LIKE}' ESCAPE '\\'${EXCL_HOST_SQL} AND ${WINDOW_SQL}
@@ -92,4 +93,4 @@ FROM w
 GROUP BY host
 ORDER BY ${HOST_SORT};
 "
-echo
+[[ "$FORMAT" == "box" ]] && echo || true

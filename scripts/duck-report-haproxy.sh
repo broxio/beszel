@@ -30,6 +30,8 @@ set -euo pipefail
 
 DUCK_DB="${HAPROXY_DUCK_DB:-./haproxy.duckdb}"
 TZ_OFFSET="${TZ_OFFSET:-8}"
+FORMAT="${FORMAT:-box}"                       # box (pretty) | csv (for Excel/pipe)
+FLAG="-box"; [[ "$FORMAT" == "csv" ]] && FLAG="-csv"
 
 command -v duckdb >/dev/null || { echo "duck-report-haproxy.sh: duckdb not found in PATH" >&2; exit 1; }
 [[ -f "$DUCK_DB" ]] || { echo "duck-report-haproxy.sh: $DUCK_DB not found (run duck-haproxy-ingest.sh first)" >&2; exit 1; }
@@ -100,11 +102,10 @@ fi
 # natural host sort: group by alpha prefix, then numeric suffix (ha-bop-2 before ha-bop-10)
 HOST_SORT="regexp_replace(host,'[0-9]+\$',''), TRY_CAST(regexp_extract(host,'([0-9]+)\$',1) AS INTEGER) NULLS FIRST"
 
-echo
-echo "HAProxy troubleshooting (DuckDB) — ${WINDOW_LABEL}  glob=${GLOB}${EXCL_LABEL}${EXCL_HOST_LABEL}  peak-time=local${TZLABEL}  db=${DUCK_DB}"
+[[ "$FORMAT" == "box" ]] && { echo; echo "HAProxy troubleshooting (DuckDB) — ${WINDOW_LABEL}  glob=${GLOB}${EXCL_LABEL}${EXCL_HOST_LABEL}  peak-time=local${TZLABEL}  db=${DUCK_DB}"; } || true
 
 # ---- per-frontend traffic & errors (FRONTEND only — no double-count) ----
-duckdb -readonly -box "$DUCK_DB" "
+duckdb -readonly "$FLAG" "$DUCK_DB" "
 WITH w AS (
   SELECT * FROM haproxy_proxies
   WHERE host LIKE '${LIKE}' ESCAPE '\\'${EXCL_HOST_SQL} AND type = 'FRONTEND' AND ${WINDOW_SQL}${EXCL_SQL}
@@ -133,7 +134,7 @@ ORDER BY ${HOST_SORT}, proxy;
 # would undercount). GROUP AGGREGATE across nodes: req_avg = sum of per-node avg rates (exact group
 # rate); req_peak & out_mbps_max = sum of per-node peaks (envelope — per-node peaks may not coincide);
 # max_req_at = when the hottest node peaked. out_mbps_max in megabits/sec.
-duckdb -readonly -box "$DUCK_DB" "
+duckdb -readonly "$FLAG" "$DUCK_DB" "
 WITH w AS (
   SELECT regexp_replace(host,'-[0-9]+\$','') AS grp, host, proxy, ts, req_rate, req_tot, bout_rate
   FROM haproxy_proxies
@@ -170,7 +171,7 @@ ORDER BY regexp_replace(t.grp,'[0-9]+\$',''), TRY_CAST(regexp_extract(t.grp,'([0
 "
 
 # ---- SLOWEST backends / servers (avg response time, ms) — the main signal ----
-duckdb -readonly -box "$DUCK_DB" "
+duckdb -readonly "$FLAG" "$DUCK_DB" "
 WITH w AS (
   SELECT * FROM haproxy_proxies
   WHERE host LIKE '${LIKE}' ESCAPE '\\'${EXCL_HOST_SQL} AND type IN ('BACKEND','SERVER')
@@ -192,7 +193,7 @@ LIMIT 25;
 "
 
 # ---- backend / server availability (detect flaps within the window) ----
-duckdb -readonly -box "$DUCK_DB" "
+duckdb -readonly "$FLAG" "$DUCK_DB" "
 WITH w AS (
   SELECT * FROM haproxy_proxies
   WHERE host LIKE '${LIKE}' ESCAPE '\\'${EXCL_HOST_SQL} AND type IN ('BACKEND','SERVER') AND ${WINDOW_SQL}${EXCL_SQL}
@@ -211,7 +212,7 @@ ORDER BY ${HOST_SORT}, proxy, type;
 "
 
 # ---- per-host process health (conn rate, idle %, queue) ----
-duckdb -readonly -box "$DUCK_DB" "
+duckdb -readonly "$FLAG" "$DUCK_DB" "
 WITH w AS (
   SELECT * FROM haproxy_info
   WHERE host LIKE '${LIKE}' ESCAPE '\\'${EXCL_HOST_SQL} AND ${WINDOW_SQL}
@@ -231,4 +232,4 @@ FROM w
 GROUP BY host
 ORDER BY ${HOST_SORT};
 "
-echo
+[[ "$FORMAT" == "box" ]] && echo || true

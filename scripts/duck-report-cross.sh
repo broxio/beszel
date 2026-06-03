@@ -30,6 +30,8 @@ HAP_DB="${HAPROXY_DUCK_DB:-./haproxy.duckdb}"
 CAP_DB="${DUCK_DB:-./beszel.duckdb}"
 TZ_OFFSET="${TZ_OFFSET:-8}"
 UTIL_THRESHOLD="${UTIL_THRESHOLD:-80}"
+FORMAT="${FORMAT:-box}"                       # box (pretty) | csv (for Excel/pipe)
+FLAG="-box"; [[ "$FORMAT" == "csv" ]] && FLAG="-csv"
 
 command -v duckdb >/dev/null || { echo "duck-report-cross.sh: duckdb not found in PATH" >&2; exit 1; }
 [[ -f "$CT_DB" ]] || { echo "duck-report-cross.sh: $CT_DB not found (conntrack store required)" >&2; exit 1; }
@@ -101,11 +103,9 @@ else
   CAP_CTE="cap_b AS (SELECT NULL::VARCHAR host, NULL::TIMESTAMP m, NULL::DOUBLE cpu_avg, NULL::DOUBLE steal_max WHERE false)"
 fi
 
-echo
-echo "cross-correlation (DuckDB) — ${WINDOW_LABEL}  glob=${GLOB}  sources=${SRC}  hot=util>=${UTIL_THRESHOLD}%  time=local${TZLABEL}"
-echo "  [1] per-host summary   [2] hot buckets (the minute-by-minute timeline where conntrack util >= ${UTIL_THRESHOLD}%)"
+[[ "$FORMAT" == "box" ]] && { echo; echo "cross-correlation (DuckDB) — ${WINDOW_LABEL}  glob=${GLOB}  sources=${SRC}  hot=util>=${UTIL_THRESHOLD}%  time=local${TZLABEL}"; echo "  [1] per-host summary   [2] hot buckets (the minute-by-minute timeline where conntrack util >= ${UTIL_THRESHOLD}%)"; } || true
 
-duckdb -box <<SQL
+duckdb "$FLAG" <<SQL
 ${ATTACH}
 
 -- per-minute join on (host, minute): conntrack drives, haproxy/capacity left-join in.
@@ -155,4 +155,4 @@ FROM j
 WHERE util_max >= ${UTIL_THRESHOLD}
 ORDER BY ${HOST_SORT}, m;
 SQL
-echo
+[[ "$FORMAT" == "box" ]] && echo || true

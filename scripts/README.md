@@ -317,7 +317,7 @@ name is a positional arg, not an env var):
 | `EXCLUDE_HOST` | `ha-uat*,ha-pre*` | all three (comma globs, case-insensitive; `''` = include) |
 | `EXCLUDE_PROXY` | `admin,stats` | `duck-report-haproxy.sh` (mgmt/stats frontends; `''` = include) |
 | `TZ_OFFSET` | `8` (UTC+8) | all (peak times + range args) |
-| `FORMAT` | `box` | `duck-report-summary.sh` (`csv` for Excel); `duck-report`/haproxy are box-only |
+| `FORMAT` | `box` | **all reports** (`csv` for Excel/pipe; multi-table reports emit one CSV block per table) |
 | `GROUP_MODE` | `sheet` | `duck-report-summary.sh` (`auto` = group every host by name) |
 | `VIEW` | `usage` | `duck-report-summary.sh` (`forecast` = cloud right-sizing) |
 | `SORT` | `name` | `duck-report-summary.sh` (`seq` = fixed spreadsheet order) |
