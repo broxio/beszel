@@ -59,7 +59,9 @@ export default memo(function ConntrackChart({ chartData, chartType }: ConntrackC
 					<CartesianGrid vertical={false} />
 					<YAxis
 						direction="ltr"
-						domain={pinnedAxisDomain()}
+						// utilization is a 0-100% gauge: pin the axis so fill level reads absolutely.
+						// connections is an open-ended count: let it auto-scale to the data.
+						domain={chartType === "utilization" ? [0, 100] : pinnedAxisDomain()}
 						orientation={chartData.orientation}
 						className="tracking-tighter"
 						width={yAxisWidth}
