@@ -28,7 +28,9 @@
 #   DUCK_DB         DuckDB file (default: ./beszel.duckdb)   # in the duck container: /data/beszel.duckdb
 #   HAPROXY_DUCK_DB HAProxy DuckDB (default: ./haproxy.duckdb). If present, a per-GROUP fe_* frontend
 #                   request/throughput summary is appended (total_req, req peak + max_req_at, out_mbps_max).
-#   EXCLUDE_HOST    comma-separated host globs dropped from the fe_* section (default ha-uat*,ha-pre*; '' = all).
+#   CONNTRACK_DUCK_DB conntrack DuckDB (default: ./conntrack.duckdb). If present, a per-GROUP conntrack
+#                   table-utilization summary is appended (util avg/p95/max + peak time, drops).
+#   EXCLUDE_HOST    comma-separated host globs dropped from the fe_*/conntrack sections (default ha-uat*,ha-pre*; '' = all).
 #   TZ_OFFSET       local-time offset in hours (default: 8 = UTC+8). Used for FROM/TO args + peak time.
 #   FORMAT          box (default, pretty) | csv (paste into Excel)
 #   GROUP_MODE      sheet (default) = the 19 fixed spreadsheet rows below;
@@ -274,6 +276,51 @@ if [[ -f "$HAPROXY_DUCK_DB" ]]; then
   SELECT t.grp AS \"group\", t.nodes, t.fe, t.total_req, a.req_avg, a.req_peak, a.max_req_at, a.out_mbps_max
   FROM tot t JOIN agg a USING (grp)
   ORDER BY regexp_replace(t.grp,'[0-9]+\$',''), TRY_CAST(regexp_extract(t.grp,'([0-9]+)\$',1) AS INTEGER) NULLS FIRST, t.grp;
+  "
+  [[ "$FORMAT" == "box" ]] && echo || true
+fi
+
+# ---- conntrack table utilization per GROUP (from the conntrack DB) ----
+# Separate DB (conntrack.duckdb); shown only if present. group = host minus trailing -N.
+# util = 100*conns/conns_max (table fill); drops = sum of per-host pkt_drop deltas over the window.
+CONNTRACK_DUCK_DB="${CONNTRACK_DUCK_DB:-./conntrack.duckdb}"
+if [[ -f "$CONNTRACK_DUCK_DB" ]]; then
+  EXCLUDE_HOST="${EXCLUDE_HOST-ha-uat*,ha-pre*}"
+  EXCL_HOST_SQL=""
+  if [[ -n "$EXCLUDE_HOST" ]]; then
+    hconds=(); IFS=',' read -ra _hpats <<<"$EXCLUDE_HOST"
+    for p in "${_hpats[@]}"; do
+      read -r p <<<"$p"; [[ -z "$p" ]] && continue
+      hl="${p//\%/\\%}"; hl="${hl//_/\\_}"; hl="${hl//\*/%}"; hl="${hl//\?/_}"
+      hconds+=("host ILIKE '${hl}' ESCAPE '\\'")
+    done
+    (( ${#hconds[@]} )) && { hj="$(printf ' OR %s' "${hconds[@]}")"; EXCL_HOST_SQL=" AND NOT (${hj# OR })"; }
+  fi
+  [[ "$FORMAT" == "box" ]] && echo "conntrack table util by group — ${WINDOW_LABEL}  util=100*conns/max  db=${CONNTRACK_DUCK_DB}"
+  duckdb -readonly "$FLAG" "$CONNTRACK_DUCK_DB" "
+  WITH w AS (
+    SELECT regexp_replace(host,'-[0-9]+\$','') AS grp, host, ts, conns, conns_max, pkt_drop
+    FROM conntrack
+    WHERE ${WINDOW_SQL}${EXCL_HOST_SQL}
+  ),
+  per_host AS (
+    SELECT grp, host, max(pkt_drop) - min(pkt_drop) AS drops FROM w GROUP BY grp, host
+  ),
+  d AS (
+    SELECT grp, count(DISTINCT host) AS nodes, sum(drops) AS drops FROM per_host GROUP BY grp
+  ),
+  g AS (
+    SELECT grp,
+           max(conns_max)                                               AS conns_max,
+           round(avg(100.0*conns/nullif(conns_max,0)),1)                AS util_avg,
+           round(quantile_cont(100.0*conns/nullif(conns_max,0),0.95),1) AS util_p95,
+           round(max(100.0*conns/nullif(conns_max,0)),1)                AS util_max,
+           strftime(arg_max(ts, 100.0*conns/nullif(conns_max,0)) + INTERVAL '${OFF_MIN} minutes','%m-%d %H:%M') AS util_max_at
+    FROM w GROUP BY grp
+  )
+  SELECT g.grp AS \"group\", d.nodes, g.conns_max, g.util_avg, g.util_p95, g.util_max, g.util_max_at, d.drops
+  FROM g JOIN d USING (grp)
+  ORDER BY regexp_replace(g.grp,'[0-9]+\$',''), TRY_CAST(regexp_extract(g.grp,'([0-9]+)\$',1) AS INTEGER) NULLS FIRST, g.grp;
   "
   [[ "$FORMAT" == "box" ]] && echo || true
 fi

@@ -38,6 +38,9 @@ services:
       TZ_OFFSET: "${TZ_OFFSET:-8}"
       BESZEL_AUTH_COLLECTION: "${BESZEL_AUTH_COLLECTION:-users}"
       DUCK_DB: /data/beszel.duckdb
+      # so duck-daily-summary.sh appends the fe_* + conntrack by-group sections when those DBs exist in /data
+      HAPROXY_DUCK_DB: /data/haproxy.duckdb
+      CONNTRACK_DUCK_DB: /data/conntrack.duckdb
       CAPACITY_PARQUET_DIR: /parquet                                 # export metrics.parquet for the UI (empty to disable)
       CAPACITY_PARQUET_DAYS: "${CAPACITY_PARQUET_DAYS:-}"           # rolling window; empty = full history
     volumes:
