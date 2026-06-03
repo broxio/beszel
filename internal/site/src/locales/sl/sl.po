@@ -563,6 +563,10 @@ msgstr ""
 msgid "Connection is down"
 msgstr "Povezava je prekinjena"
 
+#: src/components/routes/system.tsx
+msgid "Connection-tracking table usage (% of nf_conntrack_max)"
+msgstr ""
+
 #: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/lvs-aggregate.tsx
 msgid "Connections"
@@ -570,6 +574,14 @@ msgstr ""
 
 #: src/components/routes/lvs-aggregate.tsx
 msgid "Conns"
+msgstr ""
+
+#: src/components/routes/system.tsx
+msgid "Conntrack Connections"
+msgstr ""
+
+#: src/components/routes/system.tsx
+msgid "Conntrack Utilization"
 msgstr ""
 
 #: src/components/routes/system.tsx
@@ -2216,6 +2228,10 @@ msgstr ""
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Total: {0}"
 msgstr "Skupaj: {0}"
+
+#: src/components/routes/system.tsx
+msgid "Tracked connections (nf_conntrack_count)"
+msgstr ""
 
 #: src/components/routes/haproxy-aggregate.tsx
 msgid "Traffic"

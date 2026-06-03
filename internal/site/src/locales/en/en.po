@@ -558,6 +558,10 @@ msgstr "Conn rate"
 msgid "Connection is down"
 msgstr "Connection is down"
 
+#: src/components/routes/system.tsx
+msgid "Connection-tracking table usage (% of nf_conntrack_max)"
+msgstr "Connection-tracking table usage (% of nf_conntrack_max)"
+
 #: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/lvs-aggregate.tsx
 msgid "Connections"
@@ -566,6 +570,14 @@ msgstr "Connections"
 #: src/components/routes/lvs-aggregate.tsx
 msgid "Conns"
 msgstr "Conns"
+
+#: src/components/routes/system.tsx
+msgid "Conntrack Connections"
+msgstr "Conntrack Connections"
+
+#: src/components/routes/system.tsx
+msgid "Conntrack Utilization"
+msgstr "Conntrack Utilization"
 
 #: src/components/routes/system.tsx
 msgid "Containers"
@@ -2211,6 +2223,10 @@ msgstr "Total time spent on read/write (can exceed 100%)"
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Total: {0}"
 msgstr "Total: {0}"
+
+#: src/components/routes/system.tsx
+msgid "Tracked connections (nf_conntrack_count)"
+msgstr "Tracked connections (nf_conntrack_count)"
 
 #: src/components/routes/haproxy-aggregate.tsx
 msgid "Traffic"

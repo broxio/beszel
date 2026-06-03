@@ -167,6 +167,28 @@ export interface SystemStats {
 	ipvs?: IPVSStats
 	/** Vector aggregator GraphQL stats (opt-in via VECTOR_API_URL on the agent) */
 	vec?: VectorStats
+	/** netfilter conntrack table stats (Linux only, auto-enabled) */
+	ct?: ConntrackStats
+}
+
+/** Per-host netfilter conntrack snapshot (Stats.ct). util% = 100*c/m. */
+export interface ConntrackStats {
+	/** nf_conntrack_count — current tracked entries */
+	c: number
+	/** nf_conntrack_max — table limit */
+	m: number
+	/** cumulative: successful lookups */
+	f?: number
+	/** cumulative: packets not tracked (invalid) */
+	inv?: number
+	/** cumulative: insert failures (race / pressure) */
+	if?: number
+	/** cumulative: packets dropped (table full) */
+	d?: number
+	/** cumulative: early drops to make room */
+	ed?: number
+	/** cumulative: lookups restarted (hash resize) */
+	sr?: number
 }
 
 export interface HAProxyStats {
