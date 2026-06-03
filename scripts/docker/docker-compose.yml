@@ -88,6 +88,9 @@ services:
       TZ_OFFSET: "${TZ_OFFSET:-8}"
       CONNTRACK_DUCK_DB: /data/conntrack.duckdb
       CONNTRACK_SPOOL_DIR: /spool
+      # so duck-cross-report.sh finds the other two stores in /data (no cwd guessing)
+      HAPROXY_DUCK_DB: /data/haproxy.duckdb
+      DUCK_DB: /data/beszel.duckdb
     volumes:
       - ./data:/data
       - "${CONNTRACK_SPOOL_HOST_DIR:?set CONNTRACK_SPOOL_HOST_DIR to the hub's CONNTRACK_DUCK_SPOOL host dir (absolute, e.g. /home/admin/beszel/conntrack-spool)}:/spool"
