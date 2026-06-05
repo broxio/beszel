@@ -76,6 +76,7 @@ func main() {
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(openapiSpec)
 	})
+	mux.HandleFunc("GET /{$}", indexHandler) // service root (== /api/ after nginx strips the prefix)
 	mux.HandleFunc("GET /v1", indexHandler)
 	for path, ep := range endpoints {
 		mux.HandleFunc("GET "+path, makeHandler(strings.TrimPrefix(path, "/v1/"), ep))
