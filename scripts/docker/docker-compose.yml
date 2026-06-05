@@ -68,7 +68,7 @@ services:
     entrypoint: ["/usr/local/bin/haproxy.sh"]
     environment:
       HAPROXY_INGEST_INTERVAL: "${HAPROXY_INGEST_INTERVAL:-300}"
-      HAPROXY_RETENTION_DAYS: "${HAPROXY_RETENTION_DAYS:-14}"   # hot window in haproxy.duckdb (~21 GB at 5s record interval)
+      HAPROXY_RETENTION_DAYS: "${HAPROXY_RETENTION_DAYS:-14}"   # hot window in haproxy.duckdb (~55 GB at the hub's current 15s record interval)
       # cold-tier aged days to zstd Parquet before delete. haproxy_proxies is HIGH-VOLUME —
       # set HAPROXY_ARCHIVE_DIR="" to hard-delete instead if the daily Parquet is too large.
       HAPROXY_ARCHIVE_DIR: "${HAPROXY_ARCHIVE_DIR:-/data/archive}"
