@@ -14,6 +14,7 @@
 #   docker compose exec duck-ingest    duck-report-capacity.sh 24 '*'
 #   docker compose exec duck-ingest    duck-report-basics.sh 24 '*'       # generic per-host basics (auto-joins /data/conntrack.duckdb)
 #   docker compose exec -e FORMAT=json duck-ingest duck-report-basics.sh 24 '*'   # machine-readable array for a webservice/AI agent
+#   docker compose exec duck-ingest    duck-usage.sh 24                            # rows + size per store over last 24h (all 3 DBs in /data)
 #   docker compose exec haproxy-duck   duck-report-haproxy.sh 1 'ha-*'
 #   docker compose exec conntrack-duck duck-report-conntrack.sh 6 'lvs-*'
 #   docker compose exec conntrack-duck duck-report-cross.sh 6 'lvs-*'   # conntrack <-> haproxy <-> cpu (needs all 3 DBs in /data)

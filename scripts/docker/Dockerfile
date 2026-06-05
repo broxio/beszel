@@ -26,10 +26,10 @@ RUN apk add --no-cache \
  && rm /tmp/duckdb.zip
 
 # report/ingest tools + entrypoints (build context = scripts/)
-COPY duck-lib.sh duck-ingest.sh duck-report-capacity.sh duck-report-basics.sh duck-haproxy-ingest.sh duck-report-haproxy.sh duck-report-summary.sh duck-conntrack-ingest.sh duck-report-conntrack.sh duck-report-cross.sh /usr/local/bin/
+COPY duck-lib.sh duck-ingest.sh duck-report-capacity.sh duck-report-basics.sh duck-usage.sh duck-haproxy-ingest.sh duck-report-haproxy.sh duck-report-summary.sh duck-conntrack-ingest.sh duck-report-conntrack.sh duck-report-cross.sh /usr/local/bin/
 COPY docker/entrypoints/capacity.sh docker/entrypoints/haproxy.sh docker/entrypoints/conntrack.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/duck-ingest.sh /usr/local/bin/duck-report-capacity.sh \
-      /usr/local/bin/duck-report-basics.sh \
+      /usr/local/bin/duck-report-basics.sh /usr/local/bin/duck-usage.sh \
       /usr/local/bin/duck-haproxy-ingest.sh /usr/local/bin/duck-report-haproxy.sh \
       /usr/local/bin/duck-report-summary.sh \
       /usr/local/bin/duck-conntrack-ingest.sh /usr/local/bin/duck-report-conntrack.sh \

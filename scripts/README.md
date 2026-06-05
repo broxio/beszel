@@ -17,6 +17,7 @@ single capacity/usage report or building history that outlives PB's retention.
 | `duck-ingest.sh` | REST API (off-host) | siphon raw **1m** samples into a local **DuckDB** before PB prunes them; idempotent, runs on a timer |
 | `duck-report-capacity.sh` | DuckDB (local file) | capacity report from the DuckDB store: true percentiles + **exact** peak time + fleet totals |
 | `duck-report-basics.sh` | DuckDB (local file) | generic **per-host basics for EVERY host**: CPU/load/mem/disk/disk-IO/net + conntrack-if-present, auto-grouped by name; `VIEW=host\|group`, `FORMAT=box\|csv\|json` |
+| `duck-usage.sh` | DuckDB (local files) | **how many rows + how big** per store over a window (`[HOURS]`, default 24): DB on-disk size, total rows, per-table rows/hosts/span + zstd-Parquet footprint of the window |
 | `duck-report-summary.sh` | DuckDB (local file) | capacity rolled up **per host-group** (+ optional `fe_*` request/throughput from the HAProxy DB); `usage` or cloud-`forecast` views |
 | `duck-haproxy-ingest.sh` | NDJSON spool (from hub) | load the hub's **high-resolution HAProxy** spool into a dedicated DuckDB; idempotent, runs on a timer |
 | `duck-report-haproxy.sh` | DuckDB (local file) | HAProxy troubleshooting report: per-frontend req/5xx/sessions, backend flaps, per-host idle%/conn-rate |
