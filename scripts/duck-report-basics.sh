@@ -108,6 +108,20 @@ if [[ -n "${CONNTRACK_DUCK_DB:-}" && -f "$CONNTRACK_DUCK_DB" ]]; then
   CT_COL="ct_per_host.ct_util_p95"
 fi
 
+# Schema tolerance: the disk/IO/load columns are added by duck-ingest.sh's ALTER
+# migration. If this report runs against a metrics table that hasn't been widened
+# yet (ingest not upgraded/cycled), reference NULL instead so it still works (those
+# fields just read empty) — same graceful-degradation as the optional conntrack join.
+COLS="$(duckdb -readonly -noheader -list "$DUCK_DB" \
+  "SELECT column_name FROM information_schema.columns WHERE table_name='metrics';")"
+col_or_null() { if grep -qxF "$1" <<<"$COLS"; then printf '%s' "$1"; else printf 'CAST(NULL AS DOUBLE)'; fi; }
+C_LOAD1="$(col_or_null load1)"
+C_DISK_PCT="$(col_or_null disk_pct)"
+C_DISK_USED="$(col_or_null disk_used_gb)"
+C_IO_UTIL="$(col_or_null io_util)"
+C_DREAD="$(col_or_null disk_read_bps)"
+C_DWRITE="$(col_or_null disk_write_bps)"
+
 # Header only for human (box) output; csv/json stay clean for machine consumption.
 [[ "$FORMAT" == "box" ]] && { echo; echo "beszel host basics (DuckDB) — view=${VIEW}  ${WINDOW_LABEL}  glob=${GLOB}${EXCL_HOST_LABEL}  db=${DUCK_DB}"; } || true
 
@@ -128,17 +142,17 @@ per_host AS (
     round(quantile_cont(cpu,0.95),1)                      AS cpu_p95,
     round(max(cpu),1)                                     AS cpu_peak,
     round(max(steal),1)                                   AS steal,
-    round(avg(load1),2)                                   AS load1_avg,
-    round(quantile_cont(load1,0.95),2)                    AS load1_p95,
+    round(avg(${C_LOAD1}),2)                              AS load1_avg,
+    round(quantile_cont(${C_LOAD1},0.95),2)               AS load1_p95,
     round(avg(mem_pct),1)                                 AS mem_pct_avg,
     round(quantile_cont(mem_pct,0.95),1)                  AS mem_pct_p95,
     round(max(mem_used_gb),1)                             AS mem_used_gb_peak,
     round(any_value(mem_total_gb),1)                      AS mem_total_gb,
-    round(arg_max(disk_pct,ts),1)                         AS disk_pct,
-    round(arg_max(disk_used_gb,ts),1)                     AS disk_used_gb,
-    round(quantile_cont(io_util,0.95),1)                  AS io_util_p95,
-    round(quantile_cont(disk_read_bps,0.95)/1e6,2)        AS disk_read_mb_s,
-    round(quantile_cont(disk_write_bps,0.95)/1e6,2)       AS disk_write_mb_s,
+    round(arg_max(${C_DISK_PCT},ts),1)                    AS disk_pct,
+    round(arg_max(${C_DISK_USED},ts),1)                   AS disk_used_gb,
+    round(quantile_cont(${C_IO_UTIL},0.95),1)             AS io_util_p95,
+    round(quantile_cont(${C_DREAD},0.95)/1e6,2)           AS disk_read_mb_s,
+    round(quantile_cont(${C_DWRITE},0.95)/1e6,2)          AS disk_write_mb_s,
     round(quantile_cont(net_in_bps,0.95)/1e6,2)           AS net_in_mb_s,
     round(quantile_cont(net_out_bps,0.95)/1e6,2)          AS net_out_mb_s
   FROM w GROUP BY host
