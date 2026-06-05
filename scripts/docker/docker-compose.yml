@@ -12,6 +12,8 @@
 #
 # Reports on demand:
 #   docker compose exec duck-ingest    duck-report-capacity.sh 24 '*'
+#   docker compose exec duck-ingest    duck-report-basics.sh 24 '*'       # generic per-host basics (auto-joins /data/conntrack.duckdb)
+#   docker compose exec -e FORMAT=json duck-ingest duck-report-basics.sh 24 '*'   # machine-readable array for a webservice/AI agent
 #   docker compose exec haproxy-duck   duck-report-haproxy.sh 1 'ha-*'
 #   docker compose exec conntrack-duck duck-report-conntrack.sh 6 'lvs-*'
 #   docker compose exec conntrack-duck duck-report-cross.sh 6 'lvs-*'   # conntrack <-> haproxy <-> cpu (needs all 3 DBs in /data)
@@ -35,6 +37,8 @@ services:
       INGEST_INTERVAL: "${INGEST_INTERVAL:-2700}"   # 45 min (loop mode)
       INGEST_MODE: "${INGEST_MODE:-loop}"
       LOOKBACK_MIN: "${LOOKBACK_MIN:-70}"
+      RETENTION_DAYS: "${RETENTION_DAYS:-45}"        # age metrics out of the hot DB after N days (empty = keep forever)
+      ARCHIVE_DIR: "${ARCHIVE_DIR:-/data/archive}"   # cold-tier expired days to zstd Parquet here (empty = hard delete)
       TZ_OFFSET: "${TZ_OFFSET:-8}"
       BESZEL_AUTH_COLLECTION: "${BESZEL_AUTH_COLLECTION:-users}"
       DUCK_DB: /data/beszel.duckdb

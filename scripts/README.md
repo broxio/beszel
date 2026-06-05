@@ -16,6 +16,7 @@ single capacity/usage report or building history that outlives PB's retention.
 | `peak-recorder.sh` | REST API (off-host) | harvest **minute-precise** CPU/mem peaks before PB prunes them; append-only CSV |
 | `duck-ingest.sh` | REST API (off-host) | siphon raw **1m** samples into a local **DuckDB** before PB prunes them; idempotent, runs on a timer |
 | `duck-report-capacity.sh` | DuckDB (local file) | capacity report from the DuckDB store: true percentiles + **exact** peak time + fleet totals |
+| `duck-report-basics.sh` | DuckDB (local file) | generic **per-host basics for EVERY host**: CPU/load/mem/disk/disk-IO/net + conntrack-if-present, auto-grouped by name; `VIEW=host\|group`, `FORMAT=box\|csv\|json` |
 | `duck-report-summary.sh` | DuckDB (local file) | capacity rolled up **per host-group** (+ optional `fe_*` request/throughput from the HAProxy DB); `usage` or cloud-`forecast` views |
 | `duck-haproxy-ingest.sh` | NDJSON spool (from hub) | load the hub's **high-resolution HAProxy** spool into a dedicated DuckDB; idempotent, runs on a timer |
 | `duck-report-haproxy.sh` | DuckDB (local file) | HAProxy troubleshooting report: per-frontend req/5xx/sessions, backend flaps, per-host idle%/conn-rate |
@@ -90,8 +91,50 @@ duckdb $DUCK_DB "SELECT host, quantile_cont(cpu,0.95) p95, arg_max(ts,cpu) peak_
 ```
 
 Schema (`metrics`, PK `(host, ts)`): `ts`(UTC), `host`, `vcpu`, `cpu`, `steal`,
-`mem_used_gb`, `mem_total_gb`, `mem_pct`, `swap_gb`, `net_out_bps`, `net_in_bps`.
-Requires the `duckdb` CLI on the ingest/report host.
+`mem_used_gb`, `mem_total_gb`, `mem_pct`, `swap_gb`, `net_out_bps`, `net_in_bps`,
+`disk_pct`, `disk_used_gb`, `disk_total_gb`, `disk_read_bps`, `disk_write_bps`,
+`io_util`, `load1`, `load5`, `load15`. (The disk/IO/load columns are added by
+`ALTER ... ADD COLUMN IF NOT EXISTS`, so an existing DB widens in place; rows
+ingested before the change are NULL for them.) Requires the `duckdb` CLI on the
+ingest/report host.
+
+#### Generic per-host basics + machine-readable (JSON) output
+
+`duck-report-basics.sh` is the all-hosts report (not just `ha-*`): CPU, load avg,
+memory, disk usage, disk IO (throughput + `io_util%`), network bandwidth, and — if a
+conntrack store sits next to the capacity DB — conntrack table util (NULL for hosts
+without `nf_conntrack`). Hosts auto-group by name (`ha-bop-1`,`-2` → `ha-bop`).
+
+```bash
+DUCK_DB=/var/lib/beszel/beszel.duckdb ./duck-report-basics.sh 24 '*'      # per-host, last 24h
+VIEW=group ./duck-report-basics.sh 168 'ha-*'                             # per-group rollup, 7d
+FORMAT=json ./duck-report-basics.sh 24 '*' | jq .                        # array of host objects (webservice/AI)
+```
+
+All report scripts accept `FORMAT=box|csv|json`. `json` emits DuckDB's native array
+of objects keyed by the column aliases — feed it straight to an HTTP endpoint / agent.
+(Multi-section reports — summary/cross/haproxy — emit one JSON array *per section*.)
+
+#### Retention & cold-tier archive (bounding the store)
+
+`duck-ingest.sh` keeps everything forever unless `RETENTION_DAYS` is set. When set, it
+ages rows out of the hot DuckDB by **whole UTC day** after each ingest. With
+`ARCHIVE_DIR` also set, each expiring day is first written to
+`<ARCHIVE_DIR>/metrics-YYYY-MM-DD.parquet` (zstd) and only then deleted — a queryable
+cold tier:
+
+```bash
+RETENTION_DAYS=45 ARCHIVE_DIR=/var/lib/beszel/archive ./duck-ingest.sh '*'
+# cold reads:
+duckdb $DUCK_DB "SELECT * FROM read_parquet('/var/lib/beszel/archive/metrics-*.parquet') WHERE host='ha-bop-1'"
+```
+
+The compose `duck-ingest` service defaults `RETENTION_DAYS=45` + `ARCHIVE_DIR=/data/archive`.
+Rough sizing (1-min resolution, ~175 hosts): **~10–35 MB/day** into the hot DB, so a
+45-day hot window settles around **~0.5–1.6 GB** (it plateaus once daily archive ≈ daily
+ingest). The zstd Parquet archive is materially smaller per day than the live store.
+Measure your real rate with:
+`duckdb -readonly $DUCK_DB "SELECT count(*) r, count(DISTINCT host) h, min(ts), max(ts) FROM metrics"`.
 
 ### High-resolution HAProxy recording (hub → DuckDB)
 

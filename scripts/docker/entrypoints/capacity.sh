@@ -25,6 +25,8 @@ INTERVAL="${INGEST_INTERVAL:-2700}"   # seconds between runs (default 45 min)
 GLOB="${GLOB:-*}"
 MODE="${INGEST_MODE:-loop}"           # loop = internal scheduler (default); cron = idle, host drives timing
 export DUCK_DB="${DUCK_DB:-/data/beszel.duckdb}"
+export RETENTION_DAYS="${RETENTION_DAYS:-}"   # empty = keep forever; e.g. 45 to bound the store
+export ARCHIVE_DIR="${ARCHIVE_DIR:-}"         # with RETENTION_DAYS: cold-tier expired days to Parquet here (empty = hard delete)
 
 [[ -n "${BESZEL_TOKEN:-}" ]] && echo "[entrypoint] WARNING: using a static BESZEL_TOKEN — it will expire; prefer BESZEL_EMAIL/PASSWORD for a long-running container"
 

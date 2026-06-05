@@ -111,7 +111,7 @@ GROUPS_SQL="VALUES
   (18, 'proxy-sw-kr',         'proxy-sw-kr%'),
   (19, 'proxy-sw-th',         'proxy-sw-th%')"
 
-FLAG="-box"; [[ "$FORMAT" == "csv" ]] && FLAG="-csv"
+case "$FORMAT" in box) FLAG="-box";; csv) FLAG="-csv";; json) FLAG="-json";; *) echo "$(basename "$0"): FORMAT must be box|csv|json (got '$FORMAT')" >&2; exit 1;; esac
 
 # Membership CTE differs by mode; everything after it is shared.
 #   sheet -> LEFT JOIN the fixed GROUPS table (keeps empty rows), ord = seq

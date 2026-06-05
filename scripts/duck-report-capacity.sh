@@ -30,7 +30,7 @@ set -euo pipefail
 DUCK_DB="${DUCK_DB:-./beszel.duckdb}"
 TZ_OFFSET="${TZ_OFFSET:-8}"
 FORMAT="${FORMAT:-box}"                       # box (pretty) | csv (for Excel/pipe)
-FLAG="-box"; [[ "$FORMAT" == "csv" ]] && FLAG="-csv"
+case "$FORMAT" in box) FLAG="-box";; csv) FLAG="-csv";; json) FLAG="-json";; *) echo "$(basename "$0"): FORMAT must be box|csv|json (got '$FORMAT')" >&2; exit 1;; esac
 
 command -v duckdb >/dev/null || { echo "duck-report-capacity.sh: duckdb not found in PATH" >&2; exit 1; }
 [[ -f "$DUCK_DB" ]] || { echo "duck-report-capacity.sh: $DUCK_DB not found (run duck-ingest.sh first)" >&2; exit 1; }

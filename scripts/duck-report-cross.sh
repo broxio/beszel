@@ -31,7 +31,7 @@ CAP_DB="${DUCK_DB:-./beszel.duckdb}"
 TZ_OFFSET="${TZ_OFFSET:-8}"
 UTIL_THRESHOLD="${UTIL_THRESHOLD:-80}"
 FORMAT="${FORMAT:-box}"                       # box (pretty) | csv (for Excel/pipe)
-FLAG="-box"; [[ "$FORMAT" == "csv" ]] && FLAG="-csv"
+case "$FORMAT" in box) FLAG="-box";; csv) FLAG="-csv";; json) FLAG="-json";; *) echo "$(basename "$0"): FORMAT must be box|csv|json (got '$FORMAT')" >&2; exit 1;; esac
 
 command -v duckdb >/dev/null || { echo "duck-report-cross.sh: duckdb not found in PATH" >&2; exit 1; }
 [[ -f "$CT_DB" ]] || { echo "duck-report-cross.sh: $CT_DB not found (conntrack store required)" >&2; exit 1; }
