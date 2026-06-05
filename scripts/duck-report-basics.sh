@@ -151,8 +151,8 @@ per_host AS (
     round(arg_max(${C_DISK_PCT},ts),1)                    AS disk_pct,
     round(arg_max(${C_DISK_USED},ts),1)                   AS disk_used_gb,
     round(quantile_cont(${C_IO_UTIL},0.95),1)             AS io_util_p95,
-    round(quantile_cont(${C_DREAD},0.95)/1e6,2)           AS disk_read_mb_s,
-    round(quantile_cont(${C_DWRITE},0.95)/1e6,2)          AS disk_write_mb_s,
+    round(quantile_cont(${C_DREAD},0.95),2)               AS disk_read_mb_s,
+    round(quantile_cont(${C_DWRITE},0.95),2)              AS disk_write_mb_s,
     round(quantile_cont(net_in_bps,0.95)/1e6,2)           AS net_in_mb_s,
     round(quantile_cont(net_out_bps,0.95)/1e6,2)          AS net_out_mb_s
   FROM w GROUP BY host

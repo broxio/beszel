@@ -148,9 +148,9 @@ CREATE TABLE IF NOT EXISTS metrics (
   disk_pct       DOUBLE,
   disk_used_gb   DOUBLE,
   disk_total_gb  DOUBLE,
-  disk_read_bps  DOUBLE,
+  disk_read_bps  DOUBLE,   -- NOTE: agent dr/dw are MB/s (readMbPerSecond), not bytes/s, despite the name
   disk_write_bps DOUBLE,
-  io_util        DOUBLE,
+  io_util        DOUBLE,   -- dios[2]: disk IO utilization %, 0-100
   load1          DOUBLE,
   load5          DOUBLE,
   load15         DOUBLE,
