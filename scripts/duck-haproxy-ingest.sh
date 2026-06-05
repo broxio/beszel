@@ -26,6 +26,7 @@ DUCK_DB="${HAPROXY_DUCK_DB:-./haproxy.duckdb}"
 SPOOL_DIR="${HAPROXY_SPOOL_DIR:-./haproxy-spool}"
 RETENTION_DAYS="${HAPROXY_RETENTION_DAYS:-}"
 ARCHIVE_DIR="${HAPROXY_ARCHIVE_DIR:-}"
+ARCHIVE_RETENTION_DAYS="${HAPROXY_ARCHIVE_RETENTION_DAYS:-}"   # cap the Parquet archive; empty = keep forever
 
 command -v duckdb >/dev/null || { echo "duck-haproxy-ingest.sh: duckdb not found in PATH" >&2; exit 1; }
 [[ -d "$SPOOL_DIR" ]] || { echo "duck-haproxy-ingest.sh: spool dir not found: $SPOOL_DIR" >&2; exit 1; }
@@ -139,3 +140,5 @@ fi
 # NOTE: haproxy_proxies is high-volume — archiving it can write large daily Parquet
 # files; leave HAPROXY_ARCHIVE_DIR empty to hard-delete instead.
 duck_archive_prune "$DUCK_DB" "$ARCHIVE_DIR" "$RETENTION_DAYS" haproxy_proxies haproxy_info
+# Cap the archive (high-volume store): drop Parquet older than HAPROXY_ARCHIVE_RETENTION_DAYS.
+duck_archive_sweep "$ARCHIVE_DIR" "$ARCHIVE_RETENTION_DAYS" haproxy_proxies haproxy_info

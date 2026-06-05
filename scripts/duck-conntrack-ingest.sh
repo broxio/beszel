@@ -26,6 +26,7 @@ DUCK_DB="${CONNTRACK_DUCK_DB:-./conntrack.duckdb}"
 SPOOL_DIR="${CONNTRACK_SPOOL_DIR:-./conntrack-spool}"
 RETENTION_DAYS="${CONNTRACK_RETENTION_DAYS:-}"
 ARCHIVE_DIR="${CONNTRACK_ARCHIVE_DIR:-}"
+ARCHIVE_RETENTION_DAYS="${CONNTRACK_ARCHIVE_RETENTION_DAYS:-}"   # cap the Parquet archive; empty = keep forever
 
 command -v duckdb >/dev/null || { echo "duck-conntrack-ingest.sh: duckdb not found in PATH" >&2; exit 1; }
 [[ -d "$SPOOL_DIR" ]] || { echo "duck-conntrack-ingest.sh: spool dir not found: $SPOOL_DIR" >&2; exit 1; }
@@ -93,3 +94,4 @@ fi
 # age `conntrack` out after RETENTION_DAYS; with CONNTRACK_ARCHIVE_DIR each expiring
 # day is archived to Parquet first.
 duck_archive_prune "$DUCK_DB" "$ARCHIVE_DIR" "$RETENTION_DAYS" conntrack
+duck_archive_sweep "$ARCHIVE_DIR" "$ARCHIVE_RETENTION_DAYS" conntrack

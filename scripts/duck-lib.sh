@@ -49,3 +49,33 @@ duck_archive_prune() {
     done <<< "$expired_days"
   done
 }
+
+# duck_archive_sweep <archive_dir> <archive_retention_days|''> <table> [<table> ...]
+#
+# Caps the cold-tier archive: deletes <archive_dir>/<table>-YYYY-MM-DD.parquet whose
+# DATE (parsed from the filename, not mtime) is older than <archive_retention_days>.
+# Empty retention => no-op (keep archive forever). Use to bound a high-volume store's
+# archive (e.g. haproxy_proxies) while leaving small stores unbounded.
+duck_archive_sweep() {
+  local dir="$1" days="$2"; shift 2
+  [[ -n "$days" ]] || return 0
+  [[ -d "$dir" ]] || return 0
+  case "$days" in ''|*[!0-9]*)
+    echo "duck_archive_sweep: retention_days must be an integer (got '$days')" >&2; return 1 ;;
+  esac
+  local cutoff
+  cutoff="$(date -u -d "-${days} days" +%Y-%m-%d 2>/dev/null || date -u -v-"${days}"d +%Y-%m-%d)"
+  local table f fdate
+  for table in "$@"; do
+    shopt -s nullglob
+    for f in "$dir/${table}-"*.parquet; do
+      fdate="$(basename "$f" .parquet)"; fdate="${fdate#"${table}"-}"
+      [[ "$fdate" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] || continue
+      # YYYY-MM-DD sorts lexically == chronologically
+      if [[ "$fdate" < "$cutoff" ]]; then
+        rm -f "$f" && echo "$(date -u +%H:%M) swept archive (> ${days}d) ${f}"
+      fi
+    done
+    shopt -u nullglob
+  done
+}

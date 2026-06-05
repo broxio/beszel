@@ -192,3 +192,4 @@ SQL
 # Cold-tier retention (shared helper): age `metrics` out of the hot DB after
 # RETENTION_DAYS, archiving each expiring day to ARCHIVE_DIR/metrics-*.parquet first.
 duck_archive_prune "$DUCK_DB" "${ARCHIVE_DIR:-}" "$RETENTION_DAYS" metrics
+duck_archive_sweep "${ARCHIVE_DIR:-}" "${ARCHIVE_RETENTION_DAYS:-}" metrics
