@@ -136,6 +136,22 @@ ingest). The zstd Parquet archive is materially smaller per day than the live st
 Measure your real rate with:
 `duckdb -readonly $DUCK_DB "SELECT count(*) r, count(DISTINCT host) h, min(ts), max(ts) FROM metrics"`.
 
+**All three stores share the same rotation** via the `duck_archive_prune` helper in
+`duck-lib.sh` (sourced by every ingest). Same whole-day, archive-then-delete, idempotent
+behavior; each store has its own knobs (defaults in compose):
+
+| Store | Retention | Archive dir | Archive files |
+|---|---|---|---|
+| capacity (`beszel.duckdb`) | `RETENTION_DAYS=45` | `ARCHIVE_DIR=/data/archive` | `metrics-YYYY-MM-DD.parquet` |
+| haproxy (`haproxy.duckdb`) | `HAPROXY_RETENTION_DAYS=14` | `HAPROXY_ARCHIVE_DIR=/data/archive` | `haproxy_proxies-*`, `haproxy_info-*` |
+| conntrack (`conntrack.duckdb`) | `CONNTRACK_RETENTION_DAYS=14` | `CONNTRACK_ARCHIVE_DIR=/data/archive` | `conntrack-YYYY-MM-DD.parquet` |
+
+Set an `*_ARCHIVE_DIR` to `""` to hard-delete that store instead of archiving.
+**Watch `haproxy_proxies`** — it's high-volume, so its daily Parquet can be large; disable
+its archive (`HAPROXY_ARCHIVE_DIR=""`) if you don't need the cold tier. The archive itself
+is keep-forever — add a `find <dir> -name '<table>-*.parquet' -mtime +N -delete` sweep if you
+want to cap it.
+
 ### High-resolution HAProxy recording (hub → DuckDB)
 
 Different source from `duck-ingest.sh`. The capacity pipeline above pulls 1m **system**

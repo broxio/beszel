@@ -33,6 +33,8 @@
 
 set -euo pipefail
 
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/duck-lib.sh"
+
 GLOB="${1:-*}"
 DUCK_DB="${DUCK_DB:-./beszel.duckdb}"
 LOOKBACK_MIN="${LOOKBACK_MIN:-70}"
@@ -187,31 +189,6 @@ SELECT '$(date -u +%H:%M) fetched=${ROWCNT} rows; metrics now has ' || count(*) 
 FROM metrics;
 SQL
 
-# Optional row retention: keep the hot store bounded. With ARCHIVE_DIR, age out by
-# whole UTC day — archive the day to a deterministic zstd Parquet file FIRST, then
-# delete it (cold tier). Day granularity makes it idempotent: a day is either fully
-# present in the live DB or fully archived+deleted; re-running overwrites the same
-# single per-day file (COPY TO <file> is a truncating write), never duplicates rows.
-# (Ingest only ever inserts rows < LOOKBACK_MIN old, so an already-archived day is
-# never re-inserted.)
-if [[ -n "$RETENTION_DAYS" ]]; then
-  CUTOFF_DATE="CAST((now() AT TIME ZONE 'UTC') - INTERVAL '${RETENTION_DAYS} days' AS DATE)"
-  if [[ -n "${ARCHIVE_DIR:-}" ]]; then
-    mkdir -p "$ARCHIVE_DIR"
-    EXPIRED_DAYS="$(duckdb -readonly -noheader -list "$DUCK_DB" \
-      "SELECT DISTINCT CAST(ts AS DATE) FROM metrics WHERE CAST(ts AS DATE) < ${CUTOFF_DATE} ORDER BY 1;")"
-    while IFS= read -r d; do
-      [[ "$d" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] || continue
-      if duckdb "$DUCK_DB" "
-           COPY (SELECT * FROM metrics WHERE CAST(ts AS DATE) = DATE '${d}')
-             TO '${ARCHIVE_DIR}/metrics-${d}.parquet' (FORMAT PARQUET, COMPRESSION zstd);
-           DELETE FROM metrics WHERE CAST(ts AS DATE) = DATE '${d}';"; then
-        echo "$(date -u +%H:%M) archived+pruned ${d} -> ${ARCHIVE_DIR}/metrics-${d}.parquet"
-      else
-        echo "duck-ingest.sh: archive of ${d} failed; leaving rows in place for retry" >&2
-      fi
-    done <<< "$EXPIRED_DAYS"
-  else
-    duckdb "$DUCK_DB" "DELETE FROM metrics WHERE CAST(ts AS DATE) < ${CUTOFF_DATE};"
-  fi
-fi
+# Cold-tier retention (shared helper): age `metrics` out of the hot DB after
+# RETENTION_DAYS, archiving each expiring day to ARCHIVE_DIR/metrics-*.parquet first.
+duck_archive_prune "$DUCK_DB" "${ARCHIVE_DIR:-}" "$RETENTION_DAYS" metrics

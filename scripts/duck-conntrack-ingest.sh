@@ -20,9 +20,12 @@
 
 set -euo pipefail
 
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/duck-lib.sh"
+
 DUCK_DB="${CONNTRACK_DUCK_DB:-./conntrack.duckdb}"
 SPOOL_DIR="${CONNTRACK_SPOOL_DIR:-./conntrack-spool}"
 RETENTION_DAYS="${CONNTRACK_RETENTION_DAYS:-}"
+ARCHIVE_DIR="${CONNTRACK_ARCHIVE_DIR:-}"
 
 command -v duckdb >/dev/null || { echo "duck-conntrack-ingest.sh: duckdb not found in PATH" >&2; exit 1; }
 [[ -d "$SPOOL_DIR" ]] || { echo "duck-conntrack-ingest.sh: spool dir not found: $SPOOL_DIR" >&2; exit 1; }
@@ -86,7 +89,7 @@ else
   exit 1
 fi
 
-# Optional DuckDB row retention (independent of the spool, which is emptied each run).
-if [[ -n "$RETENTION_DAYS" ]]; then
-  duckdb "$DUCK_DB" "DELETE FROM conntrack WHERE ts < (now() AT TIME ZONE 'UTC') - INTERVAL '${RETENTION_DAYS} days';"
-fi
+# Cold-tier retention (shared helper), independent of the spool (emptied each run):
+# age `conntrack` out after RETENTION_DAYS; with CONNTRACK_ARCHIVE_DIR each expiring
+# day is archived to Parquet first.
+duck_archive_prune "$DUCK_DB" "$ARCHIVE_DIR" "$RETENTION_DAYS" conntrack
