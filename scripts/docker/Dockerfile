@@ -6,6 +6,14 @@
 # DuckDB ships native musl CLI builds (duckdb_cli-linux-<arch>-musl.zip), so on
 # Alpine we use those directly — no gcompat shim. A build-time smoke test confirms
 # the binary runs on this base/arch.
+
+# ---- build the duck-api read-only HTTP report wrapper (stdlib only, static) ----
+FROM golang:1.23-alpine AS apibuild
+ENV CGO_ENABLED=0 GOTOOLCHAIN=local
+WORKDIR /src
+COPY docker/duck-api/ ./
+RUN go build -trimpath -ldflags="-s -w" -o /duck-api .
+
 FROM alpine:3.20
 
 ARG DUCKDB_VERSION=1.5.3
@@ -27,14 +35,16 @@ RUN apk add --no-cache \
 
 # report/ingest tools + entrypoints (build context = scripts/)
 COPY duck-lib.sh duck-ingest.sh duck-report-capacity.sh duck-report-basics.sh duck-usage.sh duck-haproxy-ingest.sh duck-report-haproxy.sh duck-report-summary.sh duck-conntrack-ingest.sh duck-report-conntrack.sh duck-report-cross.sh /usr/local/bin/
-COPY docker/entrypoints/capacity.sh docker/entrypoints/haproxy.sh docker/entrypoints/conntrack.sh /usr/local/bin/
+COPY docker/entrypoints/capacity.sh docker/entrypoints/haproxy.sh docker/entrypoints/conntrack.sh docker/entrypoints/api.sh /usr/local/bin/
+# the static duck-api binary built above
+COPY --from=apibuild /duck-api /usr/local/bin/duck-api
 RUN chmod +x /usr/local/bin/duck-ingest.sh /usr/local/bin/duck-report-capacity.sh \
       /usr/local/bin/duck-report-basics.sh /usr/local/bin/duck-usage.sh \
       /usr/local/bin/duck-haproxy-ingest.sh /usr/local/bin/duck-report-haproxy.sh \
       /usr/local/bin/duck-report-summary.sh \
       /usr/local/bin/duck-conntrack-ingest.sh /usr/local/bin/duck-report-conntrack.sh \
-      /usr/local/bin/duck-report-cross.sh \
-      /usr/local/bin/capacity.sh /usr/local/bin/haproxy.sh /usr/local/bin/conntrack.sh \
+      /usr/local/bin/duck-report-cross.sh /usr/local/bin/duck-api \
+      /usr/local/bin/capacity.sh /usr/local/bin/haproxy.sh /usr/local/bin/conntrack.sh /usr/local/bin/api.sh \
  # back-compat aliases for the pre-reorg entrypoint names (drop once compose is migrated)
  && ln -sf /usr/local/bin/capacity.sh /usr/local/bin/entrypoint.sh \
  && ln -sf /usr/local/bin/haproxy.sh  /usr/local/bin/haproxy-entrypoint.sh

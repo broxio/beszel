@@ -150,8 +150,48 @@ behavior; each store has its own knobs (defaults in compose):
 Set an `*_ARCHIVE_DIR` to `""` to hard-delete that store instead of archiving.
 **Watch `haproxy_proxies`** — it's high-volume, so its daily Parquet can be large; disable
 its archive (`HAPROXY_ARCHIVE_DIR=""`) if you don't need the cold tier. The archive itself
-is keep-forever — add a `find <dir> -name '<table>-*.parquet' -mtime +N -delete` sweep if you
-want to cap it.
+is keep-forever unless you set `*_ARCHIVE_RETENTION_DAYS` (sweeps `<table>-*.parquet` older
+than N days, keyed on the date in the filename).
+
+### Report API (`duck-api`) — JSON over HTTP for an AI agent
+
+`duck-api` is a tiny read-only HTTP wrapper (a static Go binary baked into the
+`beszel-duck` image) that exposes the reports as JSON. It runs a **fixed, allowlisted**
+set of GET endpoints with **strictly validated params** — it never exposes DuckDB SQL
+(no `read_parquet`/`COPY`/`ATTACH` reachable by the caller). Brought up on the `api`
+profile, fronted by the existing nginx `ui-proxy` at `/api/` (basic-auth + optional IP
+allowlist + TLS):
+
+```bash
+docker compose --profile api up -d
+curl -u user:pass 'https://<host>/api/v1/basics?hours=24&host=ha-*&view=group' | jq .
+curl -u user:pass  'https://<host>/api/openapi.json'      # OpenAPI 3.0 spec (agent tool discovery)
+```
+
+| Endpoint | Report | Params |
+|---|---|---|
+| `/v1/basics` | per-host basics | `hours`, `host`, `view=host\|group` |
+| `/v1/capacity` | capacity percentiles + peak time | `hours`, `host` |
+| `/v1/haproxy` | HAProxy troubleshooting | `hours`, `host` |
+| `/v1/conntrack` | conntrack util + drops | `hours`, `host` |
+| `/v1/summary` | per-group rollup | `hours`, `view=usage\|forecast` |
+| `/v1/cross` | conntrack ↔ haproxy ↔ cpu | `hours`, `host` |
+| `/healthz`, `/v1`, `/openapi.json` | health / index / spec | — |
+
+Validation: `hours` = int `1..API_MAX_HOURS` (default cap 2160 = 90d); `host` =
+`^[A-Za-z0-9_.*?-]{1,64}$` (glob, default `*`); `view` = per-endpoint enum. Anything else
+→ `400`, nothing executed. Non-GET → `405`. Response envelope:
+
+```json
+{ "report":"basics", "params":{"hours":24,"host":"ha-*","view":"group"},
+  "generated_at":"2026-06-06T...Z",
+  "sections":[ [ {"host_group":"ha-bop","cpu_p95_avg":55.3, ...}, ... ] ] }
+```
+
+`sections` holds one array per report section (basics = 1; capacity/summary/cross have
+several). Knobs (compose env): `API_MAX_HOURS`, `API_QUERY_TIMEOUT` (s), `API_MAX_CONCURRENCY`,
+`API_EXCLUDE_HOST` (default empty = all hosts visible). **Lock down access** by uncommenting
+the `allow <CIDR>; deny all;` block in `docker/config/nginx-ui.conf` under `location /api/`.
 
 ### High-resolution HAProxy recording (hub → DuckDB)
 

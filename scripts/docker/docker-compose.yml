@@ -5,6 +5,9 @@
 #   docker compose --profile haproxy   up -d             # HAProxy spool loader (+ Parquet export)
 #   docker compose --profile conntrack up -d             # conntrack spool loader (CLI report only)
 #   docker compose --profile haproxy --profile ui up -d  # + Duck-UI web UI behind nginx basic-auth
+#   docker compose --profile api up -d                   # read-only report API at /api/ (ui-proxy + duck-api)
+#     curl -u user:pass https://<host>/api/v1/basics?hours=24&host=ha-*&view=group   # JSON for an AI agent
+#     spec at /api/openapi.json
 #
 # Production: set DUCK_IMAGE=<registry>/beszel-duck:<tag> in .env, then
 #   docker compose --profile <p> pull && docker compose --profile <p> up -d
@@ -108,6 +111,32 @@ services:
       - ./data:/data
       - "${CONNTRACK_SPOOL_HOST_DIR:?set CONNTRACK_SPOOL_HOST_DIR to the hub's CONNTRACK_DUCK_SPOOL host dir (absolute, e.g. /home/admin/beszel/conntrack-spool)}:/spool"
 
+  # ---- api: read-only HTTP report API (duck-report-*.sh as JSON) for an AI agent ----
+  # Runs the SAME beszel-duck image, entrypoint api.sh. Exposes a fixed, validated set
+  # of GET endpoints (NO raw SQL). Internal only — reached via ui-proxy at /api/ (auth +
+  # IP allowlist + TLS). Mounts the stores read-only.
+  duck-api:
+    profiles: ["api"]
+    image: "${DUCK_IMAGE:-beszel-duck:latest}"
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: beszel-duck-api
+    restart: unless-stopped
+    entrypoint: ["/usr/local/bin/api.sh"]
+    environment:
+      DUCK_DB: /data/beszel.duckdb
+      HAPROXY_DUCK_DB: /data/haproxy.duckdb
+      CONNTRACK_DUCK_DB: /data/conntrack.duckdb
+      TZ_OFFSET: "${TZ_OFFSET:-8}"
+      EXCLUDE_HOST: "${API_EXCLUDE_HOST:-}"               # empty = API sees ALL hosts (no ha-uat*/ha-pre* exclusion)
+      API_LISTEN: ":8088"
+      API_MAX_HOURS: "${API_MAX_HOURS:-2160}"             # window cap (90 days)
+      API_QUERY_TIMEOUT: "${API_QUERY_TIMEOUT:-60}"       # seconds per report
+      API_MAX_CONCURRENCY: "${API_MAX_CONCURRENCY:-4}"    # concurrent report execs
+    volumes:
+      - ./data:/data:ro                                   # reports are -readonly; the API never writes the stores
+
   # ---- ui: Duck-UI (browser DuckDB-WASM) — self-contained, air-gap friendly ----
   # Queries the rolling Parquet over HTTP (read_parquet); never touches the live DB.
   # Internal only — exposed via ui-proxy (auth + TLS). Mirror the image to your
@@ -118,10 +147,12 @@ services:
     container_name: beszel-duck-ui
     restart: unless-stopped
 
-  # ---- ui-proxy: nginx basic-auth fronting Duck-UI + serving the Parquet ----
-  # Needs config/nginx-ui.conf + ui.htpasswd (chmod 644). Publish THIS (and TLS).
+  # ---- ui-proxy: nginx basic-auth fronting Duck-UI (/) + the report API (/api/) ----
+  # On BOTH ui+api profiles so it comes up with either (an absent upstream just 502s,
+  # thanks to the lazy resolver). Needs config/nginx-ui.conf + ui.htpasswd (chmod 644).
+  # Publish THIS (and front with TLS).
   ui-proxy:
-    profiles: ["ui"]
+    profiles: ["ui", "api"]
     image: nginx:alpine
     container_name: beszel-haproxy-ui-proxy
     restart: unless-stopped

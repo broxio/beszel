@@ -1,0 +1,133 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "beszel duck-api",
+    "version": "1.0.0",
+    "description": "Read-only HTTP access to the beszel DuckDB reports (capacity / HAProxy / conntrack), for programmatic and AI-agent consumption. Each endpoint runs a fixed report with strictly validated parameters and returns a JSON envelope. No raw SQL is exposed."
+  },
+  "servers": [{ "url": "/api" }],
+  "paths": {
+    "/v1/basics": {
+      "get": {
+        "summary": "Generic per-host basics for every host",
+        "description": "CPU, load avg, memory, disk usage, disk IO (throughput + io_util%), network bandwidth, and conntrack table utilization when available. Auto-grouped by hostname.",
+        "parameters": [
+          { "$ref": "#/components/parameters/hours" },
+          { "$ref": "#/components/parameters/host" },
+          {
+            "name": "view", "in": "query", "required": false,
+            "schema": { "type": "string", "enum": ["host", "group"], "default": "host" },
+            "description": "host = one row per host; group = per host-name-group rollup"
+          }
+        ],
+        "responses": { "200": { "$ref": "#/components/responses/Report" }, "400": { "$ref": "#/components/responses/BadRequest" } }
+      }
+    },
+    "/v1/capacity": {
+      "get": {
+        "summary": "Capacity report (true percentiles + exact peak time + fleet totals)",
+        "parameters": [
+          { "$ref": "#/components/parameters/hours" },
+          { "$ref": "#/components/parameters/host" }
+        ],
+        "responses": { "200": { "$ref": "#/components/responses/Report" }, "400": { "$ref": "#/components/responses/BadRequest" } }
+      }
+    },
+    "/v1/haproxy": {
+      "get": {
+        "summary": "HAProxy troubleshooting (per-frontend req/5xx/sessions, slowest backends, flaps, per-host idle%)",
+        "parameters": [
+          { "$ref": "#/components/parameters/hours" },
+          { "$ref": "#/components/parameters/host" }
+        ],
+        "responses": { "200": { "$ref": "#/components/responses/Report" }, "400": { "$ref": "#/components/responses/BadRequest" } }
+      }
+    },
+    "/v1/conntrack": {
+      "get": {
+        "summary": "Per-host netfilter conntrack table utilization + drop deltas",
+        "parameters": [
+          { "$ref": "#/components/parameters/hours" },
+          { "$ref": "#/components/parameters/host" }
+        ],
+        "responses": { "200": { "$ref": "#/components/responses/Report" }, "400": { "$ref": "#/components/responses/BadRequest" } }
+      }
+    },
+    "/v1/summary": {
+      "get": {
+        "summary": "Capacity rolled up per host-group (usage or cloud forecast)",
+        "parameters": [
+          { "$ref": "#/components/parameters/hours" },
+          {
+            "name": "view", "in": "query", "required": false,
+            "schema": { "type": "string", "enum": ["usage", "forecast"], "default": "usage" },
+            "description": "usage = current usage rollup; forecast = cloud right-sizing recommendation"
+          }
+        ],
+        "responses": { "200": { "$ref": "#/components/responses/Report" }, "400": { "$ref": "#/components/responses/BadRequest" } }
+      }
+    },
+    "/v1/cross": {
+      "get": {
+        "summary": "Cross-correlation: conntrack util vs HAProxy 5xx/sessions vs CPU steal per minute",
+        "parameters": [
+          { "$ref": "#/components/parameters/hours" },
+          { "$ref": "#/components/parameters/host" }
+        ],
+        "responses": { "200": { "$ref": "#/components/responses/Report" }, "400": { "$ref": "#/components/responses/BadRequest" } }
+      }
+    }
+  },
+  "components": {
+    "parameters": {
+      "hours": {
+        "name": "hours", "in": "query", "required": false,
+        "schema": { "type": "integer", "minimum": 1, "maximum": 2160, "default": 24 },
+        "description": "Window: last N hours (UTC). Capped at 2160 (90 days)."
+      },
+      "host": {
+        "name": "host", "in": "query", "required": false,
+        "schema": { "type": "string", "pattern": "^[A-Za-z0-9_.*?-]{1,64}$", "default": "*" },
+        "description": "Hostname glob (* and ? wildcards), e.g. ha-* or lvs-web-?. Default * = all hosts."
+      }
+    },
+    "responses": {
+      "Report": {
+        "description": "Report envelope. `sections` holds one array per report section (most reports have several; basics has one).",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": ["report", "params", "generated_at", "sections"],
+              "properties": {
+                "report": { "type": "string" },
+                "params": {
+                  "type": "object",
+                  "properties": {
+                    "hours": { "type": "integer" },
+                    "host": { "type": "string" },
+                    "view": { "type": "string" }
+                  }
+                },
+                "generated_at": { "type": "string", "format": "date-time" },
+                "sections": {
+                  "type": "array",
+                  "description": "Each element is an array of row objects (keys = the report's column names).",
+                  "items": { "type": "array", "items": { "type": "object", "additionalProperties": true } }
+                }
+              }
+            }
+          }
+        }
+      },
+      "BadRequest": {
+        "description": "Invalid parameter",
+        "content": {
+          "application/json": {
+            "schema": { "type": "object", "properties": { "error": { "type": "string" } } }
+          }
+        }
+      }
+    }
+  }
+}
