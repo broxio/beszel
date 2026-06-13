@@ -99,8 +99,9 @@ if [[ -n "$EXCLUDE_HOST" ]]; then
   fi
 fi
 
-# natural host sort: group by alpha prefix, then numeric suffix (ha-bop-2 before ha-bop-10)
-HOST_SORT="regexp_replace(host,'[0-9]+\$',''), TRY_CAST(regexp_extract(host,'([0-9]+)\$',1) AS INTEGER) NULLS FIRST"
+# natural host sort: group by alpha prefix, then numeric suffix (ha-bop-2 before ha-bop-10).
+# The optional trailing -<letter> handles the spnk node suffix (spnk-ha-lic-1-a, -2-b, ...).
+HOST_SORT="regexp_replace(host,'[0-9]+(-[a-z]+)?\$',''), TRY_CAST(regexp_extract(host,'([0-9]+)(-[a-z]+)?\$',1) AS INTEGER) NULLS FIRST"
 
 [[ "$FORMAT" == "box" ]] && { echo; echo "HAProxy troubleshooting (DuckDB) — ${WINDOW_LABEL}  glob=${GLOB}${EXCL_LABEL}${EXCL_HOST_LABEL}  peak-time=local${TZLABEL}  db=${DUCK_DB}"; } || true
 
@@ -129,14 +130,15 @@ ORDER BY ${HOST_SORT}, proxy;
 "
 
 # ---- per-GROUP TOTAL requests + peak throughput (fe_* frontends only) ----
-# group = host with trailing -N stripped (ha-bop-1,ha-bop-2 -> ha-bop). total_req from the
+# group = host with trailing -N (and optional -<letter>) stripped (ha-bop-1,ha-bop-2 -> ha-bop;
+# spnk-ha-lic-1-a,spnk-ha-lic-2-b -> spnk-ha-lic). total_req from the
 # cumulative req_tot counter (max-min per frontend over the window; a HAProxy restart mid-window
 # would undercount). GROUP AGGREGATE across nodes: req_avg = sum of per-node avg rates (exact group
 # rate); req_peak & out_mbps_max = sum of per-node peaks (envelope — per-node peaks may not coincide);
 # max_req_at = when the hottest node peaked. out_mbps_max in megabits/sec.
 duckdb -readonly "$FLAG" "$DUCK_DB" "
 WITH w AS (
-  SELECT regexp_replace(host,'-[0-9]+\$','') AS grp, host, proxy, ts, req_rate, req_tot, bout_rate
+  SELECT regexp_replace(host,'-[0-9]+(-[a-z]+)?\$','') AS grp, host, proxy, ts, req_rate, req_tot, bout_rate
   FROM haproxy_proxies
   WHERE host LIKE '${LIKE}' ESCAPE '\\'${EXCL_HOST_SQL} AND type='FRONTEND' AND starts_with(proxy,'fe_') AND ${WINDOW_SQL}
 ),
@@ -167,7 +169,7 @@ peak_at AS (
 )
 SELECT t.grp AS \"group\", t.nodes, t.fe, t.total_req, a.req_avg, a.req_peak, p.max_req_at, a.out_mbps_max
 FROM tot t JOIN agg a USING (grp) JOIN peak_at p USING (grp)
-ORDER BY regexp_replace(t.grp,'[0-9]+\$',''), TRY_CAST(regexp_extract(t.grp,'([0-9]+)\$',1) AS INTEGER) NULLS FIRST, t.grp;
+ORDER BY regexp_replace(t.grp,'[0-9]+(-[a-z]+)?\$',''), TRY_CAST(regexp_extract(t.grp,'([0-9]+)(-[a-z]+)?\$',1) AS INTEGER) NULLS FIRST, t.grp;
 "
 
 # ---- SLOWEST backends / servers (avg response time, ms) — the main signal ----

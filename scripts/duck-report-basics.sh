@@ -136,7 +136,7 @@ ${CT_CTE}
 per_host AS (
   SELECT
     host,
-    regexp_replace(host,'-?[0-9]+\$','')                  AS host_group,
+    regexp_replace(host,'-?[0-9]+(-[a-z]+)?\$','')        AS host_group,
     count(*)                                              AS sampl,
     round(avg(cpu),1)                                     AS cpu_avg,
     round(quantile_cont(cpu,0.95),1)                      AS cpu_p95,
@@ -174,7 +174,7 @@ SELECT host, host_group, sampl,
        ct_util_p95
 FROM host_rows
 ORDER BY host_group,
-         TRY_CAST(regexp_extract(host,'([0-9]+)\$',1) AS INTEGER) NULLS FIRST,
+         TRY_CAST(regexp_extract(host,'([0-9]+)(-[a-z]+)?\$',1) AS INTEGER) NULLS FIRST,
          host;"
 else
   SQL="${COMMON_CTES}

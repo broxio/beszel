@@ -64,7 +64,7 @@ if [[ -n "$EXCLUDE_HOST" ]]; then
   (( ${#hconds[@]} )) && { hj="$(printf ' OR %s' "${hconds[@]}")"; EXCL_HOST_SQL=" AND NOT (${hj# OR })"; EXCL_HOST_LABEL="  exclude-host=${EXCLUDE_HOST}"; }
 fi
 
-HOST_SORT="regexp_replace(host,'[0-9]+\$',''), TRY_CAST(regexp_extract(host,'([0-9]+)\$',1) AS INTEGER) NULLS FIRST"
+HOST_SORT="regexp_replace(host,'[0-9]+(-[a-z]+)?\$',''), TRY_CAST(regexp_extract(host,'([0-9]+)(-[a-z]+)?\$',1) AS INTEGER) NULLS FIRST"
 
 [[ "$FORMAT" == "box" ]] && { echo; echo "conntrack troubleshooting (DuckDB) — ${WINDOW_LABEL}  glob=${GLOB}${EXCL_HOST_LABEL}  peak-time=local${TZLABEL}  db=${DUCK_DB}"; } || true
 

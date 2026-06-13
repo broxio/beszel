@@ -72,7 +72,7 @@ if [[ -n "$EXCLUDE_HOST" ]]; then
   (( ${#hconds[@]} )) && { hj="$(printf ' OR %s' "${hconds[@]}")"; EXCL_HOST_SQL=" AND NOT (${hj# OR })"; }
 fi
 
-HOST_SORT="regexp_replace(host,'[0-9]+\$',''), TRY_CAST(regexp_extract(host,'([0-9]+)\$',1) AS INTEGER) NULLS FIRST"
+HOST_SORT="regexp_replace(host,'[0-9]+(-[a-z]+)?\$',''), TRY_CAST(regexp_extract(host,'([0-9]+)(-[a-z]+)?\$',1) AS INTEGER) NULLS FIRST"
 
 # ATTACH conntrack (required) + the optional stores that exist. Build each per-minute
 # CTE from the attached table, or an empty typed CTE so the LEFT JOINs still resolve.

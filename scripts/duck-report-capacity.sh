@@ -104,8 +104,8 @@ SELECT
   strftime(arg_max(ts,mem_used_gb) + INTERVAL '${OFF_MIN} minutes','%Y-%m-%d %H:%M') AS mem_peak_at
 FROM w
 GROUP BY host
-ORDER BY regexp_replace(host,'[0-9]+\$',''),
-         TRY_CAST(regexp_extract(host,'([0-9]+)\$',1) AS INTEGER) NULLS FIRST;
+ORDER BY regexp_replace(host,'[0-9]+(-[a-z]+)?\$',''),
+         TRY_CAST(regexp_extract(host,'([0-9]+)(-[a-z]+)?\$',1) AS INTEGER) NULLS FIRST;
 "
 
 # ---- fleet total: provisioned vs real cores used ----

@@ -3,19 +3,21 @@ import type { HAProxyInfo, HAProxyStats, SystemRecord, SystemStats } from "@/typ
 /**
  * Pre-group types for environment/zone classification
  */
-export type PreGroupType = "pre" | "uat" | "lan" | "wan"
+export type PreGroupType = "pre" | "uat" | "lan" | "spnk" | "wan"
 
 /**
  * Extract pre-group (environment/zone) from group name.
  * Pattern: "ha-pre-*" → "pre"
  * Pattern: "ha-uat-*" → "uat"
  * Pattern: "ha-lan*" → "lan"
+ * Pattern: "spnk-*" → "spnk"
  * Pattern: "ha-*" (others) → "wan"
  */
 export function extractPreGroup(groupName: string): PreGroupType {
 	if (groupName.startsWith("ha-pre-") || groupName === "ha-pre") return "pre"
 	if (groupName.startsWith("ha-uat-") || groupName === "ha-uat") return "uat"
 	if (groupName.startsWith("ha-lan")) return "lan"
+	if (groupName.startsWith("spnk")) return "spnk"
 	return "wan"
 }
 
@@ -27,6 +29,7 @@ export function groupByPreGroup(groups: Map<string, unknown>): Map<PreGroupType,
 		["pre", []],
 		["uat", []],
 		["lan", []],
+		["spnk", []],
 		["wan", []],
 	])
 
@@ -47,14 +50,16 @@ export function groupByPreGroup(groups: Map<string, unknown>): Map<PreGroupType,
  * Extract group name from hostname.
  * Pattern: "ha-xxx-1", "ha-xxx-2" → "ha-xxx"
  * Pattern: "ha-web-api-1" → "ha-web-api"
+ * Pattern: "spnk-ha-lic-1-a", "spnk-ha-lic-2-b" → "spnk-ha-lic"
  *
- * @returns group name or null if doesn't match ha-* pattern
+ * @returns group name or null if doesn't match ha-* / spnk-* pattern
  */
 export function extractGroupName(hostname: string): string | null {
-	if (!hostname.startsWith("ha-")) return null
+	if (!hostname.startsWith("ha-") && !hostname.startsWith("spnk-")) return null
 
-	// Remove trailing number suffix (e.g., -1, -2, -10)
-	const match = hostname.match(/^(ha-.+?)-(\d+)$/)
+	// Remove trailing number suffix plus an optional rack/AZ letter
+	// (e.g. "-1", "-2", "-10", or "-1-a", "-10-c")
+	const match = hostname.match(/^(.+?)-(\d+)(?:-[a-z]+)?$/i)
 	if (match) {
 		return match[1]
 	}
@@ -64,10 +69,10 @@ export function extractGroupName(hostname: string): string | null {
 }
 
 /**
- * Filter systems to only those matching ha-* pattern
+ * Filter systems to only those matching ha-* or spnk-* pattern
  */
 export function filterHAProxySystems(systems: SystemRecord[]): SystemRecord[] {
-	return systems.filter((s) => s.name.startsWith("ha-"))
+	return systems.filter((s) => s.name.startsWith("ha-") || s.name.startsWith("spnk-"))
 }
 
 /**

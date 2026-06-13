@@ -107,21 +107,25 @@ GROUPS_SQL="VALUES
   (14, 'ha-candy',            'ha-candy%'),
   (15, 'ha-common',           'ha-common%'),
   (16, 'ha-3p',               'ha-3p%'),
-  (17, 'proxy-sw-jp',         'proxy-sw-jp%'),
-  (18, 'proxy-sw-kr',         'proxy-sw-kr%'),
-  (19, 'proxy-sw-th',         'proxy-sw-th%')"
+  (17, 'swsqd-jp',            'swsqd-jp%'),
+  (18, 'swsqd-kr',            'swsqd-kr%'),
+  (19, 'swsqd-th',            'swsqd-th%'),
+  (20, 'spnk-ha-lic',         'spnk-ha-lic%'),
+  (21, 'spnk-ha-credit',      'spnk-ha-credit%'),
+  (22, 'spnk-ha-dapi',        'spnk-ha-dapi%'),
+  (23, 'spnk-ha-common',      'spnk-ha-common%')"
 
 case "$FORMAT" in box) FLAG="-box";; csv) FLAG="-csv";; json) FLAG="-json";; *) echo "$(basename "$0"): FORMAT must be box|csv|json (got '$FORMAT')" >&2; exit 1;; esac
 
 # Membership CTE differs by mode; everything after it is shared.
 #   sheet -> LEFT JOIN the fixed GROUPS table (keeps empty rows), ord = seq
-#   auto  -> label = regexp_replace(host,'-[0-9]+$',''), every host, ord = NULL (order by label)
+#   auto  -> label = host minus trailing -N (and optional -<letter>, e.g. spnk-ha-lic-1-a -> spnk-ha-lic), every host, ord = NULL (order by label)
 if [[ "$GROUP_MODE" == "auto" ]]; then
   MEMBER_CTE="
 w AS (SELECT host, vcpu, cpu, steal, mem_used_gb, mem_total_gb, ts FROM metrics WHERE ${WINDOW_SQL}),
 member AS (
   SELECT CAST(NULL AS INTEGER) AS ord,
-         regexp_replace(host,'-[0-9]+\$','') AS label,
+         regexp_replace(host,'-[0-9]+(-[a-z]+)?\$','') AS label,
          host, vcpu, cpu, steal, mem_used_gb, mem_total_gb, ts
   FROM w
 )"
@@ -140,7 +144,7 @@ fi
 if [[ "$SORT" == "seq" && "$GROUP_MODE" != "auto" ]]; then
   ORDER_SQL="gf.ord"
 else
-  ORDER_SQL="regexp_replace(gf.label,'[0-9]+\$',''), TRY_CAST(regexp_extract(gf.label,'([0-9]+)\$',1) AS INTEGER) NULLS FIRST, gf.label"
+  ORDER_SQL="regexp_replace(gf.label,'[0-9]+(-[a-z]+)?\$',''), TRY_CAST(regexp_extract(gf.label,'([0-9]+)(-[a-z]+)?\$',1) AS INTEGER) NULLS FIRST, gf.label"
 fi
 
 # Column list differs by VIEW.
@@ -252,7 +256,7 @@ if [[ -f "$HAPROXY_DUCK_DB" ]]; then
   [[ "$FORMAT" == "box" ]] && echo "fe_* frontend requests by group — ${WINDOW_LABEL}  throughput=out Mbps  db=${HAPROXY_DUCK_DB}"
   duckdb -readonly "$FLAG" "$HAPROXY_DUCK_DB" "
   WITH w AS (
-    SELECT regexp_replace(host,'-[0-9]+\$','') AS grp, host, proxy, ts, req_rate, req_tot, bout_rate
+    SELECT regexp_replace(host,'-[0-9]+(-[a-z]+)?\$','') AS grp, host, proxy, ts, req_rate, req_tot, bout_rate
     FROM haproxy_proxies
     WHERE type='FRONTEND' AND starts_with(proxy,'fe_') AND ${WINDOW_SQL}${EXCL_HOST_SQL}
   ),
@@ -283,13 +287,13 @@ if [[ -f "$HAPROXY_DUCK_DB" ]]; then
   )
   SELECT t.grp AS \"group\", t.nodes, t.fe, t.total_req, a.req_avg, a.req_peak, p.max_req_at, a.out_mbps_max
   FROM tot t JOIN agg a USING (grp) JOIN peak_at p USING (grp)
-  ORDER BY regexp_replace(t.grp,'[0-9]+\$',''), TRY_CAST(regexp_extract(t.grp,'([0-9]+)\$',1) AS INTEGER) NULLS FIRST, t.grp;
+  ORDER BY regexp_replace(t.grp,'[0-9]+(-[a-z]+)?\$',''), TRY_CAST(regexp_extract(t.grp,'([0-9]+)(-[a-z]+)?\$',1) AS INTEGER) NULLS FIRST, t.grp;
   "
   [[ "$FORMAT" == "box" ]] && echo || true
 fi
 
 # ---- conntrack table utilization per GROUP (from the conntrack DB) ----
-# Separate DB (conntrack.duckdb); shown only if present. group = host minus trailing -N.
+# Separate DB (conntrack.duckdb); shown only if present. group = host minus trailing -N (and optional -<letter>).
 # util = 100*conns/conns_max (table fill); drops = sum of per-host pkt_drop deltas over the window.
 CONNTRACK_DUCK_DB="${CONNTRACK_DUCK_DB:-./conntrack.duckdb}"
 if [[ -f "$CONNTRACK_DUCK_DB" ]]; then
@@ -307,7 +311,7 @@ if [[ -f "$CONNTRACK_DUCK_DB" ]]; then
   [[ "$FORMAT" == "box" ]] && echo "conntrack table util by group — ${WINDOW_LABEL}  util=100*conns/max  db=${CONNTRACK_DUCK_DB}"
   duckdb -readonly "$FLAG" "$CONNTRACK_DUCK_DB" "
   WITH w AS (
-    SELECT regexp_replace(host,'-[0-9]+\$','') AS grp, host, ts, conns, conns_max, pkt_drop
+    SELECT regexp_replace(host,'-[0-9]+(-[a-z]+)?\$','') AS grp, host, ts, conns, conns_max, pkt_drop
     FROM conntrack
     WHERE ${WINDOW_SQL}${EXCL_HOST_SQL}
   ),
@@ -328,7 +332,7 @@ if [[ -f "$CONNTRACK_DUCK_DB" ]]; then
   )
   SELECT g.grp AS \"group\", d.nodes, g.conns_max, g.util_avg, g.util_p95, g.util_max, g.util_max_at, d.drops
   FROM g JOIN d USING (grp)
-  ORDER BY regexp_replace(g.grp,'[0-9]+\$',''), TRY_CAST(regexp_extract(g.grp,'([0-9]+)\$',1) AS INTEGER) NULLS FIRST, g.grp;
+  ORDER BY regexp_replace(g.grp,'[0-9]+(-[a-z]+)?\$',''), TRY_CAST(regexp_extract(g.grp,'([0-9]+)(-[a-z]+)?\$',1) AS INTEGER) NULLS FIRST, g.grp;
   "
   [[ "$FORMAT" == "box" ]] && echo || true
 fi
