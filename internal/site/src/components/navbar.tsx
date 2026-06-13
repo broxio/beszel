@@ -53,7 +53,7 @@ export default function Navbar() {
 	const systemTranslation = t`System`
 
 	return (
-		<div className="flex items-center h-14 md:h-16 bg-card px-4 pe-3 sm:px-6 border border-border/60 bt-0 rounded-md my-4">
+		<div className="flex items-center h-16 md:h-20 bg-card px-4 pe-3 sm:px-6 border border-border/60 bt-0 rounded-md my-4">
 			<Suspense>
 				<CommandPalette open={commandPaletteOpen} setOpen={setCommandPaletteOpen} />
 			</Suspense>
@@ -65,7 +65,7 @@ export default function Navbar() {
 				className="p-2 ps-0 me-3 group"
 				onMouseEnter={runOnce(() => import("@/components/routes/home"))}
 			>
-				<Logo className="h-[1.2rem] md:h-5 fill-foreground" />
+				<Logo className="h-12 md:h-14" />
 			</Link>
 			<Button
 				variant="outline"

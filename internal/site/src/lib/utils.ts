@@ -7,6 +7,7 @@ import { twMerge } from "tailwind-merge"
 import { toast } from "@/components/ui/use-toast"
 import type { ChartTimeData, FingerprintRecord, SemVer, SystemRecord } from "@/types"
 import { HourFormat, Unit } from "./enums"
+import { duckFaviconDataUri } from "./favicon-duck"
 import { $copyContent, $userSettings } from "./stores"
 
 export function cn(...inputs: ClassValue[]) {
@@ -103,19 +104,14 @@ export const updateFavicon = (() => {
 		}
 		prevDownCount = downCount
 		const svg = `
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 70">
-  <defs>
-    <linearGradient id="gradient" x1="0%" y1="20%" x2="100%" y2="120%">
-      <stop offset="0%" style="stop-color:#747bff"/>
-      <stop offset="100%" style="stop-color:#24eb5c"/>
-    </linearGradient>
-  </defs>
-  <path fill="url(#gradient)" d="M35 70H0V0h35q4.4 0 8.2 1.7a21.4 21.4 0 0 1 6.6 4.5q2.9 2.8 4.5 6.6Q56 16.7 56 21a15.4 15.4 0 0 1-.3 3.2 17.6 17.6 0 0 1-.2.8 19.4 19.4 0 0 1-1.5 4 17 17 0 0 1-2.4 3.4 13.5 13.5 0 0 1-2.6 2.3 12.5 12.5 0 0 1-.4.3q1.7 1 3 2.5Q53 39.1 54 41a18.3 18.3 0 0 1 1.5 4 17.4 17.4 0 0 1 .5 3 15.3 15.3 0 0 1 0 1q0 4.4-1.7 8.2a21.4 21.4 0 0 1-4.5 6.6q-2.8 2.9-6.6 4.6Q39.4 70 35 70ZM14 14v14h21a7 7 0 0 0 2.3-.3 6.6 6.6 0 0 0 .4-.2Q39 27 40 26a6.9 6.9 0 0 0 1.5-2.2q.5-1.3.5-2.8a7 7 0 0 0-.4-2.3 6.6 6.6 0 0 0-.1-.4Q40.9 17 40 16a7 7 0 0 0-2.3-1.4 6.9 6.9 0 0 0-2.5-.6 7.9 7.9 0 0 0-.2 0H14Zm0 28v14h21a7 7 0 0 0 2.3-.4 6.6 6.6 0 0 0 .4-.1Q39 54.9 40 54a7 7 0 0 0 1.5-2.2 6.9 6.9 0 0 0 .5-2.6 7.9 7.9 0 0 0 0-.2 7 7 0 0 0-.4-2.3 6.6 6.6 0 0 0-.1-.4Q40.9 45 40 44a7 7 0 0 0-2.3-1.5 6.9 6.9 0 0 0-2.5-.6 7.9 7.9 0 0 0-.2 0H14Z"/>
-  ${downCount > 0 &&
-			`
-		<circle cx="40" cy="50" r="22" fill="#f00"/>
-  	<text x="40" y="60" font-size="34" text-anchor="middle" fill="#fff" font-family="Arial" font-weight="bold">${downCount}</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <image width="128" height="128" href="${duckFaviconDataUri}"/>
+  ${downCount > 0
+				? `
+		<circle cx="96" cy="96" r="30" fill="#f00"/>
+  	<text x="96" y="110" font-size="44" text-anchor="middle" fill="#fff" font-family="Arial" font-weight="bold">${downCount}</text>
 	`
+				: ""
 			}
 </svg>
 	`
