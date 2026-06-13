@@ -50,6 +50,7 @@ const PRE_GROUP_CONFIG: Record<PreGroupType, { label: string; color: string }> =
 	pre: { label: "PRE", color: "bg-orange-500 hover:bg-orange-600" },
 	uat: { label: "UAT", color: "bg-purple-500 hover:bg-purple-600" },
 	lan: { label: "LAN", color: "bg-blue-500 hover:bg-blue-600" },
+	spnk: { label: "SPNK", color: "bg-cyan-500 hover:bg-cyan-600" },
 	wan: { label: "WAN", color: "bg-green-500 hover:bg-green-600" },
 }
 
@@ -364,7 +365,7 @@ export default memo(function HAProxyAggregatePage() {
 							)}
 						</div>
 						<div className="flex flex-wrap gap-2">
-							{(["pre", "uat", "lan", "wan"] as PreGroupType[]).map((preGroupType) => {
+							{(["pre", "uat", "lan", "spnk", "wan"] as PreGroupType[]).map((preGroupType) => {
 								const groupList = preGroups.get(preGroupType) || []
 								if (groupList.length === 0) return null
 

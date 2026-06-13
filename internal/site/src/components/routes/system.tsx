@@ -14,6 +14,7 @@ import HAProxyActivity from "@/components/charts/haproxy-activity"
 import HAProxyServers from "@/components/charts/haproxy-servers"
 import IPVSPanel from "@/components/charts/ipvs-panel"
 import VectorPanel from "@/components/charts/vector-panel"
+import ConntrackChart from "@/components/charts/conntrack-chart"
 import { ChartCard } from "./system/chart-card"
 import InfoBar from "./system/info-bar"
 import { useSystemData } from "./system/use-system-data"
@@ -80,6 +81,7 @@ export default memo(function SystemDetail({ id }: { id: string }) {
 	const hasIPVSData = !!ipvsData
 	const vectorData = systemStats.at(-1)?.stats?.vec
 	const hasVectorData = !!vectorData
+	const hasConntrackData = !!systemStats.at(-1)?.stats?.ct
 
 	// keep tabsRef in sync for keyboard navigation
 	const tabs = ["core", "disk"]
@@ -146,6 +148,27 @@ export default memo(function SystemDetail({ id }: { id: string }) {
 					<BatteryChart {...coreProps} />
 
 					{hasGpuPowerData && <GpuPowerChart chartData={chartData} grid={grid} dataEmpty={dataEmpty} />}
+
+					{hasConntrackData && (
+						<>
+							<ChartCard
+								empty={dataEmpty}
+								grid={grid}
+								title={t`Conntrack Utilization`}
+								description={t`Connection-tracking table usage (% of nf_conntrack_max)`}
+							>
+								<ConntrackChart chartData={chartData} chartType="utilization" />
+							</ChartCard>
+							<ChartCard
+								empty={dataEmpty}
+								grid={grid}
+								title={t`Conntrack Connections`}
+								description={t`Tracked connections (nf_conntrack_count)`}
+							>
+								<ConntrackChart chartData={chartData} chartType="connections" />
+							</ChartCard>
+						</>
+					)}
 				</div>
 
 				{hasGpuData && lastGpus && (
@@ -242,10 +265,7 @@ export default memo(function SystemDetail({ id }: { id: string }) {
 									<CardTitle className="text-xl sm:text-2xl">{t`HAProxy Memory Pools`}</CardTitle>
 									<CardDescription>{t`Memory pool allocation and usage statistics`}</CardDescription>
 								</CardHeader>
-								<HAProxyPools
-									pools={systemStats.at(-1)?.stats?.hpp ?? []}
-									summary={systemStats.at(-1)?.stats?.hpps}
-								/>
+								<HAProxyPools pools={systemStats.at(-1)?.stats?.hpp ?? []} summary={systemStats.at(-1)?.stats?.hpps} />
 							</Card>
 						)}
 

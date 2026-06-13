@@ -62,6 +62,95 @@ All fetch operations use retry logic: `fetchInfo`, `fetchStats`, `fetchPools`, `
 5. Accumulates traffic history for sparklines
 6. Displays combined data based on zone/group selection
 
+### High-Resolution HAProxy Recording (hub → DuckDB)
+
+**Problem:** The per-second HAProxy data on `/system/<id>` is *ephemeral* — `system_realtime.go`'s
+1s worker only runs while a browser is subscribed and broadcasts without persisting. The durable
+path (`system.go` → `createRecords` → `system_stats`) always runs but only at the ~60s system poll
+`interval` and lands in PocketBase SQLite. So there's no high-resolution HAProxy history for
+troubleshooting.
+
+**Solution:** an always-on, UI-independent recorder in the hub that samples HAProxy from every
+reporting agent and appends an NDJSON spool, loaded into a *dedicated* DuckDB by a script.
+
+#### Why NDJSON spool + loader (not embedded cgo DuckDB)
+- Keeps the hub **pure-Go** (go-duckdb is cgo → breaks the multi-arch build; see Build Notes ARM cgo pain).
+- DuckDB is single-writer-per-process; a spool keeps the hub out of the DB lock so `duck-report-haproxy.sh` reads never contend.
+- Append-only NDJSON is crash-safe and trivial; reuses the existing dockerized duckdb `read_json_auto` + `ON CONFLICT DO NOTHING` ingest pattern.
+
+#### Concurrency-safety key fact
+A naive loop calling `sys.fetchDataFromAgent()` would **race** the realtime worker — that returns the
+*shared* `sys.data` buffer (`system.go:504/565`). The recorder instead calls `sys.fetchForRecorder()`,
+which issues its **own** `GetData` into a **private** `system.CombinedData`, supporting **both
+transports**:
+- **WebSocket**: `transport.NewWebSocketTransport(sys.WsConn).Request(...)`. The WS connection
+  multiplexes concurrent in-flight requests by id (`internal/hub/ws/request_manager.go`:
+  `nextID atomic.Uint32` + mutexed pending map), so this is race-free.
+- **SSH**: opens a session on the existing `sys.client` via `createSessionWithTimeout` and decodes the
+  `GetData` response into the private buffer. It stays **passive** — never dials or closes the shared SSH
+  connection (so it can't disrupt the updater). SSH multiplexes channels, and API handlers already open
+  concurrent sessions on `sys.client`, so this matches the codebase's existing pattern.
+
+Agent `CacheTimeMs` means an overlapping recorder+realtime fetch just shares the cached snapshot — no
+extra agent load. **Note:** this WS-or-SSH support is why the feature works regardless of how agents
+connect to the hub (early mp.9 was WS-only and silently recorded nothing for SSH-connected fleets).
+
+#### What's captured (per-proxy rows, ALL types — status/sessions/traffic/response)
+- `haproxy_proxies` (one row per FRONTEND/BACKEND/SERVER per sample): `status`, sessions
+  (`scur`/`smax`/`stot`), traffic (`bin`/`bout` + `*_rate`), HTTP responses (`hrsp_1xx..5xx` + rates),
+  `rtime` (avg response time ms), health-check fails, `act_srv`/`bck_srv`. PK `(system, ts, proxy, type)`.
+- `haproxy_info` (per-host process info): version, conn/sess rates, curr/cum conns, `idle_pct`,
+  `run_queue`, tasks, pool MB, SSL. PK `(system, ts)`.
+- **Slow-backend caveat:** the agent currently parses only `rtime` (col 60). HAProxy also exposes
+  `qtime`/`ctime`/`ttime` (cols 58/59/61) per backend/server — adding those (agent-side change) gives the
+  full queue/connect/response/total latency breakdown for pinpointing *which* backend is slow.
+
+#### Config (hub env — opt-in, unset ⇒ disabled, zero overhead)
+- `HAPROXY_DUCK_SPOOL` — spool dir; **enables** the recorder. `HAPROXY_RECORD_INTERVAL` (default `2s`).
+  `HAPROXY_PROBE_INTERVAL` (default `60s`, rescan for new HAProxy hosts).
+- `HAPROXY_RECORD_TYPES` — comma list of row types to record, default **`FRONTEND,BACKEND`**. **SERVER rows
+  are excluded by default** because they're the volume bomb: HAProxy emits one row *per backend server per
+  sample*, so a fleet with many servers can write multiple GB/hour. Set `FRONTEND,BACKEND,SERVER` only if
+  you need per-server drill-down. The two volume knobs that matter: this type filter and `HAPROXY_RECORD_INTERVAL`.
+- `HAPROXY_SPOOL_ROTATE` (default `60s`) — how often the hub **seals** the live spool file (see spool model).
+
+#### Spool model (gap-free consume-and-delete, mp.13+)
+The hub writes a single `<prefix>.live.ndjson` and every `HAPROXY_SPOOL_ROTATE` **seals** it: flush, close,
+atomically rename to a complete `<prefix>-<UTCstamp>-<seq>.ndjson`. The hub NEVER writes a sealed file again.
+The loader ingests **sealed files only** (the live file is excluded by the `-*` glob) and **deletes them after
+a successful DB write** — gap-free, because no row is ever appended to a file the loader is consuming. At any
+moment the only un-ingested data is the live file (≤ one rotate interval). This replaced the earlier
+daily-rotation + dedup-archive model, which let a single day's file grow unbounded and hoarded raw NDJSON.
+
+#### File Structure
+- `internal/hub/systems/haproxy_recorder.go` — recorder loop, private-buffer fetch, seal-by-age spool writer
+- `internal/hub/systems/system_manager.go` — `go sm.startHAProxyRecorder()` in `Initialize()` (self-gates on env)
+- `scripts/duck-haproxy-ingest.sh` — ingest **sealed** spool files → dedicated `haproxy.duckdb`, then delete them (ON CONFLICT DO NOTHING for crash-safety); optional `HAPROXY_RETENTION_DAYS` DB row retention
+- `scripts/duck-report-haproxy.sh` — troubleshooting report (per-frontend req/5xx/sessions, slowest backends by `rtime`, backend flaps, per-host idle%/conn-rate); reuses `duck-report-capacity.sh`'s local-time `[HOURS]` / `'FROM' 'TO'` range mode
+- `scripts/docker/` — `beszel-duck` image + services in a profiled `docker-compose.yml`
+  (profiles: `capacity` = duck-ingest; `haproxy` = haproxy-duck; `ui` = duck-ui + ui-proxy).
+  Entrypoints in `docker/entrypoints/` (`capacity.sh`, `haproxy.sh`; image keeps back-compat symlinks to the
+  old `*-entrypoint.sh` names). `docker/config/nginx-ui.conf` is the proxy config.
+- `entrypoints/haproxy.sh` (`haproxy-duck` service) — loader loop (no hub creds; runs as root to read the hub's
+  root-owned spool + delete sealed files). Also **exports a rolling Parquet window** (`HAPROXY_PARQUET_DIR`,
+  last `HAPROXY_PARQUET_DAYS` days, every `HAPROXY_EXPORT_EVERY` cycles) for the web UI.
+- **Web UI = Duck-UI (browser DuckDB-WASM), not the official DuckDB UI.** The official UI was a dead end here:
+  the image's DuckDB 1.5.3 **musl** CLI has **no `ui`/`httpserver` extensions published** (404), and the UI needs
+  runtime egress to ui.duckdb.org — but the prod container is **air-gapped**. Duck-UI is self-contained/offline,
+  binds 0.0.0.0, fits behind nginx. Because it runs DuckDB-WASM *in the browser* it can't open the live
+  v1.5.3 `.duckdb` (storage-format + size), so the loader exports **version-stable Parquet** that Duck-UI reads
+  over HTTP via `read_parquet()` (range requests + predicate pushdown). `duck-ui` + `ui-proxy` (nginx basic-auth,
+  serves Duck-UI at `/` and the Parquet at `/data/`) are the `ui` profile; front with TLS.
+
+#### Data Flow
+1. Hub recorder ticks every `HAPROXY_RECORD_INTERVAL`; probes all systems every `HAPROXY_PROBE_INTERVAL` to maintain the HAProxy-host membership set
+2. Per tick: bounded-concurrency private-buffer `GetData` per HAProxy host; appends NDJSON rows to the live spool file, sealed every `HAPROXY_SPOOL_ROTATE`
+3. `duck-haproxy-ingest.sh` (timer, ~5min) ingests sealed files into `haproxy.duckdb` then deletes them; optional `HAPROXY_RETENTION_DAYS` prunes the DB
+4. `duck-report-haproxy.sh` / ad-hoc SQL reads the dedicated DB (traffic queries FRONTEND-only; backend `rtime` answers which-backend-is-slow)
+
+**Deploy note:** hub-only change (agents unchanged). The spool dir must be reachable by the loader —
+share a volume between the hub container and the duckdb container, or run the loader on the hub host.
+
 ## Build Notes
 
 ### Docker Multi-Platform Build
@@ -239,6 +328,16 @@ curl -s "https://hub.example/api/beszel/ipvs/stats?ids=<system_id>" -H "Authoriz
 | `v0.18.7-mp.6` | Vector collector rewritten on grpc-go using Vector's `observability.proto`. Env var rename `VECTOR_API_URL` → `VECTOR_API_ADDR` (URL form still accepted for back-compat) |
 | `v0.18.7-mp.7` | Client-only fix for `/vector` rate display flapping to 0: skip rate recomputation when polled counters are unchanged from prev sample. 60s polling commit was tried and reverted (5s polling kept). No data-path or hub-endpoint changes. (Second mp.7 attempt — first one that added a hub `Created` field broke Vector display and was reverted.) |
 | `v0.18.7-mp.8` | `/vector` aggregate page now drives live updates from the `rt_metrics` realtime subscription (reuses `system_realtime.go`'s 1s-tick worker — same machinery the `/system/<id>` page uses). HTTP polling retained at 60s as initial-discovery + safety-net fallback. Hub-only deploy; agent unchanged. Set `VECTOR_UPDATE_INTERVAL=1s` on the agent for true sub-second freshness (default 5s cache otherwise). |
+| `v0.18.7-mp.9` | High-resolution HAProxy recording: hub-side always-on collector (`internal/hub/systems/haproxy_recorder.go`, opt-in via `HAPROXY_DUCK_SPOOL`) samples HAProxy from every reporting agent into a daily NDJSON spool; `scripts/duck-haproxy-ingest.sh` loads it into a dedicated `haproxy.duckdb`; `scripts/duck-report-haproxy.sh` reports (incl. "slowest backends/servers" by `rtime`). Pure-Go, no cgo. **Hub-only deploy; agent unchanged.** Disabled by default. See "High-Resolution HAProxy Recording" section. (`qtime`/`ctime`/`ttime` full-latency breakdown deferred — needs an agent change.) **Bug: WS-only — recorded nothing for SSH-connected agents; fixed in mp.10.** |
+| `v0.18.7-mp.10` | HAProxy recorder now fetches over **SSH as well as WebSocket** (`sys.fetchForRecorder` adds a passive SSH path on the existing `sys.client`). mp.9 only handled WS, so fleets where agents connect to the hub via SSH (the common case here) got an empty spool. Hub-only; agent unchanged. |
+| `v0.18.7-mp.11` | HAProxy recorder **stderr diagnostics** (visible in `docker logs`, since PB app logs go to the DB Logs table): `[haproxy-recorder] enabled ...` on start, a per-probe summary (`systems/eligible/ok/failed/haproxy_members/rows` + a sample error), and a sample-sweep line only on stalls/failures. Added to debug an empty spool. No behavior change. |
+| `v0.18.7-mp.12` | **Volume control: `HAPROXY_RECORD_TYPES` (default `FRONTEND,BACKEND`).** mp.10/11 recorded SERVER rows too — on a fleet with many backend servers that produced multi-GB/hour spool (a real 3.4 GB file in minutes). SERVER rows now excluded by default; opt back in with `FRONTEND,BACKEND,SERVER`. Backend-level `rtime` still answers "which backend is slow." Hub-only. |
+| `v0.18.7-mp.13` | **Gap-free consume-and-delete spool.** Hub now writes a single `<prefix>.live.ndjson` and seals it every `HAPROXY_SPOOL_ROTATE` (default 60s) into `<prefix>-<stamp>-<seq>.ndjson`; the loader ingests sealed files then **deletes** them, so the spool no longer grows all day or hoards archived NDJSON. The previous daily-rotation + dedup-archive model is gone. Loader/image (`duck-haproxy-ingest.sh`) updated to match. Hub + duck-image rebuild. |
+| `v0.18.7-mp.14` | **Conntrack monitoring (new module).** Agent collects netfilter conntrack table stats from `/proc` (auto-enabled wherever `nf_conntrack` is loaded; no `CAP_NET_ADMIN`, no full-table scan) → `ConntrackStats` (CBOR key 100). Hub `conntrack_recorder.go` (opt-in `CONNTRACK_DUCK_SPOOL`, mirrors the HAProxy recorder) samples all hosts into a sealed NDJSON spool; `scripts/duck-conntrack-ingest.sh` loads it into a dedicated `conntrack.duckdb`; `scripts/duck-report-conntrack.sh` reports per-host table util% + drop deltas. New `conntrack` docker profile. **Agent + hub + duck-image rebuild** (agent change is additive — new files + one Stats field). Branch `feature/conntrack-recorder`. |
+| `v0.18.7-mp.15` | **Conntrack live charts on `/system/<id>`.** Two realtime time-series cards (Conntrack Utilization = 100×conns/max, Conntrack Connections) in the core grid, gated on `stats.ct` presence (`internal/site/src/components/charts/conntrack-chart.tsx` + `types.d.ts` `ConntrackStats` + `system.tsx` wiring). Fed by the same realtime stream as CPU/mem (no new hub data path — `ct` already rides the stats broadcast from mp.14). **Hub/UI-only rebuild; agent unchanged (no redeploy).** |
+| `v0.18.7-mp.16` | **Conntrack chart polish.** Fixed grey fill (the `hsl(var(--chart-1))` double-wrap → invalid CSS; now explicit amber `hsl(35 92% 50%)` via the `CONNTRACK_COLOR` const). Utilization card pinned to a fixed **0–100%** Y-axis so fill level reads absolutely; Connections stays auto-scaled. Hub/UI-only; agent unchanged. |
+| `v0.18.7-mp.18` | **Conntrack by-group section in `duck-report-summary.sh`.** Appends a per-host-group conntrack table-utilization table (nodes, conns_max, util avg/p95/max + peak time, drop deltas) when `CONNTRACK_DUCK_DB` is present — same gated pattern as the fe_* section. `duck-ingest` compose env now sets `HAPROXY_DUCK_DB`/`CONNTRACK_DUCK_DB=/data/...` so both optional sections work from that container. Duck-image/scripts only. |
+| `v0.18.7-mp.17` | **Cross-correlation report (`scripts/duck-report-cross.sh`).** `ATTACH`es the three DuckDB stores (conntrack required; haproxy + capacity optional, NULL if absent) read-only and joins per-minute on `(host, minute)`: per-host summary + a "hot buckets" timeline of the minutes where conntrack `util ≥ UTIL_THRESHOLD` (default 80%) alongside the concurrent HAProxy 5xx / sessions and CPU steal — "when the table filled, what else broke." Reuses the range mode + `EXCLUDE_HOST`. **Duck-image/scripts only — no hub/agent functional change** (the version bump is a release marker; rebuild the duck image to get the script). |
 
 ## Vector Aggregator Monitoring
 

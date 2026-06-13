@@ -17,19 +17,28 @@
 # Env (optional):
 #   DUCK_DB             DuckDB file (default: ./beszel.duckdb)
 #   LOOKBACK_MIN        Minutes of 1m history to fetch each run (default: 70; keep > cron gap)
+#   RETENTION_DAYS      If set, age out metrics rows older than N days after each ingest
+#                       (keeps the hot DuckDB bounded). Unset (default) = keep forever.
+#   ARCHIVE_DIR         If set together with RETENTION_DAYS, each fully-expired UTC day is
+#                       first written to <ARCHIVE_DIR>/metrics-YYYY-MM-DD.parquet (zstd) and
+#                       only THEN deleted from the live DB — a cold tier, still queryable via
+#                       read_parquet('<ARCHIVE_DIR>/metrics-*.parquet'). Unset = hard delete.
 #
 # Cron (every 15 min):
 #   */15 * * * * BESZEL_URL=https://hub BESZEL_TOKEN=xxx DUCK_DB=/var/lib/beszel/beszel.duckdb \
 #                /path/duck-ingest.sh '*' >> /var/log/beszel-duck.log 2>&1
 #
-# Then query with duck-report.sh, or any DuckDB client:
+# Then query with duck-report-capacity.sh, or any DuckDB client:
 #   duckdb /var/lib/beszel/beszel.duckdb "SELECT host, quantile_cont(cpu,0.95) FROM metrics GROUP BY host"
 
 set -euo pipefail
 
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/duck-lib.sh"
+
 GLOB="${1:-*}"
 DUCK_DB="${DUCK_DB:-./beszel.duckdb}"
 LOOKBACK_MIN="${LOOKBACK_MIN:-70}"
+RETENTION_DAYS="${RETENTION_DAYS:-}"
 
 : "${BESZEL_URL:?set BESZEL_URL (e.g. https://hub.example.com)}"
 if [[ -z "${BESZEL_TOKEN:-}" ]]; then
@@ -40,6 +49,9 @@ for bin in curl jq duckdb; do
   command -v "$bin" >/dev/null || { echo "duck-ingest.sh: $bin not found in PATH" >&2; exit 1; }
 done
 case "$LOOKBACK_MIN" in ''|*[!0-9]*) echo "duck-ingest.sh: LOOKBACK_MIN must be an integer" >&2; exit 1 ;; esac
+if [[ -n "$RETENTION_DAYS" ]]; then
+  case "$RETENTION_DAYS" in ''|*[!0-9]*) echo "duck-ingest.sh: RETENTION_DAYS must be an integer (days)" >&2; exit 1 ;; esac
+fi
 
 BASE="${BESZEL_URL%/}"
 AUTH_COLLECTION="${BESZEL_AUTH_COLLECTION:-users}"   # 'users' for a regular account, '_superusers' for an admin
@@ -110,7 +122,10 @@ jq -rs --argjson m "$SYS_MAP" '
       num(.stats.cpu), num(.stats.cpub[3]?),
       num(.stats.mu), num(.stats.m), num(.stats.mp), num(.stats.su),
       ([num(.stats.b[0]?), num(.stats.bm[0]?)] | max),
-      ([num(.stats.b[1]?), num(.stats.bm[1]?)] | max)
+      ([num(.stats.b[1]?), num(.stats.bm[1]?)] | max),
+      num(.stats.dp), num(.stats.du), num(.stats.d),
+      num(.stats.dr), num(.stats.dw), num(.stats.dios[2]?),
+      num(.stats.la[0]?), num(.stats.la[1]?), num(.stats.la[2]?)
     ] | @csv
 ' "$TMP_DIR/all.json" > "$TMP_DIR/rows.csv"
 
@@ -132,15 +147,38 @@ CREATE TABLE IF NOT EXISTS metrics (
   swap_gb       DOUBLE,
   net_out_bps   UBIGINT,
   net_in_bps    UBIGINT,
+  disk_pct       DOUBLE,
+  disk_used_gb   DOUBLE,
+  disk_total_gb  DOUBLE,
+  disk_read_bps  DOUBLE,   -- NOTE: agent dr/dw are MB/s (readMbPerSecond), not bytes/s, despite the name
+  disk_write_bps DOUBLE,
+  io_util        DOUBLE,   -- dios[2]: disk IO utilization %, 0-100
+  load1          DOUBLE,
+  load5          DOUBLE,
+  load15         DOUBLE,
   PRIMARY KEY (host, ts)
 );
+
+-- Widen an already-deployed metrics table (no-op once the columns exist).
+ALTER TABLE metrics ADD COLUMN IF NOT EXISTS disk_pct       DOUBLE;
+ALTER TABLE metrics ADD COLUMN IF NOT EXISTS disk_used_gb   DOUBLE;
+ALTER TABLE metrics ADD COLUMN IF NOT EXISTS disk_total_gb  DOUBLE;
+ALTER TABLE metrics ADD COLUMN IF NOT EXISTS disk_read_bps  DOUBLE;
+ALTER TABLE metrics ADD COLUMN IF NOT EXISTS disk_write_bps DOUBLE;
+ALTER TABLE metrics ADD COLUMN IF NOT EXISTS io_util        DOUBLE;
+ALTER TABLE metrics ADD COLUMN IF NOT EXISTS load1          DOUBLE;
+ALTER TABLE metrics ADD COLUMN IF NOT EXISTS load5          DOUBLE;
+ALTER TABLE metrics ADD COLUMN IF NOT EXISTS load15         DOUBLE;
 
 CREATE TEMP TABLE _stg AS
   SELECT * FROM read_csv('${TMP_DIR}/rows.csv', header=false,
     columns={
       'ts':'TIMESTAMP','host':'VARCHAR','vcpu':'INTEGER','cpu':'DOUBLE','steal':'DOUBLE',
       'mem_used_gb':'DOUBLE','mem_total_gb':'DOUBLE','mem_pct':'DOUBLE','swap_gb':'DOUBLE',
-      'net_out_bps':'UBIGINT','net_in_bps':'UBIGINT'
+      'net_out_bps':'UBIGINT','net_in_bps':'UBIGINT',
+      'disk_pct':'DOUBLE','disk_used_gb':'DOUBLE','disk_total_gb':'DOUBLE',
+      'disk_read_bps':'DOUBLE','disk_write_bps':'DOUBLE','io_util':'DOUBLE',
+      'load1':'DOUBLE','load5':'DOUBLE','load15':'DOUBLE'
     });
 
 INSERT INTO metrics SELECT * FROM _stg ON CONFLICT DO NOTHING;
@@ -150,3 +188,8 @@ SELECT '$(date -u +%H:%M) fetched=${ROWCNT} rows; metrics now has ' || count(*) 
        strftime(min(ts), '%Y-%m-%d %H:%M') || ' .. ' || strftime(max(ts), '%Y-%m-%d %H:%M') || ' UTC' AS status
 FROM metrics;
 SQL
+
+# Cold-tier retention (shared helper): age `metrics` out of the hot DB after
+# RETENTION_DAYS, archiving each expiring day to ARCHIVE_DIR/metrics-*.parquet first.
+duck_archive_prune "$DUCK_DB" "${ARCHIVE_DIR:-}" "$RETENTION_DAYS" metrics
+duck_archive_sweep "${ARCHIVE_DIR:-}" "${ARCHIVE_RETENTION_DAYS:-}" metrics

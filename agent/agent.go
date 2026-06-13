@@ -51,6 +51,7 @@ type Agent struct {
 	haproxyManager            *HAProxyManager                                       // Manages HAProxy stats
 	ipvsManager               *IPVSManager                                          // Manages IPVS / LVS stats (Linux only)
 	vectorManager             *VectorManager                                        // Manages Vector aggregator stats (opt-in via VECTOR_API_URL)
+	conntrackManager          *ConntrackManager                                     // Manages netfilter conntrack table stats (Linux only, auto-enabled)
 }
 
 // NewAgent creates a new agent with the given data directory for persisting data.
@@ -164,6 +165,12 @@ func NewAgent(dataDir ...string) (agent *Agent, err error) {
 		slog.Debug("Vector", "err", err)
 	}
 
+	// initialize Conntrack manager (Linux-only; auto-enables where nf_conntrack is loaded)
+	agent.conntrackManager, err = NewConntrackManager()
+	if err != nil {
+		slog.Debug("Conntrack", "err", err)
+	}
+
 	// if debugging, print stats
 	if agent.debug {
 		slog.Debug("Stats", "data", agent.gatherStats(common.DataRequestOptions{CacheTimeMs: defaultDataCacheTimeMs, IncludeDetails: true}))
@@ -237,6 +244,13 @@ func (a *Agent) gatherStats(options common.DataRequestOptions) *system.CombinedD
 		if vectorStats := a.vectorManager.GetStats(); vectorStats != nil {
 			data.Stats.Vector = vectorStats
 			slog.Debug("Vector", "version", vectorStats.Version, "components", len(vectorStats.Components), "healthy", vectorStats.Healthy)
+		}
+	}
+
+	if a.conntrackManager != nil {
+		if ctStats := a.conntrackManager.GetStats(); ctStats != nil {
+			data.Stats.Conntrack = ctStats
+			slog.Debug("Conntrack", "count", ctStats.Count, "max", ctStats.Max, "drop", ctStats.Drop, "insert_failed", ctStats.InsertFailed)
 		}
 	}
 

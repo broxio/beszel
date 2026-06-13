@@ -1,52 +1,164 @@
-# Runs the DuckDB ingester alongside beszel-hub on the same docker host.
+# DuckDB sidecars for beszel, on the same docker host. Services grouped by compose
+# PROFILE so you run only what you need:
 #
-#   cd scripts/docker
-#   cp .env.example .env      # fill in BESZEL_* (use a dedicated read-only account)
-#   docker compose up -d --build
+#   docker compose --profile capacity  up -d             # capacity ingester (duck-ingest)
+#   docker compose --profile haproxy   up -d             # HAProxy spool loader (+ Parquet export)
+#   docker compose --profile conntrack up -d             # conntrack spool loader (CLI report only)
+#   docker compose --profile haproxy --profile ui up -d  # + Duck-UI web UI behind nginx basic-auth
+#   docker compose --profile api up -d                   # read-only report API at /api/ (ui-proxy + duck-api)
+#     curl -u user:pass https://<host>/api/v1/basics?hours=24&host=ha-*&view=group   # JSON for an AI agent
+#     spec at /api/openapi.json
 #
-# Run a report on demand:
-#   docker compose exec duck-ingest duck-report.sh 24 '*'
-#   docker compose exec duck-ingest duckdb -readonly /data/beszel.duckdb "SELECT count(*) FROM metrics"
+# Production: set DUCK_IMAGE=<registry>/beszel-duck:<tag> in .env, then
+#   docker compose --profile <p> pull && docker compose --profile <p> up -d
+# (the build: sections are ignored when the image is already present.)
 #
-# The DuckDB file lives in the named volume `beszel_duckdata` (survives restarts).
+# Reports on demand:
+#   docker compose exec duck-ingest    duck-report-capacity.sh 24 '*'
+#   docker compose exec duck-ingest    duck-report-basics.sh 24 '*'       # generic per-host basics (auto-joins /data/conntrack.duckdb)
+#   docker compose exec -e FORMAT=json duck-ingest duck-report-basics.sh 24 '*'   # machine-readable array for a webservice/AI agent
+#   docker compose exec duck-ingest    duck-usage.sh 24                            # rows + size per store over last 24h (all 3 DBs in /data)
+#   docker compose exec haproxy-duck   duck-report-haproxy.sh 1 'ha-*'
+#   docker compose exec conntrack-duck duck-report-conntrack.sh 6 'lvs-*'
+#   docker compose exec conntrack-duck duck-report-cross.sh 6 'lvs-*'   # conntrack <-> haproxy <-> cpu (needs all 3 DBs in /data)
 
 services:
+  # ---- capacity: siphon beszel 1m stats into DuckDB (needs hub URL + creds) ----
   duck-ingest:
-    # Local dev: `docker compose up -d --build` builds from ./.. (the scripts/ dir).
-    # Production: set DUCK_IMAGE=<registry>/beszel-duck:<tag> in .env, then
-    #   `docker compose pull && docker compose up -d`  (uses the registry image; the
-    #   build section is ignored because the image is already present locally).
+    profiles: ["capacity"]
     image: "${DUCK_IMAGE:-beszel-duck:latest}"
     build:
-      context: ..                 # scripts/  (so duck-*.sh are in the build context)
+      context: ..                 # scripts/ (so duck-*.sh are in the build context)
       dockerfile: docker/Dockerfile
     container_name: beszel-duck-ingest
     restart: unless-stopped
+    entrypoint: ["/usr/local/bin/capacity.sh"]
     environment:
-      # Point at the hub. If this container shares the hub's docker network, use the
-      # internal service name + port (no TLS hop), e.g. http://beszel:8090.
-      # Otherwise use the public URL.
       BESZEL_URL: "${BESZEL_URL:?}"
       BESZEL_EMAIL: "${BESZEL_EMAIL:?}"
       BESZEL_PASSWORD: "${BESZEL_PASSWORD:?}"
       GLOB: "${GLOB:-*}"
       INGEST_INTERVAL: "${INGEST_INTERVAL:-2700}"   # 45 min (loop mode)
-      INGEST_MODE: "${INGEST_MODE:-loop}"           # loop (internal timer) | cron (idle; host drives)
+      INGEST_MODE: "${INGEST_MODE:-loop}"
       LOOKBACK_MIN: "${LOOKBACK_MIN:-70}"
+      RETENTION_DAYS: "${RETENTION_DAYS:-45}"        # age metrics out of the hot DB after N days (empty = keep forever)
+      ARCHIVE_DIR: "${ARCHIVE_DIR:-/data/archive}"   # cold-tier expired days to zstd Parquet here (empty = hard delete)
       TZ_OFFSET: "${TZ_OFFSET:-8}"
       BESZEL_AUTH_COLLECTION: "${BESZEL_AUTH_COLLECTION:-users}"
       DUCK_DB: /data/beszel.duckdb
+      # so duck-report-summary.sh appends the fe_* + conntrack by-group sections when those DBs exist in /data
+      HAPROXY_DUCK_DB: /data/haproxy.duckdb
+      CONNTRACK_DUCK_DB: /data/conntrack.duckdb
+      CAPACITY_PARQUET_DIR: /parquet                                 # export metrics.parquet for the UI (empty to disable)
+      CAPACITY_PARQUET_DAYS: "${CAPACITY_PARQUET_DAYS:-}"           # rolling window; empty = full history
     volumes:
-      # Host bind mount: the DuckDB file lives in ./data next to this compose file,
-      # so it's visible/back-up-able and independent of the container lifecycle.
-      # The entrypoint chowns it to the container user on start, so a plain
-      # `mkdir data` (or letting compose create it) is enough — no manual chown.
       - ./data:/data
-    # If reaching the hub over the internal docker network, join it here and set
-    # BESZEL_URL=http://<hub-service>:8090 in .env. Otherwise omit `networks`.
-    # networks: [beszel_default]
+      - ./parquet:/parquet                                          # shared with ui-proxy (served at /data/)
+    # networks: [beszel_default]   # join the hub network + set BESZEL_URL=http://<hub>:8090
 
-# Uncomment + match the hub's network name (docker network ls) to use internal DNS:
-# networks:
-#   beszel_default:
-#     external: true
+  # ---- haproxy: load the hub's NDJSON spool into a dedicated DuckDB ----
+  # No hub creds — reads the local spool the hub writes. Runs as root so it can
+  # read the hub's root-owned spool + delete sealed files. Also publishes the
+  # read-only UI snapshot.
+  haproxy-duck:
+    profiles: ["haproxy"]
+    image: "${DUCK_IMAGE:-beszel-duck:latest}"
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: beszel-haproxy-duck
+    restart: unless-stopped
+    entrypoint: ["/usr/local/bin/haproxy.sh"]
+    environment:
+      HAPROXY_INGEST_INTERVAL: "${HAPROXY_INGEST_INTERVAL:-300}"
+      HAPROXY_RETENTION_DAYS: "${HAPROXY_RETENTION_DAYS:-14}"   # hot window in haproxy.duckdb (~55 GB at the hub's current 15s record interval)
+      # cold-tier aged days to zstd Parquet before delete. haproxy_proxies is HIGH-VOLUME —
+      # set HAPROXY_ARCHIVE_DIR="" to hard-delete instead if the daily Parquet is too large.
+      HAPROXY_ARCHIVE_DIR: "${HAPROXY_ARCHIVE_DIR:-/data/archive}"
+      HAPROXY_ARCHIVE_RETENTION_DAYS: "${HAPROXY_ARCHIVE_RETENTION_DAYS:-}"   # empty = keep archive forever (~238 MB/day cold); set e.g. 365 to cap it
+      TZ_OFFSET: "${TZ_OFFSET:-8}"
+      HAPROXY_DUCK_DB: /data/haproxy.duckdb
+      HAPROXY_SPOOL_DIR: /spool
+      HAPROXY_PARQUET_DIR: /parquet                                  # rolling Parquet for the UI (empty to disable)
+      HAPROXY_PARQUET_DAYS: "${HAPROXY_PARQUET_DAYS:-2}"             # window exported to Parquet
+      HAPROXY_EXPORT_EVERY: "${HAPROXY_EXPORT_EVERY:-2}"            # every N ingest cycles (2×5min=10min)
+    volumes:
+      - ./data:/data
+      - ./parquet:/parquet                                          # shared with ui-proxy (served at /data/)
+      - "${HAPROXY_SPOOL_HOST_DIR:?set HAPROXY_SPOOL_HOST_DIR to the hub's HAPROXY_DUCK_SPOOL host dir (absolute, e.g. /home/admin/beszel/haproxy-spool)}:/spool"
+
+  # ---- conntrack: hub conntrack spool -> dedicated DuckDB (CLI report only, no UI) ----
+  conntrack-duck:
+    profiles: ["conntrack"]
+    image: "${DUCK_IMAGE:-beszel-duck:latest}"
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: beszel-conntrack-duck
+    restart: unless-stopped
+    entrypoint: ["/usr/local/bin/conntrack.sh"]
+    environment:
+      CONNTRACK_INGEST_INTERVAL: "${CONNTRACK_INGEST_INTERVAL:-300}"
+      CONNTRACK_RETENTION_DAYS: "${CONNTRACK_RETENTION_DAYS:-14}"
+      CONNTRACK_ARCHIVE_DIR: "${CONNTRACK_ARCHIVE_DIR:-/data/archive}"   # cold-tier expired days to zstd Parquet (empty = hard delete)
+      TZ_OFFSET: "${TZ_OFFSET:-8}"
+      CONNTRACK_DUCK_DB: /data/conntrack.duckdb
+      CONNTRACK_SPOOL_DIR: /spool
+      # so duck-report-cross.sh finds the other two stores in /data (no cwd guessing)
+      HAPROXY_DUCK_DB: /data/haproxy.duckdb
+      DUCK_DB: /data/beszel.duckdb
+    volumes:
+      - ./data:/data
+      - "${CONNTRACK_SPOOL_HOST_DIR:?set CONNTRACK_SPOOL_HOST_DIR to the hub's CONNTRACK_DUCK_SPOOL host dir (absolute, e.g. /home/admin/beszel/conntrack-spool)}:/spool"
+
+  # ---- api: read-only HTTP report API (duck-report-*.sh as JSON) for an AI agent ----
+  # Runs the SAME beszel-duck image, entrypoint api.sh. Exposes a fixed, validated set
+  # of GET endpoints (NO raw SQL). Internal only — reached via ui-proxy at /api/ (auth +
+  # IP allowlist + TLS). Mounts the stores read-only.
+  duck-api:
+    profiles: ["api"]
+    image: "${DUCK_IMAGE:-beszel-duck:latest}"
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: beszel-duck-api
+    restart: unless-stopped
+    entrypoint: ["/usr/local/bin/api.sh"]
+    environment:
+      DUCK_DB: /data/beszel.duckdb
+      HAPROXY_DUCK_DB: /data/haproxy.duckdb
+      CONNTRACK_DUCK_DB: /data/conntrack.duckdb
+      TZ_OFFSET: "${TZ_OFFSET:-8}"
+      EXCLUDE_HOST: "${API_EXCLUDE_HOST:-}"               # empty = API sees ALL hosts (no ha-uat*/ha-pre* exclusion)
+      API_LISTEN: ":8088"
+      API_MAX_HOURS: "${API_MAX_HOURS:-2160}"             # window cap (90 days)
+      API_QUERY_TIMEOUT: "${API_QUERY_TIMEOUT:-60}"       # seconds per report
+      API_MAX_CONCURRENCY: "${API_MAX_CONCURRENCY:-4}"    # concurrent report execs
+    volumes:
+      - ./data:/data:ro                                   # reports are -readonly; the API never writes the stores
+
+  # ---- ui: Duck-UI (browser DuckDB-WASM) — self-contained, air-gap friendly ----
+  # Queries the rolling Parquet over HTTP (read_parquet); never touches the live DB.
+  # Internal only — exposed via ui-proxy (auth + TLS). Mirror the image to your
+  # registry if the host can't reach ghcr.io.
+  duck-ui:
+    profiles: ["ui"]
+    image: "${DUCK_UI_IMAGE:-ghcr.io/caioricciuti/duck-ui:latest}"
+    container_name: beszel-duck-ui
+    restart: unless-stopped
+
+  # ---- ui-proxy: nginx basic-auth fronting Duck-UI (/) + the report API (/api/) ----
+  # On BOTH ui+api profiles so it comes up with either (an absent upstream just 502s,
+  # thanks to the lazy resolver). Needs config/nginx-ui.conf + ui.htpasswd (chmod 644).
+  # Publish THIS (and front with TLS).
+  ui-proxy:
+    profiles: ["ui", "api"]
+    image: nginx:alpine
+    container_name: beszel-haproxy-ui-proxy
+    restart: unless-stopped
+    ports:
+      - "${UI_PROXY_PORT:-8080}:8080"
+    volumes:
+      - ./config/nginx-ui.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./ui.htpasswd:/etc/nginx/.htpasswd:ro
+      - ./parquet:/srv/parquet:ro                                   # served at /data/ (same volume the loader writes)

@@ -15,7 +15,12 @@ single capacity/usage report or building history that outlives PB's retention.
 | `capacity-api.sh` | REST API (off-host) | same as `capacity.sh`, over HTTP |
 | `peak-recorder.sh` | REST API (off-host) | harvest **minute-precise** CPU/mem peaks before PB prunes them; append-only CSV |
 | `duck-ingest.sh` | REST API (off-host) | siphon raw **1m** samples into a local **DuckDB** before PB prunes them; idempotent, runs on a timer |
-| `duck-report.sh` | DuckDB (local file) | capacity report from the DuckDB store: true percentiles + **exact** peak time + fleet totals |
+| `duck-report-capacity.sh` | DuckDB (local file) | capacity report from the DuckDB store: true percentiles + **exact** peak time + fleet totals |
+| `duck-report-basics.sh` | DuckDB (local file) | generic **per-host basics for EVERY host**: CPU/load/mem/disk/disk-IO/net + conntrack-if-present, auto-grouped by name; `VIEW=host\|group`, `FORMAT=box\|csv\|json` |
+| `duck-usage.sh` | DuckDB (local files) | **how many rows + how big** per store over a window (`[HOURS]`, default 24): DB on-disk size, total rows, per-table rows/hosts/span + zstd-Parquet footprint of the window |
+| `duck-report-summary.sh` | DuckDB (local file) | capacity rolled up **per host-group** (+ optional `fe_*` request/throughput from the HAProxy DB); `usage` or cloud-`forecast` views |
+| `duck-haproxy-ingest.sh` | NDJSON spool (from hub) | load the hub's **high-resolution HAProxy** spool into a dedicated DuckDB; idempotent, runs on a timer |
+| `duck-report-haproxy.sh` | DuckDB (local file) | HAProxy troubleshooting report: per-frontend req/5xx/sessions, backend flaps, per-host idle%/conn-rate |
 
 `stats*` and `capacity*` are read-only one-shot reports straight off PB. `peak-recorder.sh`
 and `duck-ingest.sh` run on a timer to build long-term stores that outlive PB retention.
@@ -79,7 +84,7 @@ beszel's own rollups keep only the peak *value*, not its time (see Findings #3).
              /path/duck-ingest.sh '*' >> /var/log/beszel-duck.log 2>&1
 
 # 2. report any time (TZ_OFFSET controls peak-time display, default UTC+8)
-DUCK_DB=/var/lib/beszel/beszel.duckdb ./duck-report.sh 168 'ha-bop*'   # last 7 days
+DUCK_DB=/var/lib/beszel/beszel.duckdb ./duck-report-capacity.sh 168 'ha-bop*'   # last 7 days
 
 # 3. or just write SQL — native percentiles, arg_max, time-bucketing
 duckdb $DUCK_DB "SELECT host, quantile_cont(cpu,0.95) p95, arg_max(ts,cpu) peak_at
@@ -87,22 +92,191 @@ duckdb $DUCK_DB "SELECT host, quantile_cont(cpu,0.95) p95, arg_max(ts,cpu) peak_
 ```
 
 Schema (`metrics`, PK `(host, ts)`): `ts`(UTC), `host`, `vcpu`, `cpu`, `steal`,
-`mem_used_gb`, `mem_total_gb`, `mem_pct`, `swap_gb`, `net_out_bps`, `net_in_bps`.
-Requires the `duckdb` CLI on the ingest/report host.
+`mem_used_gb`, `mem_total_gb`, `mem_pct`, `swap_gb`, `net_out_bps`, `net_in_bps`,
+`disk_pct`, `disk_used_gb`, `disk_total_gb`, `disk_read_bps`, `disk_write_bps`,
+`io_util`, `load1`, `load5`, `load15`. (The disk/IO/load columns are added by
+`ALTER ... ADD COLUMN IF NOT EXISTS`, so an existing DB widens in place; rows
+ingested before the change are NULL for them.) Requires the `duckdb` CLI on the
+ingest/report host.
 
-### Containerised ingester (`docker/`)
+#### Generic per-host basics + machine-readable (JSON) output
 
-Runs the ingester as a long-lived container alongside beszel-hub on the docker host.
-It loops `duck-ingest.sh` every `INGEST_INTERVAL` (default 45 min), logging to stdout.
+`duck-report-basics.sh` is the all-hosts report (not just `ha-*`): CPU, load avg,
+memory, disk usage, disk IO (throughput + `io_util%`), network bandwidth, and — if a
+conntrack store sits next to the capacity DB — conntrack table util (NULL for hosts
+without `nf_conntrack`). Hosts auto-group by name (`ha-bop-1`,`-2` → `ha-bop`).
+
+```bash
+DUCK_DB=/var/lib/beszel/beszel.duckdb ./duck-report-basics.sh 24 '*'      # per-host, last 24h
+VIEW=group ./duck-report-basics.sh 168 'ha-*'                             # per-group rollup, 7d
+FORMAT=json ./duck-report-basics.sh 24 '*' | jq .                        # array of host objects (webservice/AI)
+```
+
+All report scripts accept `FORMAT=box|csv|json`. `json` emits DuckDB's native array
+of objects keyed by the column aliases — feed it straight to an HTTP endpoint / agent.
+(Multi-section reports — summary/cross/haproxy — emit one JSON array *per section*.)
+
+#### Retention & cold-tier archive (bounding the store)
+
+`duck-ingest.sh` keeps everything forever unless `RETENTION_DAYS` is set. When set, it
+ages rows out of the hot DuckDB by **whole UTC day** after each ingest. With
+`ARCHIVE_DIR` also set, each expiring day is first written to
+`<ARCHIVE_DIR>/metrics-YYYY-MM-DD.parquet` (zstd) and only then deleted — a queryable
+cold tier:
+
+```bash
+RETENTION_DAYS=45 ARCHIVE_DIR=/var/lib/beszel/archive ./duck-ingest.sh '*'
+# cold reads:
+duckdb $DUCK_DB "SELECT * FROM read_parquet('/var/lib/beszel/archive/metrics-*.parquet') WHERE host='ha-bop-1'"
+```
+
+The compose `duck-ingest` service defaults `RETENTION_DAYS=45` + `ARCHIVE_DIR=/data/archive`.
+Rough sizing (1-min resolution, ~175 hosts): **~10–35 MB/day** into the hot DB, so a
+45-day hot window settles around **~0.5–1.6 GB** (it plateaus once daily archive ≈ daily
+ingest). The zstd Parquet archive is materially smaller per day than the live store.
+Measure your real rate with:
+`duckdb -readonly $DUCK_DB "SELECT count(*) r, count(DISTINCT host) h, min(ts), max(ts) FROM metrics"`.
+
+**All three stores share the same rotation** via the `duck_archive_prune` helper in
+`duck-lib.sh` (sourced by every ingest). Same whole-day, archive-then-delete, idempotent
+behavior; each store has its own knobs (defaults in compose):
+
+| Store | Retention | Archive dir | Archive files |
+|---|---|---|---|
+| capacity (`beszel.duckdb`) | `RETENTION_DAYS=45` | `ARCHIVE_DIR=/data/archive` | `metrics-YYYY-MM-DD.parquet` |
+| haproxy (`haproxy.duckdb`) | `HAPROXY_RETENTION_DAYS=14` | `HAPROXY_ARCHIVE_DIR=/data/archive` | `haproxy_proxies-*`, `haproxy_info-*` |
+| conntrack (`conntrack.duckdb`) | `CONNTRACK_RETENTION_DAYS=14` | `CONNTRACK_ARCHIVE_DIR=/data/archive` | `conntrack-YYYY-MM-DD.parquet` |
+
+Set an `*_ARCHIVE_DIR` to `""` to hard-delete that store instead of archiving.
+**Watch `haproxy_proxies`** — it's high-volume, so its daily Parquet can be large; disable
+its archive (`HAPROXY_ARCHIVE_DIR=""`) if you don't need the cold tier. The archive itself
+is keep-forever unless you set `*_ARCHIVE_RETENTION_DAYS` (sweeps `<table>-*.parquet` older
+than N days, keyed on the date in the filename).
+
+### Report API (`duck-api`) — JSON over HTTP for an AI agent
+
+`duck-api` is a tiny read-only HTTP wrapper (a static Go binary baked into the
+`beszel-duck` image) that exposes the reports as JSON. It runs a **fixed, allowlisted**
+set of GET endpoints with **strictly validated params** — it never exposes DuckDB SQL
+(no `read_parquet`/`COPY`/`ATTACH` reachable by the caller). Brought up on the `api`
+profile, fronted by the existing nginx `ui-proxy` at `/api/` (basic-auth + optional IP
+allowlist + TLS):
+
+```bash
+docker compose --profile api up -d
+curl -u user:pass 'https://<host>/api/v1/basics?hours=24&host=ha-*&view=group' | jq .
+curl -u user:pass  'https://<host>/api/openapi.json'      # OpenAPI 3.0 spec (agent tool discovery)
+```
+
+| Endpoint | Report | Params |
+|---|---|---|
+| `/v1/basics` | per-host basics | `hours`, `host`, `view=host\|group` |
+| `/v1/capacity` | capacity percentiles + peak time | `hours`, `host` |
+| `/v1/haproxy` | HAProxy troubleshooting | `hours`, `host` |
+| `/v1/conntrack` | conntrack util + drops | `hours`, `host` |
+| `/v1/summary` | per-group rollup | `hours`, `view=usage\|forecast` |
+| `/v1/cross` | conntrack ↔ haproxy ↔ cpu | `hours`, `host` |
+| `/healthz`, `/v1`, `/openapi.json` | health / index / spec | — |
+
+Validation: `hours` = int `1..API_MAX_HOURS` (default cap 2160 = 90d); `host` =
+`^[A-Za-z0-9_.*?-]{1,64}$` (glob, default `*`); `view` = per-endpoint enum. Anything else
+→ `400`, nothing executed. Non-GET → `405`. Response envelope:
+
+```json
+{ "report":"basics", "params":{"hours":24,"host":"ha-*","view":"group"},
+  "generated_at":"2026-06-06T...Z",
+  "sections":[ [ {"host_group":"ha-bop","cpu_p95_avg":55.3, ...}, ... ] ] }
+```
+
+`sections` holds one array per report section (basics = 1; capacity/summary/cross have
+several). Knobs (compose env): `API_MAX_HOURS`, `API_QUERY_TIMEOUT` (s), `API_MAX_CONCURRENCY`,
+`API_EXCLUDE_HOST` (default empty = all hosts visible). **Lock down access** by uncommenting
+the `allow <CIDR>; deny all;` block in `docker/config/nginx-ui.conf` under `location /api/`.
+
+### High-resolution HAProxy recording (hub → DuckDB)
+
+Different source from `duck-ingest.sh`. The capacity pipeline above pulls 1m **system**
+stats over REST. For HAProxy troubleshooting we want sub-minute resolution that beszel never
+persists (the per-second data on `/system/<id>` is broadcast live and discarded). So the
+**hub itself** samples HAProxy from every agent reporting it and appends an NDJSON spool;
+this loader ingests the spool into a *dedicated* DuckDB.
+
+**1. Enable recording on the hub** (opt-in via env — unset ⇒ feature off, zero overhead):
+
+```
+HAPROXY_DUCK_SPOOL=/data/haproxy-spool     # enables it; dir the hub writes spool files to
+HAPROXY_RECORD_INTERVAL=5s                  # sample cadence; a volume knob
+HAPROXY_PROBE_INTERVAL=60s                  # how often to rescan for new HAProxy hosts
+HAPROXY_RECORD_TYPES=FRONTEND,BACKEND       # row types to record (default); add SERVER for per-server drill-down
+                                            # SERVER is the volume bomb (1 row per backend server per sample) — off by default
+HAPROXY_SPOOL_ROTATE=60s                    # how often the hub seals the live spool file for the loader to consume
+```
+
+The hub writes daily-rotated `haproxy_proxies-YYYYMMDD.ndjson` (one line per
+frontend/backend/server per sample) and `haproxy_info-YYYYMMDD.ndjson` (per-host process
+info). Pure-Go, append-only — no DB driver in the hub, so it never holds a DuckDB lock.
+
+**2. Load + report** (the spool dir must be reachable by the loader — share a volume between
+the hub and the duckdb container, or run the loader on the hub host):
+
+```bash
+# load on a timer (every ~5 min); idempotent via PK dedup, archives closed daily files
+*/5 * * * * HAPROXY_DUCK_DB=/data/haproxy.duckdb HAPROXY_SPOOL_DIR=/data/haproxy-spool \
+            HAPROXY_RETENTION_DAYS=30 /path/duck-haproxy-ingest.sh >> /var/log/haproxy-duck.log 2>&1
+
+# troubleshoot (same relative [HOURS] / 'FROM' 'TO' local-time range mode as duck-report-capacity.sh)
+HAPROXY_DUCK_DB=/data/haproxy.duckdb ./duck-report-haproxy.sh 1 'ha-*'
+HAPROXY_DUCK_DB=/data/haproxy.duckdb ./duck-report-haproxy.sh '2026-06-01 10:00' '2026-06-01 10:30' 'ha-bop*'
+```
+
+Tables: `haproxy_proxies` PK `(system, ts, proxy, type)`, `haproxy_info` PK `(system, ts)`.
+Traffic queries are **FRONTEND-only** (no double-count, per the project rule) but all proxy
+types are stored so you can drill into backends/servers.
+
+**Volume note:** at 2s, ~43.2k samples/day per series. e.g. 20 hosts × ~5 proxies ≈ 100
+series ⇒ ~4.3M proxy rows/day. `HAPROXY_RECORD_INTERVAL=5s` cuts that 2.5×;
+`HAPROXY_RETENTION_DAYS` bounds DB + spool growth.
+
+### Containerised sidecars (`docker/`)
+
+One `beszel-duck` image, **four services grouped by compose profile** so you run only
+what you need. Entrypoints live in `docker/entrypoints/`; the proxy config in `docker/config/`.
+
+| Profile | Services | Purpose |
+|---|---|---|
+| `capacity` | `duck-ingest` | loops `duck-ingest.sh` (needs hub URL + read-only creds); exports `metrics.parquet` for the UI |
+| `haproxy` | `haproxy-duck` | HAProxy spool → DuckDB + rolling Parquet export (no hub creds) |
+| `ui` | `duck-ui`, `ui-proxy` | Duck-UI (browser DuckDB-WASM) behind nginx basic-auth, querying the Parquet |
+
+Both ingesters export Parquet into the shared `./parquet` dir, which `ui-proxy` serves at `/data/`. In Duck-UI:
+`read_parquet('https://<host>/data/metrics.parquet')` (capacity) and `…/haproxy_proxies.parquet` (HAProxy).
+Copy-paste Duck-UI queries (incl. ones that reproduce the CLI report's tables): **[DUCK-UI-QUERIES.md](DUCK-UI-QUERIES.md)**.
 
 ```bash
 cd scripts/docker
-cp .env.example .env        # fill BESZEL_URL + a DEDICATED read-only account
-docker compose up -d --build
+cp .env.example .env        # fill BESZEL_URL + a DEDICATED read-only account (capacity only)
 
+# capacity ingester:
+docker compose --profile capacity up -d --build
 docker compose logs -f duck-ingest                       # watch ingests
-docker compose exec duck-ingest duck-report.sh 24 '*'    # report on demand
+docker compose exec duck-ingest duck-report-capacity.sh 24 '*'    # report on demand
+
+# HAProxy loader (set HAPROXY_SPOOL_HOST_DIR to the hub's spool dir):
+docker compose --profile haproxy up -d
+docker compose exec haproxy-duck duck-report-haproxy.sh 1 'ha-*'
+
+# web UI: Duck-UI behind nginx basic-auth (create ui.htpasswd first, chmod 644):
+docker run --rm -it httpd:alpine htpasswd -nB admin > ui.htpasswd && chmod 644 ui.htpasswd
+docker compose --profile haproxy --profile ui up -d
+# then browse the proxy (front with TLS); query in Duck-UI:
+#   SELECT host,proxy,quantile_cont(rtime,0.95) FROM read_parquet('https://<host>/data/haproxy_proxies.parquet')
+#   WHERE type='BACKEND' GROUP BY 1,2 ORDER BY 3 DESC;
 ```
+The **official DuckDB UI doesn't fit** here: the musl DuckDB build has no `ui` extension and it needs runtime
+egress to ui.duckdb.org (the prod box is air-gapped). **Duck-UI** is self-contained and runs DuckDB-WASM in the
+browser, so the loader exports a rolling **Parquet** window it can read over HTTP.
+**Note:** services are profile-gated, so a bare `docker compose up -d` (no `--profile`)
+starts nothing — always pass the profile(s) you want, on `up`, `pull`, `logs`, and `down`.
 
 - **Use email/password, not a token** — the container re-auths every run, so it never
   expires (a static token would die in ~7 days). A regular **`users`** account works
@@ -147,7 +321,7 @@ trigger runs by `exec`-ing into it:
 ```
 
 Use one or the other, not both (the cron-mode container does not self-ingest). Either way the
-DuckDB file is the same volume, and `duck-report.sh` works unchanged.
+DuckDB file is the same volume, and `duck-report-capacity.sh` works unchanged.
 
 #### Polling cadence (freshness vs load)
 
@@ -198,6 +372,65 @@ already present). If you copy *only* `docker-compose.yml` + `.env` to prod (no `
 build context), that's fine for the pull flow; just don't pass `--build` there.
 Validated: multi-arch build produces a working amd64 image (the build runs the duckdb smoke
 test per-arch, so a broken arch fails the build, not prod).
+
+### Running the reports (in the duck container)
+
+Three read-only report scripts ship in the image. The `*-ingest.sh` scripts are loaders
+(driven by the entrypoints/timers), not reports. Two DBs back the reports:
+
+- **Capacity** (`metrics`: CPU/mem) → `/data/beszel.duckdb` — the `duck-ingest` service
+- **HAProxy** (`haproxy_proxies`/`haproxy_info`) → `/data/haproxy.duckdb` — the `haproxy-duck` service
+
+Run each from the service that owns its DB (or either if your `./data` volume is shared — just
+point the env at the right file). Both invocation forms match across all three:
+`<HOURS>` (relative) or `'FROM' 'TO'` (explicit **local** range).
+
+```bash
+# 1) Capacity per-host + fleet total
+docker compose exec duck-ingest duck-report-capacity.sh 6 'ha-bop*'
+docker compose exec duck-ingest duck-report-capacity.sh '2026-06-02 13:00' '2026-06-02 19:00' 'ha-*'
+
+# 2) Capacity by host-GROUP (+ fe_* requests/throughput if the HAProxy DB is present)
+docker compose exec duck-ingest duck-report-summary.sh 6
+docker compose exec -e HAPROXY_DUCK_DB=/data/haproxy.duckdb duck-ingest duck-report-summary.sh 6
+docker compose exec -e FORMAT=csv duck-ingest duck-report-summary.sh '2026-06-02' '2026-06-03'   # Excel
+
+# 3) HAProxy troubleshooting (per-frontend, slowest backends, flaps, host health, fe_* by group)
+docker compose exec haproxy-duck duck-report-haproxy.sh 6 'ha-*'
+docker compose exec haproxy-duck duck-report-haproxy.sh '2026-06-02 13:00' '2026-06-02 19:00' 'ha-bop*'
+
+# 4) Conntrack table pressure (per-host util% + drop deltas) — needs the conntrack profile
+docker compose exec conntrack-duck duck-report-conntrack.sh 6 'lvs-*'
+
+# 5) Cross-correlation: conntrack util <-> HAProxy 5xx <-> CPU steal, joined per-minute on (host,minute).
+#    ATTACHes all three DuckDB stores read-only (conntrack required; haproxy/capacity optional). Run from
+#    a container whose /data holds all three .duckdb files. UTIL_THRESHOLD (default 80) sets the "hot bucket" cutoff.
+docker compose exec conntrack-duck duck-report-cross.sh 6 'lvs-*'
+docker compose exec -e UTIL_THRESHOLD=70 conntrack-duck duck-report-cross.sh '2026-06-03 09:00' '2026-06-03 12:00' 'ha-bop*'
+```
+
+Knobs are **env vars — pass them with `-e` BEFORE the service name** (anything after the script
+name is a positional arg, not an env var):
+
+| Env | Default | Applies to |
+|---|---|---|
+| `EXCLUDE_HOST` | `ha-uat*,ha-pre*` | all three (comma globs, case-insensitive; `''` = include) |
+| `EXCLUDE_PROXY` | `admin,stats` | `duck-report-haproxy.sh` (mgmt/stats frontends; `''` = include) |
+| `TZ_OFFSET` | `8` (UTC+8) | all (peak times + range args) |
+| `FORMAT` | `box` | **all reports** (`csv` for Excel/pipe; multi-table reports emit one CSV block per table) |
+| `GROUP_MODE` | `sheet` | `duck-report-summary.sh` (`auto` = group every host by name) |
+| `VIEW` | `usage` | `duck-report-summary.sh` (`forecast` = cloud right-sizing) |
+| `SORT` | `name` | `duck-report-summary.sh` (`seq` = fixed spreadsheet order) |
+| `HAPROXY_DUCK_DB` | `./haproxy.duckdb` | `duck-report-summary.sh` fe_* section |
+
+```bash
+# include the non-prod zones / mgmt frontends that are hidden by default:
+docker compose exec -e EXCLUDE_HOST='' -e EXCLUDE_PROXY='' haproxy-duck duck-report-haproxy.sh 6 'ha-*'
+# cloud capacity forecast over ~30 days, CSV, every host auto-grouped:
+docker compose exec -e VIEW=forecast -e GROUP_MODE=auto -e FORMAT=csv duck-ingest duck-report-summary.sh 720
+```
+
+(Service names `duck-ingest`/`haproxy-duck` assume the bundled compose — adjust for yours.)
 
 ---
 
@@ -286,7 +519,7 @@ The agent pushes one value per minute; there's no instantaneous spike captured. 
   Overlapping fetch windows are safe, so it just pulls the last `LOOKBACK_MIN` each run (no
   watermark bookkeeping). Same cadence rule: run more often than the 1h `1m` retention.
   DuckDB is single-writer — one cron job is fine; don't let runs overlap (a flock) and run
-  analysis read-only. `ts` is stored UTC; `duck-report.sh` shifts to local via `TZ_OFFSET`.
+  analysis read-only. `ts` is stored UTC; `duck-report-capacity.sh` shifts to local via `TZ_OFFSET`.
   Percentiles/peak-time use DuckDB natives (`quantile_cont`, `arg_max`) — accurate because
   the store holds raw 1m, unlike bucket-averaged reports off PB.
 
@@ -306,7 +539,7 @@ The agent pushes one value per minute; there's no instantaneous spike captured. 
    harvesting `1m` data before the 1-hour purge; correlate spikes with deploys/incidents
    and keep an all-time peak log forever.
 6. **Full analytical store (recommended for serious analysis)** — `duck-ingest.sh` on a
-   cron into DuckDB keeps *every* raw 1m sample forever. `duck-report.sh` (or plain SQL)
+   cron into DuckDB keeps *every* raw 1m sample forever. `duck-report-capacity.sh` (or plain SQL)
    then gives accurate percentiles, exact peak times, hourly/daily rollups, and fleet
    totals. This is the superset of #4 and #5 — only skip it if you specifically want a
    zero-dependency (no DuckDB) setup.

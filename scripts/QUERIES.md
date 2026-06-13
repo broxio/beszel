@@ -2,7 +2,7 @@
 
 The `duck-ingest.sh` pipeline lands raw 1-minute samples in one table, `metrics`.
 Because it's *raw* (not bucket-averaged), you can compute accurate percentiles, exact
-peak times, and any rollup with plain SQL. `duck-report.sh` is just a canned version of
+peak times, and any rollup with plain SQL. `duck-report-capacity.sh` is just a canned version of
 the capacity query below — everything here is the same data, queried directly.
 
 ## Schema

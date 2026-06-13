@@ -1,0 +1,338 @@
+#!/usr/bin/env bash
+# duck-report-summary.sh — capacity rolled up per host "group" (NOT per host), over a
+# chosen window. Reads the capacity DuckDB built by duck-ingest.sh (the `metrics`
+# table: per-host 1-min cpu%/mem). Group = a host-name prefix (ha-bop-1, ha-bop-2 ->
+# ha-bop). Two views: current usage, or a cloud capacity-planning forecast.
+#
+# Window args (same as duck-report-capacity.sh):
+#   ./duck-report-summary.sh [HOURS]              # relative: last N hours (default 24)
+#   ./duck-report-summary.sh 'FROM' 'TO'          # explicit range (LOCAL time, per TZ_OFFSET)
+#
+# VIEW=usage (default) — one row per GROUP:
+#   group nodes sampl vcpu  cpu_avg/p95/p99/peak(%) steal  cores_avg/p95/peak  cpu_peak_at peak_host
+#     mem_total  mem_avg/p95/p99/peak
+#     cpu_*    = pooled over the group's samples (a single node's %, NOT a sum); cpu_peak is the worst node-minute,
+#                cpu_peak_at/peak_host say when & which node.
+#     cores_*  = TOTAL CPU CORES USED by the group = sum over nodes of vcpu*cpu%/100. CPU analog of memory:
+#                cores_* (used) vs vcpu (provisioned), like mem_avg/p95/p99/peak (used GB) vs mem_total.
+#
+# VIEW=forecast columns — "what to provision in cloud":
+#   nodes  vcpu_prov  cores_p95 cores_peak  cpu_util_p95   provisioned vs CONSUMED cpu
+#          mem_prov_gb mem_p95_gb mem_peak_gb mem_util_p95  provisioned vs CONSUMED ram
+#          rec_vcpu   rec_mem_gb                            recommended cloud size for the GROUP
+#     rec_vcpu  = ceil( (REC_BASIS cores) / TARGET_CPU_UTIL )   default: p95 cores at 70% target util
+#     rec_mem_gb= ceil( mem_peak_gb * MEM_HEADROOM )            default: peak RAM * 1.2 (RAM isn't burstable)
+#   Forecast off a REPRESENTATIVE window (weeks incl. busy days), e.g. a 30-day range, NOT 6h.
+#
+# Env:
+#   DUCK_DB         DuckDB file (default: ./beszel.duckdb)   # in the duck container: /data/beszel.duckdb
+#   HAPROXY_DUCK_DB HAProxy DuckDB (default: ./haproxy.duckdb). If present, a per-GROUP fe_* frontend
+#                   request/throughput summary is appended (total_req, req peak + max_req_at, out_mbps_max).
+#   CONNTRACK_DUCK_DB conntrack DuckDB (default: ./conntrack.duckdb). If present, a per-GROUP conntrack
+#                   table-utilization summary is appended (util avg/p95/max + peak time, drops).
+#   EXCLUDE_HOST    comma-separated host globs dropped from the fe_*/conntrack sections (default ha-uat*,ha-pre*; '' = all).
+#   TZ_OFFSET       local-time offset in hours (default: 8 = UTC+8). Used for FROM/TO args + peak time.
+#   FORMAT          box (default, pretty) | csv (paste into Excel)
+#   GROUP_MODE      sheet (default) = the 19 fixed spreadsheet rows below;
+#                   auto           = derive the group from EVERY host name (strip trailing -N) and
+#                                    aggregate all servers — no fixed list; also good for group discovery.
+#   VIEW            usage (default) | forecast
+#   TARGET_CPU_UTIL CPU headroom for rec_vcpu — how full to run cloud instances (default 0.7 = 70%)
+#   MEM_HEADROOM    RAM multiplier for rec_mem_gb (default 1.2 = +20% over peak)
+#   REC_BASIS       size rec_vcpu off 'p95' (default) or 'peak' cores
+#   SORT            row order: name (default, by group name) | seq (the fixed spreadsheet order, sheet mode)
+#
+# Examples:
+#   ./duck-report-summary.sh 6                                       # last 6h, usage
+#   VIEW=forecast ./duck-report-summary.sh '2026-05-01' '2026-06-01' # 1-month cloud forecast (sheet rows)
+#   VIEW=forecast GROUP_MODE=auto FORMAT=csv ./duck-report-summary.sh '2026-05-01' '2026-06-01' > plan.csv
+#   docker compose exec -T duck-ingest sh -lc \
+#     'DUCK_DB=/data/beszel.duckdb VIEW=forecast duck-report-summary.sh 720'   # ~30d
+#
+# Edit the GROUPS table below to add/rename rows or fix a prefix.
+
+set -euo pipefail
+
+DUCK_DB="${DUCK_DB:-./beszel.duckdb}"
+TZ_OFFSET="${TZ_OFFSET:-8}"
+FORMAT="${FORMAT:-box}"
+GROUP_MODE="${GROUP_MODE:-sheet}"
+VIEW="${VIEW:-usage}"
+TARGET_CPU_UTIL="${TARGET_CPU_UTIL:-0.7}"
+MEM_HEADROOM="${MEM_HEADROOM:-1.2}"
+REC_BASIS="${REC_BASIS:-p95}"
+SORT="${SORT:-name}"
+
+command -v duckdb >/dev/null || { echo "duck-report-summary.sh: duckdb not found in PATH" >&2; exit 1; }
+[[ -f "$DUCK_DB" ]] || { echo "duck-report-summary.sh: $DUCK_DB not found (run duck-ingest.sh first)" >&2; exit 1; }
+[[ "$TARGET_CPU_UTIL" =~ ^[0-9]*\.?[0-9]+$ ]] || { echo "duck-report-summary.sh: TARGET_CPU_UTIL must be a number (e.g. 0.7)" >&2; exit 1; }
+[[ "$MEM_HEADROOM"    =~ ^[0-9]*\.?[0-9]+$ ]] || { echo "duck-report-summary.sh: MEM_HEADROOM must be a number (e.g. 1.2)" >&2; exit 1; }
+
+OFF_MIN="$(awk "BEGIN{print int(${TZ_OFFSET}*60)}")"
+TZLABEL="$(awk "BEGIN{o=${TZ_OFFSET}+0; printf (o>=0?\"+%g\":\"%g\"), o}")"
+
+# Window: same two forms as duck-report-capacity.sh (arg1 integer => relative hours; else FROM/TO local range).
+if [[ "${1:-24}" =~ ^[0-9]+$ ]]; then
+  HOURS="${1:-24}"
+  WINDOW_SQL="ts >= (now() AT TIME ZONE 'UTC') - INTERVAL '${HOURS} hours'"
+  WINDOW_LABEL="window=${HOURS}h"
+else
+  FROM="$1"; TO="${2:-}"
+  [[ -n "$TO" ]] || { echo "duck-report-summary.sh: range mode needs FROM and TO, e.g. '2026-05-01' '2026-06-01'" >&2; exit 1; }
+  for t in "$FROM" "$TO"; do
+    [[ "$t" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}([\ T][0-9]{2}:[0-9]{2}(:[0-9]{2})?)?$ ]] || \
+      { echo "duck-report-summary.sh: bad timestamp '$t' (use 'YYYY-MM-DD' or 'YYYY-MM-DD HH:MM')" >&2; exit 1; }
+  done
+  # args are local time -> convert to the UTC stored in `ts` by subtracting the offset
+  WINDOW_SQL="ts >= TIMESTAMP '${FROM}' - INTERVAL '${OFF_MIN} minutes' AND ts < TIMESTAMP '${TO}' - INTERVAL '${OFF_MIN} minutes'"
+  WINDOW_LABEL="from='${FROM}' to='${TO}' local${TZLABEL}"
+fi
+
+# ---- GROUPS: (seq, label, host LIKE pattern) — spreadsheet row order ----
+# '%' = wildcard suffix, so 'ha-bop%' covers ha-bop, ha-bop-1, ha-bop-2, ...
+GROUPS_SQL="VALUES
+  ( 1, 'lvs-credit',          'lvs-credit%'),
+  ( 2, 'ha-credit',           'ha-credit%'),
+  ( 3, 'lvs-lic',             'lvs-lic%'),
+  ( 4, 'lvs-bop',             'lvs-bop%'),
+  ( 5, 'lvs-sgs',             'lvs-sgs%'),
+  ( 6, 'ha-lic',              'ha-lic%'),
+  ( 7, 'ha-bop',              'ha-bop%'),
+  ( 8, 'ha-sgs',              'ha-sgs%'),
+  ( 9, 'lvs-admin',           'lvs-admin%'),
+  (10, 'lvs-candy',           'lvs-candy%'),
+  (11, 'lvs-common',          'lvs-common%'),
+  (12, 'lvs-3p',              'lvs-3p%'),
+  (13, 'ha-admin',            'ha-admin%'),
+  (14, 'ha-candy',            'ha-candy%'),
+  (15, 'ha-common',           'ha-common%'),
+  (16, 'ha-3p',               'ha-3p%'),
+  (17, 'swsqd-jp',            'swsqd-jp%'),
+  (18, 'swsqd-kr',            'swsqd-kr%'),
+  (19, 'swsqd-th',            'swsqd-th%'),
+  (20, 'spnk-ha-lic',         'spnk-ha-lic%'),
+  (21, 'spnk-ha-credit',      'spnk-ha-credit%'),
+  (22, 'spnk-ha-dapi',        'spnk-ha-dapi%'),
+  (23, 'spnk-ha-common',      'spnk-ha-common%')"
+
+case "$FORMAT" in box) FLAG="-box";; csv) FLAG="-csv";; json) FLAG="-json";; *) echo "$(basename "$0"): FORMAT must be box|csv|json (got '$FORMAT')" >&2; exit 1;; esac
+
+# Membership CTE differs by mode; everything after it is shared.
+#   sheet -> LEFT JOIN the fixed GROUPS table (keeps empty rows), ord = seq
+#   auto  -> label = host minus trailing -N (and optional -<letter>, e.g. spnk-ha-lic-1-a -> spnk-ha-lic), every host, ord = NULL (order by label)
+if [[ "$GROUP_MODE" == "auto" ]]; then
+  MEMBER_CTE="
+w AS (SELECT host, vcpu, cpu, steal, mem_used_gb, mem_total_gb, ts FROM metrics WHERE ${WINDOW_SQL}),
+member AS (
+  SELECT CAST(NULL AS INTEGER) AS ord,
+         regexp_replace(host,'-[0-9]+(-[a-z]+)?\$','') AS label,
+         host, vcpu, cpu, steal, mem_used_gb, mem_total_gb, ts
+  FROM w
+)"
+else
+  MEMBER_CTE="
+groups(seq,label,pat) AS (${GROUPS_SQL}),
+w AS (SELECT host, vcpu, cpu, steal, mem_used_gb, mem_total_gb, ts FROM metrics WHERE ${WINDOW_SQL}),
+member AS (
+  SELECT g.seq AS ord, g.label AS label,
+         m.host, m.vcpu, m.cpu, m.steal, m.mem_used_gb, m.mem_total_gb, m.ts
+  FROM groups g LEFT JOIN w m ON m.host LIKE g.pat
+)"
+fi
+
+# Row order: by group name (default, natural sort) or the fixed spreadsheet seq (SORT=seq, sheet mode only).
+if [[ "$SORT" == "seq" && "$GROUP_MODE" != "auto" ]]; then
+  ORDER_SQL="gf.ord"
+else
+  ORDER_SQL="regexp_replace(gf.label,'[0-9]+(-[a-z]+)?\$',''), TRY_CAST(regexp_extract(gf.label,'([0-9]+)(-[a-z]+)?\$',1) AS INTEGER) NULLS FIRST, gf.label"
+fi
+
+# Column list differs by VIEW.
+if [[ "$VIEW" == "forecast" ]]; then
+  COLS="gf.label AS \"group\", gf.nodes,
+        gf.vcpu,
+        gf.cores_p95, gf.cores_peak,
+        gf.util_p95_pct  AS cpu_util_p95,
+        gf.mem_tot_gb    AS mem_total,
+        gf.mem_p95_gb, gf.mem_peak_gb,
+        gf.mem_util_p95_pct AS mem_util_p95,
+        gf.rec_vcpu, gf.rec_mem_gb"
+else
+  # usage view — one row per GROUP. cpu_* pooled over the group's samples (a node's %);
+  # cores_*/mem_* summed across nodes (cores/GB used) vs vcpu/mem_total.
+  COLS="gf.label AS \"group\", gf.nodes, gf.smpl AS sampl, gf.vcpu,
+        gf.cpu_avg, gf.cpu_p95, gf.cpu_p99, gf.cpu_max AS cpu_peak, gf.steal,
+        gf.cores_avg, gf.cores_p95, gf.cores_peak,
+        gf.cpu_max_at AS cpu_peak_at, gf.peak_host,
+        gf.mem_tot_gb AS mem_total, gf.mem_used_gb AS mem_avg, gf.mem_p95_gb AS mem_p95,
+        gf.mem_p99_gb AS mem_p99, gf.mem_peak_gb AS mem_peak"
+fi
+
+[[ "$FORMAT" == "box" ]] && echo && \
+  echo "beszel capacity by group — view=${VIEW} mode=${GROUP_MODE} ${WINDOW_LABEL}  peak-time=local${TZLABEL}  db=${DUCK_DB}" && \
+  { [[ "$VIEW" == "forecast" ]] && echo "  rec_vcpu = ceil(${REC_BASIS} cores / ${TARGET_CPU_UTIL})   rec_mem_gb = ceil(peak RAM * ${MEM_HEADROOM})" || true; }
+
+# Shared aggregation:
+#   gm  = group-wide stats on raw samples (cpu% + which node/when peaked)
+#   ha  = per-host rollup; agg = SUM across the group's nodes (true capacity math, like duck-report fleet total)
+#   gf  = final per-group columns incl. memory percentiles + cloud sizing recommendation
+duckdb -readonly "$FLAG" "$DUCK_DB" "
+WITH ${MEMBER_CTE},
+gm AS (
+  SELECT ord, label,
+         count(DISTINCT host)                                        AS nodes,
+         count(cpu)                                                  AS smpl,
+         round(avg(cpu),1)                                           AS cpu_avg,
+         round(quantile_cont(cpu,0.95),1)                            AS cpu_p95,
+         round(quantile_cont(cpu,0.99),1)                            AS cpu_p99,
+         round(max(cpu),1)                                           AS cpu_max,
+         round(max(steal),1)                                         AS steal,
+         arg_max(host, cpu)                                          AS peak_host,
+         strftime(arg_max(ts, cpu) + INTERVAL '${OFF_MIN} minutes','%m-%d %H:%M') AS cpu_max_at
+  FROM member GROUP BY ord, label
+),
+ha AS (
+  SELECT label, host,
+         any_value(vcpu)                                  AS vcpu,
+         any_value(vcpu)*avg(cpu)/100                      AS c_avg,
+         any_value(vcpu)*quantile_cont(cpu,0.95)/100       AS c_p95,
+         any_value(vcpu)*max(cpu)/100                      AS c_peak,
+         any_value(mem_total_gb)                           AS mem_tot,
+         avg(mem_used_gb)                                  AS mem_avg,
+         quantile_cont(mem_used_gb,0.95)                   AS mem_p95,
+         quantile_cont(mem_used_gb,0.99)                   AS mem_p99,
+         max(mem_used_gb)                                  AS mem_peak
+  FROM member WHERE host IS NOT NULL GROUP BY label, host
+),
+agg AS (
+  SELECT label,
+         sum(vcpu)                                         AS vcpu,
+         round(sum(c_avg),2)                               AS cores_avg,
+         round(sum(c_p95),2)                               AS cores_p95,
+         round(sum(c_peak),2)                              AS cores_peak,
+         round(100*sum(c_p95)/nullif(sum(vcpu),0),1)       AS util_p95_pct,
+         round(sum(mem_avg),1)                             AS mem_used_gb,
+         round(sum(mem_p95),1)                             AS mem_p95_gb,
+         round(sum(mem_p99),1)                             AS mem_p99_gb,
+         round(sum(mem_peak),1)                            AS mem_peak_gb,
+         round(sum(mem_tot),1)                             AS mem_tot_gb
+  FROM ha GROUP BY label
+),
+gf AS (
+  SELECT gm.ord, gm.label, gm.nodes, gm.smpl,
+         gm.cpu_avg, gm.cpu_p95, gm.cpu_p99, gm.cpu_max, gm.steal, gm.peak_host, gm.cpu_max_at,
+         a.vcpu, a.cores_avg, a.cores_p95, a.cores_peak, a.util_p95_pct,
+         a.mem_used_gb, a.mem_p95_gb, a.mem_p99_gb, a.mem_peak_gb, a.mem_tot_gb,
+         round(100*a.mem_p95_gb/nullif(a.mem_tot_gb,0),1)                                   AS mem_util_p95_pct,
+         CEIL((CASE WHEN '${REC_BASIS}'='peak' THEN a.cores_peak ELSE a.cores_p95 END)/${TARGET_CPU_UTIL}) AS rec_vcpu,
+         CEIL(a.mem_peak_gb * ${MEM_HEADROOM})                                              AS rec_mem_gb
+  FROM gm LEFT JOIN agg a USING (label)
+)
+SELECT ${COLS}
+FROM gf
+ORDER BY ${ORDER_SQL};
+"
+[[ "$FORMAT" == "box" ]] && echo || true
+
+# ---- fe_* frontend requests + peak throughput per GROUP (from the HAProxy DB) ----
+# Separate DB (haproxy.duckdb); shown only if present. group = host with trailing -N stripped.
+# total_req from the cumulative req_tot counter (max-min per frontend over window). GROUP AGGREGATE
+# across the group's nodes: req_avg = sum of per-node avg rates (exact group rate); req_peak &
+# out_mbps_max = sum of per-node peaks (envelope — per-node peaks may not be simultaneous);
+# max_req_at = when the hottest node peaked. Non-prod zones excluded via EXCLUDE_HOST (default ha-uat*,ha-pre*; '' = all).
+HAPROXY_DUCK_DB="${HAPROXY_DUCK_DB:-./haproxy.duckdb}"
+if [[ -f "$HAPROXY_DUCK_DB" ]]; then
+  EXCLUDE_HOST="${EXCLUDE_HOST-ha-uat*,ha-pre*}"
+  EXCL_HOST_SQL=""
+  if [[ -n "$EXCLUDE_HOST" ]]; then
+    hconds=(); IFS=',' read -ra _hpats <<<"$EXCLUDE_HOST"
+    for p in "${_hpats[@]}"; do
+      read -r p <<<"$p"; [[ -z "$p" ]] && continue
+      hl="${p//\%/\\%}"; hl="${hl//_/\\_}"; hl="${hl//\*/%}"; hl="${hl//\?/_}"
+      hconds+=("host ILIKE '${hl}' ESCAPE '\\'")
+    done
+    (( ${#hconds[@]} )) && { hj="$(printf ' OR %s' "${hconds[@]}")"; EXCL_HOST_SQL=" AND NOT (${hj# OR })"; }
+  fi
+  [[ "$FORMAT" == "box" ]] && echo "fe_* frontend requests by group — ${WINDOW_LABEL}  throughput=out Mbps  db=${HAPROXY_DUCK_DB}"
+  duckdb -readonly "$FLAG" "$HAPROXY_DUCK_DB" "
+  WITH w AS (
+    SELECT regexp_replace(host,'-[0-9]+(-[a-z]+)?\$','') AS grp, host, proxy, ts, req_rate, req_tot, bout_rate
+    FROM haproxy_proxies
+    WHERE type='FRONTEND' AND starts_with(proxy,'fe_') AND ${WINDOW_SQL}${EXCL_HOST_SQL}
+  ),
+  per_fe AS (
+    SELECT grp, host, proxy, max(req_tot) - min(req_tot) AS reqs FROM w GROUP BY grp, host, proxy
+  ),
+  tot AS (
+    SELECT grp, count(DISTINCT host) AS nodes, count(DISTINCT proxy) AS fe, sum(reqs) AS total_req
+    FROM per_fe GROUP BY grp
+  ),
+  per_host_ts AS (
+    SELECT grp, host, ts, sum(req_rate) AS req_h, sum(bout_rate) AS bout_h FROM w GROUP BY grp, host, ts
+  ),
+  per_host AS (
+    SELECT grp, host, avg(req_h) AS req_avg_h, max(req_h) AS req_peak_h, max(bout_h) AS bout_peak_h
+    FROM per_host_ts GROUP BY grp, host
+  ),
+  agg AS (
+    SELECT grp,
+           round(sum(req_avg_h),1)         AS req_avg,
+           sum(req_peak_h)                 AS req_peak,
+           round(sum(bout_peak_h)*8/1e6,1) AS out_mbps_max
+    FROM per_host GROUP BY grp
+  ),
+  peak_at AS (
+    SELECT grp, strftime(arg_max(ts, req_h) + INTERVAL '${OFF_MIN} minutes','%m-%d %H:%M') AS max_req_at
+    FROM per_host_ts GROUP BY grp
+  )
+  SELECT t.grp AS \"group\", t.nodes, t.fe, t.total_req, a.req_avg, a.req_peak, p.max_req_at, a.out_mbps_max
+  FROM tot t JOIN agg a USING (grp) JOIN peak_at p USING (grp)
+  ORDER BY regexp_replace(t.grp,'[0-9]+(-[a-z]+)?\$',''), TRY_CAST(regexp_extract(t.grp,'([0-9]+)(-[a-z]+)?\$',1) AS INTEGER) NULLS FIRST, t.grp;
+  "
+  [[ "$FORMAT" == "box" ]] && echo || true
+fi
+
+# ---- conntrack table utilization per GROUP (from the conntrack DB) ----
+# Separate DB (conntrack.duckdb); shown only if present. group = host minus trailing -N (and optional -<letter>).
+# util = 100*conns/conns_max (table fill); drops = sum of per-host pkt_drop deltas over the window.
+CONNTRACK_DUCK_DB="${CONNTRACK_DUCK_DB:-./conntrack.duckdb}"
+if [[ -f "$CONNTRACK_DUCK_DB" ]]; then
+  EXCLUDE_HOST="${EXCLUDE_HOST-ha-uat*,ha-pre*}"
+  EXCL_HOST_SQL=""
+  if [[ -n "$EXCLUDE_HOST" ]]; then
+    hconds=(); IFS=',' read -ra _hpats <<<"$EXCLUDE_HOST"
+    for p in "${_hpats[@]}"; do
+      read -r p <<<"$p"; [[ -z "$p" ]] && continue
+      hl="${p//\%/\\%}"; hl="${hl//_/\\_}"; hl="${hl//\*/%}"; hl="${hl//\?/_}"
+      hconds+=("host ILIKE '${hl}' ESCAPE '\\'")
+    done
+    (( ${#hconds[@]} )) && { hj="$(printf ' OR %s' "${hconds[@]}")"; EXCL_HOST_SQL=" AND NOT (${hj# OR })"; }
+  fi
+  [[ "$FORMAT" == "box" ]] && echo "conntrack table util by group — ${WINDOW_LABEL}  util=100*conns/max  db=${CONNTRACK_DUCK_DB}"
+  duckdb -readonly "$FLAG" "$CONNTRACK_DUCK_DB" "
+  WITH w AS (
+    SELECT regexp_replace(host,'-[0-9]+(-[a-z]+)?\$','') AS grp, host, ts, conns, conns_max, pkt_drop
+    FROM conntrack
+    WHERE ${WINDOW_SQL}${EXCL_HOST_SQL}
+  ),
+  per_host AS (
+    SELECT grp, host, max(pkt_drop) - min(pkt_drop) AS drops FROM w GROUP BY grp, host
+  ),
+  d AS (
+    SELECT grp, count(DISTINCT host) AS nodes, sum(drops) AS drops FROM per_host GROUP BY grp
+  ),
+  g AS (
+    SELECT grp,
+           max(conns_max)                                               AS conns_max,
+           round(avg(100.0*conns/nullif(conns_max,0)),1)                AS util_avg,
+           round(quantile_cont(100.0*conns/nullif(conns_max,0),0.95),1) AS util_p95,
+           round(max(100.0*conns/nullif(conns_max,0)),1)                AS util_max,
+           strftime(arg_max(ts, 100.0*conns/nullif(conns_max,0)) + INTERVAL '${OFF_MIN} minutes','%m-%d %H:%M') AS util_max_at
+    FROM w GROUP BY grp
+  )
+  SELECT g.grp AS \"group\", d.nodes, g.conns_max, g.util_avg, g.util_p95, g.util_max, g.util_max_at, d.drops
+  FROM g JOIN d USING (grp)
+  ORDER BY regexp_replace(g.grp,'[0-9]+(-[a-z]+)?\$',''), TRY_CAST(regexp_extract(g.grp,'([0-9]+)(-[a-z]+)?\$',1) AS INTEGER) NULLS FIRST, g.grp;
+  "
+  [[ "$FORMAT" == "box" ]] && echo || true
+fi

@@ -41,23 +41,40 @@ type Stats struct {
 	Bandwidth    [2]uint64 `json:"b,omitzero" cbor:"26,keyasint,omitzero"` // [sent bytes, recv bytes]
 	MaxBandwidth [2]uint64 `json:"bm,omitzero" cbor:"-"`                   // [sent bytes, recv bytes]
 	// TODO: remove other load fields in future release in favor of load avg array
-	LoadAvg           [3]float64           `json:"la,omitempty" cbor:"28,keyasint"`
-	Battery           [2]uint8             `json:"bat,omitzero" cbor:"29,keyasint,omitzero"`    // [percent, charge state, current]
-	NetworkInterfaces map[string][4]uint64 `json:"ni,omitempty" cbor:"31,keyasint,omitempty"`   // [upload bytes, download bytes, total upload, total download]
-	DiskIO            [2]uint64            `json:"dio,omitzero" cbor:"32,keyasint,omitzero"`    // [read bytes, write bytes]
-	MaxDiskIO         [2]uint64            `json:"diom,omitzero" cbor:"-"`                      // [max read bytes, max write bytes]
-	CpuBreakdown      []float64            `json:"cpub,omitempty" cbor:"33,keyasint,omitempty"` // [user, system, iowait, steal, idle]
-	CpuCoresUsage     Uint8Slice           `json:"cpus,omitempty" cbor:"34,keyasint,omitempty"` // per-core busy usage [CPU0..]
-	DiskIoStats       [6]float64           `json:"dios,omitzero" cbor:"35,keyasint,omitzero"`   // [read time %, write time %, io utilization %, r_await ms, w_await ms, weighted io %]
-	MaxDiskIoStats    [6]float64           `json:"diosm,omitzero" cbor:"-"`                     // max values for DiskIoStats
-	HAProxy            []HAProxyStats        `json:"hap,omitempty" cbor:"50,keyasint,omitempty"`  // hap: HAProxy frontend/backend stats (from "show stat")
-	HAProxyInfo        *HAProxyInfo          `json:"hapi,omitempty" cbor:"51,keyasint,omitempty"` // hapi: HAProxy process info (from "show info")
-	HAProxyPools       []HAProxyPool         `json:"hpp,omitempty" cbor:"52,keyasint,omitempty"`  // hpp: HAProxy memory pools (from "show pools")
-	HAProxyPoolSummary *HAProxyPoolSummary   `json:"hpps,omitempty" cbor:"53,keyasint,omitempty"` // hpps: HAProxy pool summary totals
-	HAProxyActivity    []HAProxyActivity     `json:"hpa,omitempty" cbor:"54,keyasint,omitempty"`  // hpa: HAProxy per-thread activity (from "show activity")
-	HAProxyServers     []HAProxyServerState  `json:"hpsv,omitempty" cbor:"55,keyasint,omitempty"` // hpsv: HAProxy server states (from "show servers state")
-	IPVS               *IPVSStats            `json:"ipvs,omitempty" cbor:"60,keyasint,omitempty"` // IPVS / LVS stats (Linux only)
-	Vector             *VectorStats          `json:"vec,omitempty" cbor:"80,keyasint,omitempty"`  // Vector aggregator GraphQL stats (opt-in via VECTOR_API_URL)
+	LoadAvg            [3]float64           `json:"la,omitempty" cbor:"28,keyasint"`
+	Battery            [2]uint8             `json:"bat,omitzero" cbor:"29,keyasint,omitzero"`    // [percent, charge state, current]
+	NetworkInterfaces  map[string][4]uint64 `json:"ni,omitempty" cbor:"31,keyasint,omitempty"`   // [upload bytes, download bytes, total upload, total download]
+	DiskIO             [2]uint64            `json:"dio,omitzero" cbor:"32,keyasint,omitzero"`    // [read bytes, write bytes]
+	MaxDiskIO          [2]uint64            `json:"diom,omitzero" cbor:"-"`                      // [max read bytes, max write bytes]
+	CpuBreakdown       []float64            `json:"cpub,omitempty" cbor:"33,keyasint,omitempty"` // [user, system, iowait, steal, idle]
+	CpuCoresUsage      Uint8Slice           `json:"cpus,omitempty" cbor:"34,keyasint,omitempty"` // per-core busy usage [CPU0..]
+	DiskIoStats        [6]float64           `json:"dios,omitzero" cbor:"35,keyasint,omitzero"`   // [read time %, write time %, io utilization %, r_await ms, w_await ms, weighted io %]
+	MaxDiskIoStats     [6]float64           `json:"diosm,omitzero" cbor:"-"`                     // max values for DiskIoStats
+	HAProxy            []HAProxyStats       `json:"hap,omitempty" cbor:"50,keyasint,omitempty"`  // hap: HAProxy frontend/backend stats (from "show stat")
+	HAProxyInfo        *HAProxyInfo         `json:"hapi,omitempty" cbor:"51,keyasint,omitempty"` // hapi: HAProxy process info (from "show info")
+	HAProxyPools       []HAProxyPool        `json:"hpp,omitempty" cbor:"52,keyasint,omitempty"`  // hpp: HAProxy memory pools (from "show pools")
+	HAProxyPoolSummary *HAProxyPoolSummary  `json:"hpps,omitempty" cbor:"53,keyasint,omitempty"` // hpps: HAProxy pool summary totals
+	HAProxyActivity    []HAProxyActivity    `json:"hpa,omitempty" cbor:"54,keyasint,omitempty"`  // hpa: HAProxy per-thread activity (from "show activity")
+	HAProxyServers     []HAProxyServerState `json:"hpsv,omitempty" cbor:"55,keyasint,omitempty"` // hpsv: HAProxy server states (from "show servers state")
+	IPVS               *IPVSStats           `json:"ipvs,omitempty" cbor:"60,keyasint,omitempty"` // IPVS / LVS stats (Linux only)
+	Vector             *VectorStats         `json:"vec,omitempty" cbor:"80,keyasint,omitempty"`  // Vector aggregator GraphQL stats (opt-in via VECTOR_API_URL)
+	Conntrack          *ConntrackStats      `json:"ct,omitempty" cbor:"100,keyasint,omitempty"`  // ct: netfilter conntrack table usage + drop counters (Linux only)
+}
+
+// ConntrackStats is the per-host netfilter connection-tracking snapshot. Cheap
+// /proc reads only — never a full-table scan: nf_conntrack_count/max are gauges,
+// the rest are cumulative per-CPU counters summed from /proc/net/stat/nf_conntrack.
+// util% is derived at query time (100*Count/Max). No CAP_NET_ADMIN (files are
+// world-readable). Auto-enabled wherever the nf_conntrack module is loaded.
+type ConntrackStats struct {
+	Count         uint64 `json:"c" cbor:"0,keyasint"`                       // nf_conntrack_count — current tracked entries (gauge)
+	Max           uint64 `json:"m" cbor:"1,keyasint"`                       // nf_conntrack_max — table limit (table-full => dropped packets)
+	Found         uint64 `json:"f,omitempty" cbor:"2,keyasint,omitempty"`   // cumulative: successful conntrack lookups
+	Invalid       uint64 `json:"inv,omitempty" cbor:"3,keyasint,omitempty"` // cumulative: packets that could not be tracked
+	InsertFailed  uint64 `json:"if,omitempty" cbor:"4,keyasint,omitempty"`  // cumulative: insert failures (race / pressure)
+	Drop          uint64 `json:"d,omitempty" cbor:"5,keyasint,omitempty"`   // cumulative: packets dropped (table full) — the alarm
+	EarlyDrop     uint64 `json:"ed,omitempty" cbor:"6,keyasint,omitempty"`  // cumulative: early drops of assured conns to make room
+	SearchRestart uint64 `json:"sr,omitempty" cbor:"7,keyasint,omitempty"`  // cumulative: lookups restarted due to hash resize
 }
 
 // VectorStats is the per-host snapshot of a Vector aggregator instance, polled
@@ -67,7 +84,7 @@ type Stats struct {
 type VectorStats struct {
 	Version        string            `json:"v,omitempty" cbor:"0,keyasint,omitempty"`   // Vector versionString from meta query
 	Hostname       string            `json:"h,omitempty" cbor:"1,keyasint,omitempty"`   // Vector reported hostname
-	Healthy        bool              `json:"hl" cbor:"2,keyasint"`                       // health query result
+	Healthy        bool              `json:"hl" cbor:"2,keyasint"`                      // health query result
 	UptimeSec      uint64            `json:"u,omitempty" cbor:"3,keyasint,omitempty"`   // process uptime in seconds (if exposed)
 	ComponentCount uint32            `json:"cc,omitempty" cbor:"4,keyasint,omitempty"`  // total components
 	SourceCount    uint32            `json:"sc,omitempty" cbor:"5,keyasint,omitempty"`  // source-kind components
@@ -85,9 +102,9 @@ type VectorStats struct {
 // VectorComponent represents one source/transform/sink component.
 // All metric fields are cumulative counters from Vector — the UI derives rates.
 type VectorComponent struct {
-	ID             string `json:"i" cbor:"0,keyasint"`                       // componentId
-	Type           string `json:"t" cbor:"1,keyasint"`                       // componentType (e.g. "kafka", "remap", "elasticsearch")
-	Kind           string `json:"k" cbor:"2,keyasint"`                       // "source" | "transform" | "sink"
+	ID             string `json:"i" cbor:"0,keyasint"`                      // componentId
+	Type           string `json:"t" cbor:"1,keyasint"`                      // componentType (e.g. "kafka", "remap", "elasticsearch")
+	Kind           string `json:"k" cbor:"2,keyasint"`                      // "source" | "transform" | "sink"
 	ReceivedEvents uint64 `json:"re,omitempty" cbor:"3,keyasint,omitempty"` // received_events_total
 	SentEvents     uint64 `json:"se,omitempty" cbor:"4,keyasint,omitempty"` // sent_events_total
 	ReceivedBytes  uint64 `json:"rb,omitempty" cbor:"5,keyasint,omitempty"` // received_bytes_total
@@ -100,18 +117,18 @@ type VectorComponent struct {
 // All traffic aggregates use service-level stats only — summing service + destination
 // would double-count, since service.bytes_in == sum(destinations.bytes_in).
 type IPVSStats struct {
-	Role          string        `json:"r" cbor:"0,keyasint"`                       // "active" | "standby" | "unknown" — VIP-bound check
-	VirtualIPs    []string      `json:"v" cbor:"1,keyasint"`                       // distinct VIPs from IPVS config (the WAN/ISP IPs)
-	ActiveConns   uint32        `json:"ac" cbor:"2,keyasint,omitempty"`            // sum active across services
-	InactiveConns uint32        `json:"ic" cbor:"3,keyasint,omitempty"`            // sum inactive across services (from destinations)
-	ConnRate      uint64        `json:"cps" cbor:"4,keyasint,omitempty"`           // sum new conns/sec
-	BytesInRate   uint64        `json:"bir" cbor:"5,keyasint,omitempty"`           // bits/sec ingress (kernel-provided)
-	BytesOutRate  uint64        `json:"bor" cbor:"6,keyasint,omitempty"`           // bits/sec egress
-	PktInRate     uint64        `json:"pir" cbor:"7,keyasint,omitempty"`           // packets/sec ingress
-	PktOutRate    uint64        `json:"por" cbor:"8,keyasint,omitempty"`           // packets/sec egress
-	TotalBytesIn  uint64        `json:"tbi" cbor:"9,keyasint,omitempty"`           // cumulative bytes in
-	TotalBytesOut uint64        `json:"tbo" cbor:"10,keyasint,omitempty"`          // cumulative bytes out
-	TotalConns    uint64        `json:"tc" cbor:"11,keyasint,omitempty"`           // cumulative conns
+	Role          string        `json:"r" cbor:"0,keyasint"`              // "active" | "standby" | "unknown" — VIP-bound check
+	VirtualIPs    []string      `json:"v" cbor:"1,keyasint"`              // distinct VIPs from IPVS config (the WAN/ISP IPs)
+	ActiveConns   uint32        `json:"ac" cbor:"2,keyasint,omitempty"`   // sum active across services
+	InactiveConns uint32        `json:"ic" cbor:"3,keyasint,omitempty"`   // sum inactive across services (from destinations)
+	ConnRate      uint64        `json:"cps" cbor:"4,keyasint,omitempty"`  // sum new conns/sec
+	BytesInRate   uint64        `json:"bir" cbor:"5,keyasint,omitempty"`  // bits/sec ingress (kernel-provided)
+	BytesOutRate  uint64        `json:"bor" cbor:"6,keyasint,omitempty"`  // bits/sec egress
+	PktInRate     uint64        `json:"pir" cbor:"7,keyasint,omitempty"`  // packets/sec ingress
+	PktOutRate    uint64        `json:"por" cbor:"8,keyasint,omitempty"`  // packets/sec egress
+	TotalBytesIn  uint64        `json:"tbi" cbor:"9,keyasint,omitempty"`  // cumulative bytes in
+	TotalBytesOut uint64        `json:"tbo" cbor:"10,keyasint,omitempty"` // cumulative bytes out
+	TotalConns    uint64        `json:"tc" cbor:"11,keyasint,omitempty"`  // cumulative conns
 	Services      []IPVSService `json:"svc,omitempty" cbor:"12,keyasint,omitempty"`
 }
 
@@ -119,8 +136,8 @@ type IPVSStats struct {
 type IPVSService struct {
 	VIP           string     `json:"v" cbor:"0,keyasint"`
 	Port          uint16     `json:"p" cbor:"1,keyasint"`
-	Protocol      string     `json:"pr" cbor:"2,keyasint"`                  // "TCP" | "UDP" | "IP(<n>)"
-	Scheduler     string     `json:"sc" cbor:"3,keyasint"`                  // rr/wrr/lc/wlc/sh/dh
+	Protocol      string     `json:"pr" cbor:"2,keyasint"`                     // "TCP" | "UDP" | "IP(<n>)"
+	Scheduler     string     `json:"sc" cbor:"3,keyasint"`                     // rr/wrr/lc/wlc/sh/dh
 	ForwardMode   string     `json:"fm,omitempty" cbor:"4,keyasint,omitempty"` // NAT/DR/TUN — derived from first destination
 	ActiveConns   uint32     `json:"ac" cbor:"5,keyasint,omitempty"`
 	InactiveConns uint32     `json:"ic" cbor:"6,keyasint,omitempty"`
@@ -139,7 +156,7 @@ type IPVSService struct {
 type IPVSDest struct {
 	Address       string `json:"a" cbor:"0,keyasint"`
 	Port          uint16 `json:"p" cbor:"1,keyasint"`
-	Weight        int32  `json:"w" cbor:"2,keyasint"`                   // 0 = drained / down
+	Weight        int32  `json:"w" cbor:"2,keyasint"`                      // 0 = drained / down
 	ForwardMode   string `json:"fm,omitempty" cbor:"3,keyasint,omitempty"` // NAT/DR/TUN
 	ActiveConns   uint32 `json:"ac" cbor:"4,keyasint,omitempty"`
 	InactiveConns uint32 `json:"ic" cbor:"5,keyasint,omitempty"`
@@ -239,52 +256,52 @@ type HAProxyStats struct {
 
 // HAProxyInfo contains HAProxy process information from "show info"
 type HAProxyInfo struct {
-	Version        string `json:"v" cbor:"0,keyasint"`                       // HAProxy version
-	Uptime         string `json:"up" cbor:"1,keyasint"`                      // uptime string
-	UptimeSec      uint64 `json:"us" cbor:"2,keyasint"`                      // uptime in seconds
-	MemMaxMB       uint64 `json:"mm,omitempty" cbor:"3,keyasint,omitempty"`  // max memory MB
-	PoolAllocMB    uint64 `json:"pa,omitempty" cbor:"4,keyasint,omitempty"`  // pool allocated MB
-	PoolUsedMB     uint64 `json:"pu,omitempty" cbor:"5,keyasint,omitempty"`  // pool used MB
-	Nbthread       uint64 `json:"nt" cbor:"6,keyasint"`                      // number of threads
-	Maxconn        uint64 `json:"mc" cbor:"7,keyasint"`                      // max connections
-	CurrConns      uint64 `json:"cc" cbor:"8,keyasint"`                      // current connections
-	CumConns       uint64 `json:"tc" cbor:"9,keyasint"`                      // cumulative connections
-	CumReq         uint64 `json:"tr" cbor:"10,keyasint"`                     // cumulative requests
-	MaxSslConns    uint64 `json:"msc,omitempty" cbor:"11,keyasint,omitempty"` // max SSL connections
-	CurrSslConns   uint64 `json:"csc,omitempty" cbor:"12,keyasint,omitempty"` // current SSL connections
-	CumSslConns    uint64 `json:"tsc,omitempty" cbor:"13,keyasint,omitempty"` // cumulative SSL connections
-	ConnRate       uint64 `json:"cr,omitempty" cbor:"14,keyasint,omitempty"`  // connection rate
-	MaxConnRate    uint64 `json:"mcr,omitempty" cbor:"15,keyasint,omitempty"` // max connection rate
-	SessRate       uint64 `json:"sr,omitempty" cbor:"16,keyasint,omitempty"`  // session rate
-	MaxSessRate    uint64 `json:"msr,omitempty" cbor:"17,keyasint,omitempty"` // max session rate
-	SslRate        uint64 `json:"slr,omitempty" cbor:"18,keyasint,omitempty"`  // SSL rate
-	MaxSslRate     uint64 `json:"mslr,omitempty" cbor:"19,keyasint,omitempty"` // max SSL rate
-	SslReusePct    uint64 `json:"srp,omitempty" cbor:"27,keyasint,omitempty"`  // SSL frontend session reuse %
-	Tasks          uint64 `json:"tk,omitempty" cbor:"20,keyasint,omitempty"`  // tasks
-	RunQueue       uint64 `json:"rq,omitempty" cbor:"21,keyasint,omitempty"`  // run queue
-	IdlePct        uint64 `json:"ip,omitempty" cbor:"22,keyasint,omitempty"`  // idle percent
-	Node           string `json:"nd,omitempty" cbor:"23,keyasint,omitempty"`  // node name
-	TotalBytesOut  uint64 `json:"bo,omitempty" cbor:"24,keyasint,omitempty"`  // total bytes out
-	BytesOutRate   uint64 `json:"bor,omitempty" cbor:"25,keyasint,omitempty"` // bytes out rate
-	Pid            uint64 `json:"pid,omitempty" cbor:"26,keyasint,omitempty"` // process ID
+	Version       string `json:"v" cbor:"0,keyasint"`                         // HAProxy version
+	Uptime        string `json:"up" cbor:"1,keyasint"`                        // uptime string
+	UptimeSec     uint64 `json:"us" cbor:"2,keyasint"`                        // uptime in seconds
+	MemMaxMB      uint64 `json:"mm,omitempty" cbor:"3,keyasint,omitempty"`    // max memory MB
+	PoolAllocMB   uint64 `json:"pa,omitempty" cbor:"4,keyasint,omitempty"`    // pool allocated MB
+	PoolUsedMB    uint64 `json:"pu,omitempty" cbor:"5,keyasint,omitempty"`    // pool used MB
+	Nbthread      uint64 `json:"nt" cbor:"6,keyasint"`                        // number of threads
+	Maxconn       uint64 `json:"mc" cbor:"7,keyasint"`                        // max connections
+	CurrConns     uint64 `json:"cc" cbor:"8,keyasint"`                        // current connections
+	CumConns      uint64 `json:"tc" cbor:"9,keyasint"`                        // cumulative connections
+	CumReq        uint64 `json:"tr" cbor:"10,keyasint"`                       // cumulative requests
+	MaxSslConns   uint64 `json:"msc,omitempty" cbor:"11,keyasint,omitempty"`  // max SSL connections
+	CurrSslConns  uint64 `json:"csc,omitempty" cbor:"12,keyasint,omitempty"`  // current SSL connections
+	CumSslConns   uint64 `json:"tsc,omitempty" cbor:"13,keyasint,omitempty"`  // cumulative SSL connections
+	ConnRate      uint64 `json:"cr,omitempty" cbor:"14,keyasint,omitempty"`   // connection rate
+	MaxConnRate   uint64 `json:"mcr,omitempty" cbor:"15,keyasint,omitempty"`  // max connection rate
+	SessRate      uint64 `json:"sr,omitempty" cbor:"16,keyasint,omitempty"`   // session rate
+	MaxSessRate   uint64 `json:"msr,omitempty" cbor:"17,keyasint,omitempty"`  // max session rate
+	SslRate       uint64 `json:"slr,omitempty" cbor:"18,keyasint,omitempty"`  // SSL rate
+	MaxSslRate    uint64 `json:"mslr,omitempty" cbor:"19,keyasint,omitempty"` // max SSL rate
+	SslReusePct   uint64 `json:"srp,omitempty" cbor:"27,keyasint,omitempty"`  // SSL frontend session reuse %
+	Tasks         uint64 `json:"tk,omitempty" cbor:"20,keyasint,omitempty"`   // tasks
+	RunQueue      uint64 `json:"rq,omitempty" cbor:"21,keyasint,omitempty"`   // run queue
+	IdlePct       uint64 `json:"ip,omitempty" cbor:"22,keyasint,omitempty"`   // idle percent
+	Node          string `json:"nd,omitempty" cbor:"23,keyasint,omitempty"`   // node name
+	TotalBytesOut uint64 `json:"bo,omitempty" cbor:"24,keyasint,omitempty"`   // total bytes out
+	BytesOutRate  uint64 `json:"bor,omitempty" cbor:"25,keyasint,omitempty"`  // bytes out rate
+	Pid           uint64 `json:"pid,omitempty" cbor:"26,keyasint,omitempty"`  // process ID
 }
 
 // HAProxyPool represents a single memory pool from "show pools"
 type HAProxyPool struct {
-	Name      string `json:"n" cbor:"0,keyasint"`                       // pool name
-	Size      uint64 `json:"sz" cbor:"1,keyasint"`                      // element size (bytes)
-	Allocated uint64 `json:"a" cbor:"2,keyasint"`                       // total allocated bytes
-	Used      uint64 `json:"u" cbor:"3,keyasint"`                       // total used count
-	InCache   uint64 `json:"ic,omitempty" cbor:"4,keyasint,omitempty"`  // in thread caches
-	Failures  uint64 `json:"f,omitempty" cbor:"5,keyasint,omitempty"`   // allocation failures
+	Name      string `json:"n" cbor:"0,keyasint"`                      // pool name
+	Size      uint64 `json:"sz" cbor:"1,keyasint"`                     // element size (bytes)
+	Allocated uint64 `json:"a" cbor:"2,keyasint"`                      // total allocated bytes
+	Used      uint64 `json:"u" cbor:"3,keyasint"`                      // total used count
+	InCache   uint64 `json:"ic,omitempty" cbor:"4,keyasint,omitempty"` // in thread caches
+	Failures  uint64 `json:"f,omitempty" cbor:"5,keyasint,omitempty"`  // allocation failures
 }
 
 // HAProxyPoolSummary contains total pool statistics
 type HAProxyPoolSummary struct {
-	TotalPools     uint64 `json:"tp" cbor:"0,keyasint"`                      // number of pools
-	TotalAllocated uint64 `json:"ta" cbor:"1,keyasint"`                      // total allocated bytes
-	TotalUsed      uint64 `json:"tu" cbor:"2,keyasint"`                      // total used bytes
-	InThreadCaches uint64 `json:"tc,omitempty" cbor:"3,keyasint,omitempty"`  // bytes in thread caches
+	TotalPools     uint64 `json:"tp" cbor:"0,keyasint"`                     // number of pools
+	TotalAllocated uint64 `json:"ta" cbor:"1,keyasint"`                     // total allocated bytes
+	TotalUsed      uint64 `json:"tu" cbor:"2,keyasint"`                     // total used bytes
+	InThreadCaches uint64 `json:"tc,omitempty" cbor:"3,keyasint,omitempty"` // bytes in thread caches
 }
 
 // HAProxyActivity represents per-thread activity from "show activity"
@@ -301,15 +318,15 @@ type HAProxyActivity struct {
 
 // HAProxyServerState represents server state from "show servers state"
 type HAProxyServerState struct {
-	Backend     string `json:"bk" cbor:"0,keyasint"`                       // backend name
-	Server      string `json:"sv" cbor:"1,keyasint"`                       // server name
-	Address     string `json:"addr" cbor:"2,keyasint"`                     // server address
-	Port        uint16 `json:"port" cbor:"3,keyasint"`                     // server port
-	OpState     uint8  `json:"os" cbor:"4,keyasint"`                       // operational state (0=stopped, 2=running)
-	AdminState  uint8  `json:"as" cbor:"5,keyasint"`                       // admin state
-	Weight      uint16 `json:"w" cbor:"6,keyasint"`                        // current weight
-	CheckStatus uint8  `json:"cks,omitempty" cbor:"7,keyasint,omitempty"`  // check status
-	LastChange  uint64 `json:"lc,omitempty" cbor:"8,keyasint,omitempty"`   // seconds since last change
+	Backend     string `json:"bk" cbor:"0,keyasint"`                      // backend name
+	Server      string `json:"sv" cbor:"1,keyasint"`                      // server name
+	Address     string `json:"addr" cbor:"2,keyasint"`                    // server address
+	Port        uint16 `json:"port" cbor:"3,keyasint"`                    // server port
+	OpState     uint8  `json:"os" cbor:"4,keyasint"`                      // operational state (0=stopped, 2=running)
+	AdminState  uint8  `json:"as" cbor:"5,keyasint"`                      // admin state
+	Weight      uint16 `json:"w" cbor:"6,keyasint"`                       // current weight
+	CheckStatus uint8  `json:"cks,omitempty" cbor:"7,keyasint,omitempty"` // check status
+	LastChange  uint64 `json:"lc,omitempty" cbor:"8,keyasint,omitempty"`  // seconds since last change
 }
 
 type Os = uint8

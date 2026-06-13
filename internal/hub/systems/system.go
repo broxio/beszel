@@ -603,6 +603,70 @@ func (sys *System) fetchDataViaSSH(options common.DataRequestOptions) (*system.C
 	return sys.data, nil
 }
 
+// fetchForRecorder fetches agent data into a PRIVATE buffer, never touching the
+// shared sys.data, so the HAProxy recorder can run concurrently with the updater
+// and realtime worker without a data race. Supports both transports. On SSH it
+// stays passive: it reuses the existing client/session via createSessionWithTimeout
+// but never dials or closes the shared SSH connection (so a recorder fetch can't
+// disrupt the updater).
+func (sys *System) fetchForRecorder(ctx context.Context, options common.DataRequestOptions) (*system.CombinedData, error) {
+	if sys.WsConn != nil && sys.WsConn.IsConnected() {
+		var cd system.CombinedData
+		if err := transport.NewWebSocketTransport(sys.WsConn).Request(ctx, common.GetData, options, &cd); err != nil {
+			return nil, err
+		}
+		return &cd, nil
+	}
+
+	if sys.client == nil {
+		return nil, errNoRecorderTransport
+	}
+	session, err := sys.createSessionWithTimeout(4 * time.Second)
+	if err != nil {
+		return nil, err
+	}
+	defer session.Close()
+
+	stdout, err := session.StdoutPipe()
+	if err != nil {
+		return nil, err
+	}
+	stdin, stdinErr := session.StdinPipe()
+	if err := session.Shell(); err != nil {
+		return nil, err
+	}
+
+	var cd system.CombinedData
+	if sys.agentVersion.GTE(beszel.MinVersionAgentResponse) && stdinErr == nil {
+		req := common.HubRequest[any]{Action: common.GetData, Data: options}
+		_ = cbor.NewEncoder(stdin).Encode(req)
+		_ = stdin.Close()
+		var resp common.AgentResponse
+		if decErr := cbor.NewDecoder(stdout).Decode(&resp); decErr != nil || resp.SystemData == nil {
+			return nil, fmt.Errorf("recorder ssh decode failed: %w", decErr)
+		}
+		cd = *resp.SystemData
+		if err := session.Wait(); err != nil {
+			return nil, err
+		}
+		return &cd, nil
+	}
+
+	var decodeErr error
+	if sys.agentVersion.GTE(beszel.MinVersionCbor) {
+		decodeErr = cbor.NewDecoder(stdout).Decode(&cd)
+	} else {
+		decodeErr = json.NewDecoder(stdout).Decode(&cd)
+	}
+	if decodeErr != nil {
+		return nil, decodeErr
+	}
+	if err := session.Wait(); err != nil {
+		return nil, err
+	}
+	return &cd, nil
+}
+
 // runSSHOperation establishes an SSH session and executes the provided operation.
 // The operation can request a retry by returning true as the first return value.
 func (sys *System) runSSHOperation(timeout time.Duration, retries int, operation func(*ssh.Session) (bool, error)) error {

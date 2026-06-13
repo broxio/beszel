@@ -1,2 +1,5 @@
 .env
 data/
+haproxy-data/
+parquet/
+ui.htpasswd
