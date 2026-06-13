@@ -13,6 +13,8 @@
         "description": "CPU, load avg, memory, disk usage, disk IO (throughput + io_util%), network bandwidth, and conntrack table utilization when available. Auto-grouped by hostname.",
         "parameters": [
           { "$ref": "#/components/parameters/hours" },
+          { "$ref": "#/components/parameters/from" },
+          { "$ref": "#/components/parameters/to" },
           { "$ref": "#/components/parameters/host" },
           {
             "name": "view", "in": "query", "required": false,
@@ -28,6 +30,8 @@
         "summary": "Capacity report (true percentiles + exact peak time + fleet totals)",
         "parameters": [
           { "$ref": "#/components/parameters/hours" },
+          { "$ref": "#/components/parameters/from" },
+          { "$ref": "#/components/parameters/to" },
           { "$ref": "#/components/parameters/host" }
         ],
         "responses": { "200": { "$ref": "#/components/responses/Report" }, "400": { "$ref": "#/components/responses/BadRequest" } }
@@ -38,6 +42,8 @@
         "summary": "HAProxy troubleshooting (per-frontend req/5xx/sessions, slowest backends, flaps, per-host idle%)",
         "parameters": [
           { "$ref": "#/components/parameters/hours" },
+          { "$ref": "#/components/parameters/from" },
+          { "$ref": "#/components/parameters/to" },
           { "$ref": "#/components/parameters/host" }
         ],
         "responses": { "200": { "$ref": "#/components/responses/Report" }, "400": { "$ref": "#/components/responses/BadRequest" } }
@@ -48,6 +54,8 @@
         "summary": "Per-host netfilter conntrack table utilization + drop deltas",
         "parameters": [
           { "$ref": "#/components/parameters/hours" },
+          { "$ref": "#/components/parameters/from" },
+          { "$ref": "#/components/parameters/to" },
           { "$ref": "#/components/parameters/host" }
         ],
         "responses": { "200": { "$ref": "#/components/responses/Report" }, "400": { "$ref": "#/components/responses/BadRequest" } }
@@ -58,6 +66,8 @@
         "summary": "Capacity rolled up per host-group (usage or cloud forecast)",
         "parameters": [
           { "$ref": "#/components/parameters/hours" },
+          { "$ref": "#/components/parameters/from" },
+          { "$ref": "#/components/parameters/to" },
           {
             "name": "view", "in": "query", "required": false,
             "schema": { "type": "string", "enum": ["usage", "forecast"], "default": "usage" },
@@ -72,6 +82,8 @@
         "summary": "Cross-correlation: conntrack util vs HAProxy 5xx/sessions vs CPU steal per minute",
         "parameters": [
           { "$ref": "#/components/parameters/hours" },
+          { "$ref": "#/components/parameters/from" },
+          { "$ref": "#/components/parameters/to" },
           { "$ref": "#/components/parameters/host" }
         ],
         "responses": { "200": { "$ref": "#/components/responses/Report" }, "400": { "$ref": "#/components/responses/BadRequest" } }
@@ -83,7 +95,17 @@
       "hours": {
         "name": "hours", "in": "query", "required": false,
         "schema": { "type": "integer", "minimum": 1, "maximum": 2160, "default": 24 },
-        "description": "Window: last N hours (UTC). Capped at 2160 (90 days)."
+        "description": "Window: last N hours (UTC). Capped at 2160 (90 days). Mutually exclusive with from/to."
+      },
+      "from": {
+        "name": "from", "in": "query", "required": false,
+        "schema": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}([ T][0-9]{2}:[0-9]{2}(:[0-9]{2})?)?$" },
+        "description": "Explicit range start, local time (server TZ_OFFSET, default UTC+8). 'YYYY-MM-DD' or 'YYYY-MM-DD HH:MM[:SS]'. Must be paired with to; cannot be combined with hours."
+      },
+      "to": {
+        "name": "to", "in": "query", "required": false,
+        "schema": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}([ T][0-9]{2}:[0-9]{2}(:[0-9]{2})?)?$" },
+        "description": "Explicit range end (exclusive), local time (server TZ_OFFSET, default UTC+8). 'YYYY-MM-DD' or 'YYYY-MM-DD HH:MM[:SS]'. Must be paired with from; cannot be combined with hours."
       },
       "host": {
         "name": "host", "in": "query", "required": false,
@@ -106,7 +128,9 @@
                   "properties": {
                     "hours": { "type": "integer" },
                     "host": { "type": "string" },
-                    "view": { "type": "string" }
+                    "view": { "type": "string" },
+                    "from": { "type": "string" },
+                    "to": { "type": "string" }
                   }
                 },
                 "generated_at": { "type": "string", "format": "date-time" },

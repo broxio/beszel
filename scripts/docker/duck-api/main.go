@@ -46,10 +46,17 @@ var endpoints = map[string]endpoint{
 // excludes everything that could matter to a shell (we never use a shell, but defence in depth).
 var hostRe = regexp.MustCompile(`^[A-Za-z0-9_.*?-]{1,64}$`)
 
+// timestamp for from/to range mode: mirrors the validation in the report scripts
+// ('YYYY-MM-DD' or 'YYYY-MM-DD HH:MM[:SS]', local time per the script's TZ_OFFSET).
+// Restricted to digits + - : space T, so it is safe to pass as an argv element.
+var tsRe = regexp.MustCompile(`^[0-9]{4}-[0-9]{2}-[0-9]{2}([ T][0-9]{2}:[0-9]{2}(:[0-9]{2})?)?$`)
+
 type params struct {
-	Hours int    `json:"hours"`
+	Hours int    `json:"hours,omitempty"`
 	Host  string `json:"host,omitempty"`
 	View  string `json:"view,omitempty"`
+	From  string `json:"from,omitempty"`
+	To    string `json:"to,omitempty"`
 }
 
 type envelope struct {
@@ -99,12 +106,16 @@ func indexHandler(w http.ResponseWriter, _ *http.Request) {
 		"service":   "duck-api",
 		"endpoints": list,
 		"openapi":   "/openapi.json",
-		"note":      "read-only GET; window via ?hours=N (1.." + strconv.Itoa(maxHours) + ")",
+		"note":      "read-only GET; window via ?hours=N (1.." + strconv.Itoa(maxHours) + ") or ?from=&to= (local time)",
 	})
 }
 
 func paramDoc(ep endpoint) map[string]any {
-	p := map[string]any{"hours": "int 1.." + strconv.Itoa(maxHours)}
+	p := map[string]any{
+		"hours": "int 1.." + strconv.Itoa(maxHours) + " (relative window; mutually exclusive with from/to)",
+		"from":  "local ts 'YYYY-MM-DD[ HH:MM[:SS]]'; pair with to for an explicit range",
+		"to":    "local ts 'YYYY-MM-DD[ HH:MM[:SS]]'; pair with from for an explicit range",
+	}
 	if ep.takesHost {
 		p["host"] = "glob, default *"
 	}
@@ -118,10 +129,33 @@ func makeHandler(report string, ep endpoint) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		q := r.URL.Query()
 
-		hours, ok := parseHours(q.Get("hours"))
-		if !ok {
-			httpError(w, http.StatusBadRequest, "hours must be an integer in 1.."+strconv.Itoa(maxHours))
-			return
+		// Window selection: either relative (?hours=N) or an explicit local-time
+		// range (?from=...&to=...). The two are mutually exclusive; range mode
+		// hands FROM/TO straight to the script's range form (arg1 not an integer).
+		from, to := q.Get("from"), q.Get("to")
+		rangeMode := from != "" || to != ""
+
+		var hours int
+		if rangeMode {
+			if q.Get("hours") != "" {
+				httpError(w, http.StatusBadRequest, "cannot combine 'hours' with 'from'/'to'")
+				return
+			}
+			if from == "" || to == "" {
+				httpError(w, http.StatusBadRequest, "range query needs both 'from' and 'to'")
+				return
+			}
+			if !tsRe.MatchString(from) || !tsRe.MatchString(to) {
+				httpError(w, http.StatusBadRequest, "from/to must be 'YYYY-MM-DD' or 'YYYY-MM-DD HH:MM[:SS]' (local time)")
+				return
+			}
+		} else {
+			var ok bool
+			hours, ok = parseHours(q.Get("hours"))
+			if !ok {
+				httpError(w, http.StatusBadRequest, "hours must be an integer in 1.."+strconv.Itoa(maxHours))
+				return
+			}
 		}
 
 		host := q.Get("host")
@@ -152,8 +186,14 @@ func makeHandler(report string, ep endpoint) http.HandlerFunc {
 			return
 		}
 
-		// argv: never a shell. Args already validated above.
-		args := []string{strconv.Itoa(hours)}
+		// argv: never a shell. Args already validated above. In range mode the
+		// script auto-selects its FROM/TO form because arg1 isn't a bare integer.
+		var args []string
+		if rangeMode {
+			args = []string{from, to}
+		} else {
+			args = []string{strconv.Itoa(hours)}
+		}
 		if ep.takesHost {
 			args = append(args, host)
 		}
@@ -198,7 +238,7 @@ func makeHandler(report string, ep endpoint) http.HandlerFunc {
 
 		writeJSON(w, http.StatusOK, envelope{
 			Report:      report,
-			Params:      params{Hours: hours, Host: hostFor(ep, host), View: view},
+			Params:      params{Hours: hours, Host: hostFor(ep, host), View: view, From: from, To: to},
 			GeneratedAt: time.Now().UTC().Format(time.RFC3339),
 			Sections:    sections,
 		})
