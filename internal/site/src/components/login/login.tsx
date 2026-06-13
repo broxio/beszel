@@ -61,7 +61,7 @@ export default function () {
 				</div>
 				<div className="text-center">
 					<h1 className="mb-3">
-						<Logo className="h-7 fill-foreground mx-auto" />
+						<Logo className="h-16 mx-auto" />
 						<span className="sr-only">Beszel</span>
 					</h1>
 					<p className="text-sm text-muted-foreground">{subtitle}</p>
