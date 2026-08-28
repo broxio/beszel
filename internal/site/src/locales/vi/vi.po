@@ -8,7 +8,7 @@ msgstr ""
 "Language: vi\n"
 "Project-Id-Version: beszel\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2026-04-05 18:28\n"
+"PO-Revision-Date: 2026-08-18 17:52\n"
 "Last-Translator: \n"
 "Language-Team: Vietnamese\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
@@ -340,6 +340,7 @@ msgid "Bat"
 msgstr "Pin"
 
 #: src/components/routes/system/charts/sensor-charts.tsx
+#: src/components/routes/system/charts/sensor-charts.tsx
 #: src/lib/alerts.ts
 msgid "Battery"
 msgstr "Pin"
@@ -632,6 +633,10 @@ msgstr "Sao chép lệnh Linux"
 msgid "Copy name"
 msgstr "Sao chép tên"
 
+#: src/components/routes/settings/tokens-fingerprints.tsx
+msgid "Copy public key"
+msgstr ""
+
 #: src/components/copy-to-clipboard.tsx
 msgid "Copy text"
 msgstr "Sao chép văn bản"
@@ -722,6 +727,8 @@ msgid "Current sessions across frontends and backends"
 msgstr ""
 
 #. Context: Battery state
+#. Context: Battery state
+#: src/components/routes/system/charts/sensor-charts.tsx
 #: src/components/routes/system/charts/sensor-charts.tsx
 msgid "Current state"
 msgstr "Trạng thái hiện tại"
@@ -1028,6 +1035,10 @@ msgstr "Cập nhật cảnh báo thất bại"
 msgid "Failed: {0}"
 msgstr "Thất bại: {0}"
 
+#: src/components/routes/system/charts/sensor-charts.tsx
+msgid "Fans"
+msgstr ""
+
 #: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/lvs-aggregate.tsx
 msgid "Filter by zone:"
@@ -1311,7 +1322,6 @@ msgstr "Địa chỉ email không hợp lệ."
 msgid "Kind"
 msgstr ""
 
-#: src/components/lang-toggle.tsx
 #: src/components/routes/settings/general.tsx
 msgid "Language"
 msgstr "Ngôn ngữ"
@@ -1452,8 +1462,8 @@ msgid "Memory Usage"
 msgstr "Sử dụng Bộ nhớ"
 
 #: src/components/routes/system/charts/memory-charts.tsx
-msgid "Memory usage of docker containers"
-msgstr "Sử dụng bộ nhớ của các container Docker"
+msgid "Memory usage of containers"
+msgstr "Mức sử dụng bộ nhớ của các container"
 
 #: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/lvs-aggregate.tsx
@@ -1479,8 +1489,8 @@ msgid "Net"
 msgstr "Mạng"
 
 #: src/components/routes/system/charts/network-charts.tsx
-msgid "Network traffic of docker containers"
-msgstr "Lưu lượng mạng của các container Docker"
+msgid "Network traffic of containers"
+msgstr "Lưu lượng mạng của các container"
 
 #: src/components/routes/system/charts/network-charts.tsx
 #: src/components/routes/system/network-sheet.tsx
@@ -1767,6 +1777,10 @@ msgstr "Ngôn ngữ Ưa thích"
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Process started"
 msgstr "Tiến trình đã khởi động"
+
+#: src/components/routes/settings/tokens-fingerprints.tsx
+msgid "Public key"
+msgstr ""
 
 #. Use 'Key' if your language requires many more characters
 #: src/components/add-system.tsx
@@ -2071,6 +2085,10 @@ msgstr ""
 #: src/lib/alerts.ts
 msgid "System"
 msgstr "Hệ thống"
+
+#: src/components/routes/system/charts/sensor-charts.tsx
+msgid "System fan speeds (RPM)"
+msgstr ""
 
 #: src/components/routes/system/charts/load-average-chart.tsx
 msgid "System load averages over time"

@@ -8,7 +8,7 @@ msgstr ""
 "Language: sr\n"
 "Project-Id-Version: beszel\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2026-04-05 18:27\n"
+"PO-Revision-Date: 2026-08-26 21:14\n"
 "Last-Translator: \n"
 "Language-Team: Serbian (Cyrillic)\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
@@ -340,6 +340,7 @@ msgid "Bat"
 msgstr "Бат"
 
 #: src/components/routes/system/charts/sensor-charts.tsx
+#: src/components/routes/system/charts/sensor-charts.tsx
 #: src/lib/alerts.ts
 msgid "Battery"
 msgstr "Батерија"
@@ -632,6 +633,10 @@ msgstr "Копирај Linux команду"
 msgid "Copy name"
 msgstr "Копирај име"
 
+#: src/components/routes/settings/tokens-fingerprints.tsx
+msgid "Copy public key"
+msgstr "Копирај јавни кључ"
+
 #: src/components/copy-to-clipboard.tsx
 msgid "Copy text"
 msgstr "Копирај текст"
@@ -722,6 +727,8 @@ msgid "Current sessions across frontends and backends"
 msgstr ""
 
 #. Context: Battery state
+#. Context: Battery state
+#: src/components/routes/system/charts/sensor-charts.tsx
 #: src/components/routes/system/charts/sensor-charts.tsx
 msgid "Current state"
 msgstr "Тренутно стање"
@@ -1028,6 +1035,10 @@ msgstr "Неуспело ажурирање упозорења"
 msgid "Failed: {0}"
 msgstr "Неуспело: {0}"
 
+#: src/components/routes/system/charts/sensor-charts.tsx
+msgid "Fans"
+msgstr "Вентилатори"
+
 #: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/lvs-aggregate.tsx
 msgid "Filter by zone:"
@@ -1091,7 +1102,7 @@ msgstr "Глобално"
 
 #: src/components/routes/system.tsx
 msgid "GPU"
-msgstr ""
+msgstr "ГПЈ"
 
 #: src/components/routes/system/charts/gpu-charts.tsx
 msgid "GPU Engines"
@@ -1311,7 +1322,6 @@ msgstr "Неважећа имејл адреса."
 msgid "Kind"
 msgstr ""
 
-#: src/components/lang-toggle.tsx
 #: src/components/routes/settings/general.tsx
 msgid "Language"
 msgstr "Језик"
@@ -1452,8 +1462,8 @@ msgid "Memory Usage"
 msgstr "Употреба меморије"
 
 #: src/components/routes/system/charts/memory-charts.tsx
-msgid "Memory usage of docker containers"
-msgstr "Употреба меморије docker контејнера"
+msgid "Memory usage of containers"
+msgstr "Коришћење меморије контејнера"
 
 #: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/lvs-aggregate.tsx
@@ -1479,8 +1489,8 @@ msgid "Net"
 msgstr "Мрежа"
 
 #: src/components/routes/system/charts/network-charts.tsx
-msgid "Network traffic of docker containers"
-msgstr "Мрежни саобраћај docker контејнера"
+msgid "Network traffic of containers"
+msgstr "Мрежни саобраћај контејнера"
 
 #: src/components/routes/system/charts/network-charts.tsx
 #: src/components/routes/system/network-sheet.tsx
@@ -1768,6 +1778,10 @@ msgstr "Жељени језик"
 msgid "Process started"
 msgstr "Процес покренут"
 
+#: src/components/routes/settings/tokens-fingerprints.tsx
+msgid "Public key"
+msgstr "Јавни кључ"
+
 #. Use 'Key' if your language requires many more characters
 #: src/components/add-system.tsx
 msgid "Public Key"
@@ -1859,7 +1873,7 @@ msgstr "Настави"
 #: src/components/systems-table/systems-table-columns.tsx
 msgctxt "Root disk label"
 msgid "Root"
-msgstr ""
+msgstr "Root"
 
 #: src/components/routes/settings/tokens-fingerprints.tsx
 msgid "Rotate token"
@@ -2055,7 +2069,7 @@ msgstr "Swap употреба"
 #: src/components/mode-toggle.tsx
 #: src/components/mode-toggle.tsx
 msgid "Switch theme"
-msgstr ""
+msgstr "Промени тему"
 
 #: src/components/add-system.tsx
 #: src/components/alerts-history-columns.tsx
@@ -2071,6 +2085,10 @@ msgstr ""
 #: src/lib/alerts.ts
 msgid "System"
 msgstr "Систем"
+
+#: src/components/routes/system/charts/sensor-charts.tsx
+msgid "System fan speeds (RPM)"
+msgstr ""
 
 #: src/components/routes/system/charts/load-average-chart.tsx
 msgid "System load averages over time"
@@ -2222,7 +2240,7 @@ msgstr ""
 #: src/components/routes/system/disk-io-sheet.tsx
 msgctxt "Disk I/O"
 msgid "Total time spent on read/write (can exceed 100%)"
-msgstr ""
+msgstr "Укупно време проведено на читању/писању (може бити веће од 100%)"
 
 #. placeholder {0}: data.length
 #: src/components/systemd-table/systemd-table.tsx

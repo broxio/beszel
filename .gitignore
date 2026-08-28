@@ -3,7 +3,6 @@ pb_data
 data
 temp
 .vscode
-beszel-agent
 beszel_data
 beszel_data*
 dist
@@ -28,3 +27,5 @@ dockerfile_agent_dev
 scripts/peaks.csv
 scripts/ui.htpasswd
 hub
+.cr-release-packages
+.tmp

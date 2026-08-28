@@ -335,6 +335,7 @@ msgid "Bat"
 msgstr "Bat"
 
 #: src/components/routes/system/charts/sensor-charts.tsx
+#: src/components/routes/system/charts/sensor-charts.tsx
 #: src/lib/alerts.ts
 msgid "Battery"
 msgstr "Battery"
@@ -627,6 +628,10 @@ msgstr "Copy Linux command"
 msgid "Copy name"
 msgstr "Copy name"
 
+#: src/components/routes/settings/tokens-fingerprints.tsx
+msgid "Copy public key"
+msgstr "Copy public key"
+
 #: src/components/copy-to-clipboard.tsx
 msgid "Copy text"
 msgstr "Copy text"
@@ -717,6 +722,8 @@ msgid "Current sessions across frontends and backends"
 msgstr "Current sessions across frontends and backends"
 
 #. Context: Battery state
+#. Context: Battery state
+#: src/components/routes/system/charts/sensor-charts.tsx
 #: src/components/routes/system/charts/sensor-charts.tsx
 msgid "Current state"
 msgstr "Current state"
@@ -1023,6 +1030,10 @@ msgstr "Failed to update alert"
 msgid "Failed: {0}"
 msgstr "Failed: {0}"
 
+#: src/components/routes/system/charts/sensor-charts.tsx
+msgid "Fans"
+msgstr "Fans"
+
 #: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/lvs-aggregate.tsx
 msgid "Filter by zone:"
@@ -1306,7 +1317,6 @@ msgstr "Invalid email address."
 msgid "Kind"
 msgstr "Kind"
 
-#: src/components/lang-toggle.tsx
 #: src/components/routes/settings/general.tsx
 msgid "Language"
 msgstr "Language"
@@ -1447,8 +1457,8 @@ msgid "Memory Usage"
 msgstr "Memory Usage"
 
 #: src/components/routes/system/charts/memory-charts.tsx
-msgid "Memory usage of docker containers"
-msgstr "Memory usage of docker containers"
+msgid "Memory usage of containers"
+msgstr "Memory usage of containers"
 
 #: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/lvs-aggregate.tsx
@@ -1474,8 +1484,8 @@ msgid "Net"
 msgstr "Net"
 
 #: src/components/routes/system/charts/network-charts.tsx
-msgid "Network traffic of docker containers"
-msgstr "Network traffic of docker containers"
+msgid "Network traffic of containers"
+msgstr "Network traffic of containers"
 
 #: src/components/routes/system/charts/network-charts.tsx
 #: src/components/routes/system/network-sheet.tsx
@@ -1762,6 +1772,10 @@ msgstr "Preferred Language"
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Process started"
 msgstr "Process started"
+
+#: src/components/routes/settings/tokens-fingerprints.tsx
+msgid "Public key"
+msgstr "Public key"
 
 #. Use 'Key' if your language requires many more characters
 #: src/components/add-system.tsx
@@ -2066,6 +2080,10 @@ msgstr "Switch theme"
 #: src/lib/alerts.ts
 msgid "System"
 msgstr "System"
+
+#: src/components/routes/system/charts/sensor-charts.tsx
+msgid "System fan speeds (RPM)"
+msgstr "System fan speeds (RPM)"
 
 #: src/components/routes/system/charts/load-average-chart.tsx
 msgid "System load averages over time"
