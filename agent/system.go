@@ -12,6 +12,7 @@ import (
 
 	"github.com/henrygd/beszel"
 	"github.com/henrygd/beszel/agent/battery"
+	"github.com/henrygd/beszel/agent/btrfs"
 	"github.com/henrygd/beszel/agent/utils"
 	"github.com/henrygd/beszel/agent/zfs"
 	"github.com/henrygd/beszel/internal/entities/container"
@@ -32,7 +33,11 @@ func (a *Agent) refreshSystemDetails() {
 
 	if a.dockerManager != nil {
 		a.systemDetails.Podman = a.dockerManager.IsPodman()
-		hostInfo, _ = a.dockerManager.GetHostInfo()
+		// Docker's host info describes the machine its daemon runs on. On macOS and
+		// Windows that is a Linux VM, so its CPU and memory totals are not this host's.
+		if runtime.GOOS != "darwin" && runtime.GOOS != "windows" {
+			hostInfo, _ = a.dockerManager.GetHostInfo()
+		}
 	}
 
 	a.systemDetails.Hostname, _ = os.Hostname()
@@ -214,6 +219,10 @@ func (a *Agent) getSystemStats(cacheTimeMs uint16) system.Stats {
 
 	// disk i/o (cache-aware per interval)
 	a.updateDiskIo(cacheTimeMs, &systemStats)
+
+	// storage pool stats
+	a.storagePoolManager.Update(&systemStats)
+	a.storagePoolManager.markDuplicateCharts(&systemStats, a.fsStats, btrfs.MountID)
 
 	// network stats (per cache interval)
 	a.updateNetworkStats(cacheTimeMs, &systemStats)

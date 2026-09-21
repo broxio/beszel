@@ -4,6 +4,7 @@ package agent
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -85,6 +86,31 @@ func TestParseSmartForSata(t *testing.T) {
 	assert.Equal(t, uint64(2048408248320), deviceData.Capacity)
 	if assert.NotEmpty(t, deviceData.Attributes) {
 		assertAttrValue(t, deviceData.Attributes, "Temperature_Celsius", 31)
+	}
+}
+
+func TestParseSmartForSataPreservesFailedAndUnknownStatus(t *testing.T) {
+	for _, test := range []struct {
+		name        string
+		temperature int
+		want        string
+	}{
+		{name: "failed", temperature: 30, want: "FAILED"},
+		{name: "unknown", want: "UNKNOWN"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			jsonPayload := []byte(fmt.Sprintf(`{
+				"device": {"name": "/dev/sda", "type": "sat"},
+				"serial_number": "PRESERVE%s",
+				"temperature": {"current": %d},
+				"ata_smart_attributes": {"table": [{"id": 197, "raw": {"value": 1, "string": "1"}}]}
+			}`, test.name, test.temperature))
+
+			sm := &SmartManager{SmartDataMap: make(map[string]*smart.SmartData)}
+			hasData, _ := sm.parseSmartForSata(jsonPayload, "")
+			require.True(t, hasData)
+			assert.Equal(t, test.want, sm.SmartDataMap["PRESERVE"+test.name].SmartStatus)
+		})
 	}
 }
 

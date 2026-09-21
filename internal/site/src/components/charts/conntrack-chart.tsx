@@ -24,7 +24,7 @@ interface ConntrackChartProps {
 // connections = the raw tracked-entry count.
 export default memo(function ConntrackChart({ chartData, chartType }: ConntrackChartProps) {
 	const { yAxisWidth, updateYAxisWidth } = useYAxisWidth()
-	const { systemStats } = chartData
+	const systemStats = chartData.systemStats ?? []
 
 	if (systemStats.length === 0) {
 		return null
@@ -37,8 +37,10 @@ export default memo(function ConntrackChart({ chartData, chartType }: ConntrackC
 		return updateYAxisWidth(`${toFixedFloat(val, 0)}`)
 	}
 
-	const tooltipFormatter = (item: { value: number }) =>
-		chartType === "utilization" ? `${decimalString(item.value)}%` : `${decimalString(item.value)} conns`
+	const tooltipFormatter = (item: unknown) => {
+		const { value } = item as { value: number }
+		return chartType === "utilization" ? `${decimalString(value)}%` : `${decimalString(value)} conns`
+	}
 
 	const value = (ct?: ConntrackStats): number | null => {
 		if (!ct) return null
@@ -69,7 +71,7 @@ export default memo(function ConntrackChart({ chartData, chartType }: ConntrackC
 						tickLine={false}
 						axisLine={false}
 					/>
-					{xAxis(chartData)}
+					{xAxis(chartData.chartTime, systemStats.at(-1)?.created as number)}
 					<ChartTooltip
 						animationEasing="ease-out"
 						animationDuration={150}

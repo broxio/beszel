@@ -39,7 +39,7 @@ type ResponseKey = keyof typeof responseColors
 
 export default memo(function HAProxyResponsesChart({ chartData, proxyFilter }: HAProxyResponsesChartProps) {
 	const { yAxisWidth, updateYAxisWidth } = useYAxisWidth()
-	const { systemStats } = chartData
+	const systemStats = chartData.systemStats ?? []
 
 	// Get proxy names for filtering
 	const proxyNames = useMemo(() => {
@@ -132,7 +132,7 @@ export default memo(function HAProxyResponsesChart({ chartData, proxyFilter }: H
 						tickLine={false}
 						axisLine={false}
 					/>
-					{xAxis(chartData)}
+					{xAxis(chartData.chartTime, transformedData.at(-1)?.created as number)}
 					<ChartTooltip
 						animationEasing="ease-out"
 						animationDuration={150}

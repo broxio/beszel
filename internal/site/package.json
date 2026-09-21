@@ -1,7 +1,7 @@
 {
 	"name": "beszel",
 	"private": true,
-	"version": "0.18.8-mp.1",
+	"version": "0.20.0-mp.1",
 	"type": "module",
 	"scripts": {
 		"dev": "vite --host",

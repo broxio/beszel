@@ -226,7 +226,7 @@ func (r *haproxyRecorder) sweep(systems []*System, fn func(*System, *system.Comb
 			continue
 		}
 		wsUp := sys.WsConn != nil && sys.WsConn.IsConnected()
-		if !wsUp && sys.client == nil {
+		if !wsUp && sys.client.Load() == nil {
 			continue
 		}
 		atomic.AddInt64(&eligible, 1)

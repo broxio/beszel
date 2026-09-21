@@ -8,7 +8,7 @@ msgstr ""
 "Language: ru\n"
 "Project-Id-Version: beszel\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2026-08-21 22:34\n"
+"PO-Revision-Date: 2026-09-18 19:21\n"
 "Last-Translator: \n"
 "Language-Team: Russian\n"
 "Plural-Forms: nplurals=4; plural=((n%10==1 && n%100!=11) ? 0 : ((n%10 >= 2 && n%10 <=4 && (n%100 < 12 || n%100 > 14)) ? 1 : ((n%10 == 0 || (n%10 >= 5 && n%10 <=9)) || (n%100 >= 11 && n%100 <= 14)) ? 2 : 3));\n"
@@ -52,6 +52,12 @@ msgstr ""
 msgid "{0} of {1} row(s) selected."
 msgstr "Выбрано {0} из {1} строк."
 
+#. placeholder {0}: selectedSystemIds.size
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "{0} selected"
+msgstr "Выбрано: {0}"
+
 #. placeholder {0}: vec.sc ?? 0
 #. placeholder {1}: vec.tc ?? 0
 #. placeholder {2}: vec.sk ?? 0
@@ -89,6 +95,10 @@ msgstr "{count, plural, one {{countString} час} other {{countString} часо
 #: src/lib/utils.ts
 msgid "{count, plural, one {{countString} minute} few {{countString} minutes} many {{countString} minutes} other {{countString} minutes}}"
 msgstr "{count, plural, one {{countString} минута} few {{countString} минут} many {{countString} минут} other {{countString} минуты}}"
+
+#: src/components/routes/system/charts/disk-charts.tsx
+msgid "{diskName} I/O"
+msgstr "Ввод-вывод {diskName}"
 
 #: src/components/charts/ipvs-panel.tsx
 msgid "{drainedTotal} drained real server(s)"
@@ -151,6 +161,7 @@ msgstr "5 мин"
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
 #: src/components/routes/system/smart-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Actions"
 msgstr "Действия"
@@ -192,6 +203,10 @@ msgstr "Активное состояние"
 #: src/components/add-system.tsx
 #: src/components/navbar.tsx
 #: src/components/navbar.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Add {foo}"
@@ -259,6 +274,7 @@ msgstr "Все системы"
 msgid "Are you sure you want to delete {name}?"
 msgstr "Вы уверены, что хотите удалить {name}?"
 
+#: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 msgid "Are you sure?"
 msgstr "Вы уверены?"
@@ -266,6 +282,11 @@ msgstr "Вы уверены?"
 #: src/components/copy-to-clipboard.tsx
 msgid "Automatic copy requires a secure context."
 msgstr "Автоматическое копирование требует безопасного контекста."
+
+#: src/components/routes/system/storage-pools-table.tsx
+msgctxt "Disk space available"
+msgid "Available"
+msgstr "Доступно"
 
 #: src/components/routes/system/chart-card.tsx
 msgid "Average"
@@ -305,7 +326,7 @@ msgstr "Среднее время от очереди до завершения 
 
 #: src/components/routes/system/charts/cpu-charts.tsx
 msgid "Average system-wide CPU utilization"
-msgstr "Среднее использование CPU по всей системе"
+msgstr "Среднее использование CPU в системе"
 
 #. placeholder {0}: gpu.n
 #: src/components/routes/system/charts/gpu-charts.tsx
@@ -315,6 +336,14 @@ msgstr "Среднее использование {0}"
 #: src/components/routes/system/charts/gpu-charts.tsx
 msgid "Average utilization of GPU engines"
 msgstr "Средняя загрузка ядер GPU"
+
+#: src/components/routes/system/charts/monitors-charts.tsx
+msgid "Average, minimum, and maximum response time"
+msgstr "Среднее, минимальное и максимальное время отклика"
+
+#: src/components/network-monitors-table/network-monitors-columns.tsx
+msgid "Avg 1h"
+msgstr "Сред. за 1 ч"
 
 #: src/components/routes/haproxy-aggregate.tsx
 msgid "Avg Response"
@@ -385,6 +414,19 @@ msgstr "Биты (Кбит/с, Мбит/с, Гбит/с)"
 msgid "Boot state"
 msgstr "Состояние загрузки"
 
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "Bulk Add"
+msgstr "Массовое добавление"
+
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "Bulk Add {foo}"
+msgstr "Массовое добавление {foo}"
+
+#: src/components/network-monitors-table/network-monitors-columns.tsx
+msgid "Bulk copy"
+msgstr "Массовое копирование"
+
 #: src/components/routes/settings/general.tsx
 #: src/components/routes/settings/general.tsx
 msgid "Bytes (KB/s, MB/s, GB/s)"
@@ -426,6 +468,7 @@ msgstr "Может запустить"
 msgid "Can stop"
 msgstr "Может остановить"
 
+#: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/systems-table/systems-table-columns.tsx
@@ -437,6 +480,7 @@ msgid "Capabilities"
 msgstr "Возможности"
 
 #: src/components/routes/system/smart-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
 msgid "Capacity"
 msgstr "Емкость"
 
@@ -489,16 +533,31 @@ msgstr "Проверьте ваш сервис мониторинга"
 msgid "Check your notification service"
 msgstr "Проверьте ваш сервис уведомлений"
 
+#: src/components/routes/system/storage-pools-table.tsx
+msgid "Checksum errors"
+msgstr "Ошибки контрольной суммы"
+
 #: src/components/containers-table/containers-table.tsx
+#: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/routes/system/smart-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
 #: src/components/systems-table/systems-table.tsx
 msgid "Clear"
 msgstr "Очистить"
+
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "Clear all"
+msgstr "Очистить всё"
 
 #: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/lvs-aggregate.tsx
 msgid "Clear All"
 msgstr ""
+
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "Clear matches"
+msgstr "Очистить совпадения"
 
 #: src/components/containers-table/containers-table.tsx
 msgid "Click on a container to view more information."
@@ -507,6 +566,10 @@ msgstr "Нажмите на контейнер для просмотра доп�
 #: src/components/routes/system/smart-table.tsx
 msgid "Click on a device to view more information."
 msgstr "Нажмите на устройство для просмотра дополнительной информации."
+
+#: src/components/routes/system/storage-pools-table.tsx
+msgid "Click on a pool to view vdev and dataset details."
+msgstr "Нажмите на пул, чтобы просмотреть сведения о vdev и dataset."
 
 #: src/components/systems-table/systems-table.tsx
 msgid "Click on a system to view more information."
@@ -544,6 +607,10 @@ msgstr ""
 #: src/components/routes/settings/notifications.tsx
 msgid "Configure how you receive alert notifications."
 msgstr "Настройте способ получения уведомления об оповещениях."
+
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "Configure response monitoring from this agent."
+msgstr "Настройте мониторинг времени отклика с этого агента."
 
 #: src/components/login/auth-form.tsx
 #: src/components/login/auth-form.tsx
@@ -585,10 +652,19 @@ msgstr ""
 msgid "Conntrack Utilization"
 msgstr ""
 
+#: src/lib/alerts.ts
+msgid "Container"
+msgstr "Контейнер"
+
+#: src/lib/alerts.ts
+msgid "Container Health"
+msgstr "Здоровье контейнера"
+
 #: src/components/routes/system.tsx
 msgid "Containers"
 msgstr "Контейнеры"
 
+#: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Continue"
@@ -649,6 +725,10 @@ msgstr "Скопируйте команду для установки агент
 msgid "Copy the<0>docker-compose.yml</0> content for the agent below, or register agents automatically with a <1>universal token</1>."
 msgstr "Скопируйте содержимое <0>docker-compose.yml</0> для агента ниже, или зарегистрируйте агентов автоматически с помощью <1>универсального токена</1>."
 
+#: src/components/network-monitors-table/network-monitors-columns.tsx
+msgid "Copy to system"
+msgstr "Копировать в систему"
+
 #: src/components/routes/settings/tokens-fingerprints.tsx
 msgid "Copy YAML"
 msgstr "Копировать YAML"
@@ -673,9 +753,17 @@ msgstr "ЦП"
 msgid "CPU Cores"
 msgstr "Ядра CPU"
 
+#: src/lib/alerts.ts
+msgid "CPU I/O Wait"
+msgstr "Ожидание ввода-вывода CPU (IOWait)"
+
 #: src/components/systemd-table/systemd-table-columns.tsx
 msgid "CPU Peak"
 msgstr "Пик CPU"
+
+#: src/lib/alerts.ts
+msgid "CPU Steal Time"
+msgstr "Недоступное время CPU (Steal)"
 
 #: src/components/systemd-table/systemd-table.tsx
 msgid "CPU time"
@@ -709,9 +797,21 @@ msgstr "Создано"
 msgid "Critical (%)"
 msgstr "Критический (%)"
 
+#: src/components/routes/system/disk-io-sheet.tsx
+msgid "Cumulative data read since boot"
+msgstr "Суммарно прочитано данных с момента загрузки"
+
+#: src/components/routes/system/disk-io-sheet.tsx
+msgid "Cumulative data written since boot"
+msgstr "Суммарно записано данных с момента загрузки"
+
 #: src/components/routes/system/network-sheet.tsx
 msgid "Cumulative Download"
 msgstr "Совокупная загрузка"
+
+#: src/components/routes/system/disk-io-sheet.tsx
+msgid "Cumulative Read"
+msgstr "Суммарное чтение"
 
 #: src/components/routes/haproxy-aggregate.tsx
 msgid "Cumulative Totals"
@@ -720,6 +820,10 @@ msgstr ""
 #: src/components/routes/system/network-sheet.tsx
 msgid "Cumulative Upload"
 msgstr "Совокупная отдача"
+
+#: src/components/routes/system/disk-io-sheet.tsx
+msgid "Cumulative Write"
+msgstr "Суммарная запись"
 
 #: src/components/routes/system.tsx
 #: src/components/routes/system.tsx
@@ -757,6 +861,7 @@ msgstr "По умолчанию"
 msgid "Default time period"
 msgstr "Период по умолчанию"
 
+#: src/components/network-monitors-table/network-monitors-columns.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/system/smart-table.tsx
@@ -795,15 +900,10 @@ msgstr "Разряжается"
 msgid "Disk"
 msgstr "Диск"
 
-#: src/components/routes/system/charts/disk-charts.tsx
-msgid "Disk I/O"
-msgstr "Дисковый ввод/вывод"
-
 #: src/components/routes/settings/general.tsx
 msgid "Disk unit"
 msgstr "Единицы измерения дисковой активности"
 
-#: src/components/routes/system/charts/disk-charts.tsx
 #: src/components/routes/system/charts/disk-charts.tsx
 #: src/lib/alerts.ts
 msgid "Disk Usage"
@@ -855,12 +955,14 @@ msgstr "Загрузка"
 msgid "Duration"
 msgstr "Длительность"
 
+#: src/components/network-monitors-table/network-monitors-columns.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Edit"
 msgstr "Редактировать"
 
 #: src/components/add-system.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Edit {foo}"
 msgstr "Редактировать {foo}"
@@ -909,6 +1011,11 @@ msgstr "Введите ваш одноразовый пароль."
 msgid "Ephemeral"
 msgstr "Эфемерный"
 
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/network-monitors-table.tsx
+#: src/components/network-monitors-table/network-monitors-table.tsx
+#: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/settings/config-yaml.tsx
 #: src/components/routes/settings/heartbeat.tsx
@@ -1008,9 +1115,18 @@ msgstr "Неудачно"
 msgid "Failed Attributes:"
 msgstr "Неудачные атрибуты:"
 
+#: src/lib/alerts.ts
+msgid "Failed Services"
+msgstr "Службы со сбоем"
+
 #: src/lib/api.ts
 msgid "Failed to authenticate"
 msgstr "Не удалось аутентифицировать"
+
+#: src/components/network-monitors-table/network-monitors-table.tsx
+#: src/components/network-monitors-table/network-monitors-table.tsx
+msgid "Failed to delete monitors."
+msgstr "Не удалось удалить мониторы."
 
 #: src/components/routes/settings/layout.tsx
 #: src/components/routes/settings/notifications.tsx
@@ -1029,6 +1145,10 @@ msgstr "Не удалось отправить тестовое уведомле
 #: src/components/alerts/alerts-sheet.tsx
 msgid "Failed to update alert"
 msgstr "Не удалось обновить оповещение"
+
+#: src/components/network-monitors-table/network-monitors-table.tsx
+msgid "Failed to update monitors."
+msgstr "Не удалось обновить мониторы."
 
 #. placeholder {0}: statusTotals[ServiceStatus.Failed]
 #: src/components/systemd-table/systemd-table.tsx
@@ -1050,9 +1170,12 @@ msgid "Filter groups:"
 msgstr ""
 
 #: src/components/containers-table/containers-table.tsx
+#: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/system/chart-card.tsx
 #: src/components/routes/system/smart-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
 #: src/components/systemd-table/systemd-table.tsx
 #: src/components/systems-table/systems-table.tsx
 msgid "Filter..."
@@ -1073,6 +1196,12 @@ msgstr "На <0>{min}</0> {min, plural, one {минуту} other {минут}}"
 #: src/components/login/auth-form.tsx
 msgid "Forgot password?"
 msgstr "Забыли пароль?"
+
+#: src/components/routes/system/storage-pools-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
+msgctxt "Free space"
+msgid "Free"
+msgstr "Свободно"
 
 #: src/components/add-system.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
@@ -1106,7 +1235,7 @@ msgstr "GPU"
 
 #: src/components/routes/system/charts/gpu-charts.tsx
 msgid "GPU Engines"
-msgstr "GPU движки"
+msgstr "Ядра GPU"
 
 #: src/components/routes/system/charts/gpu-charts.tsx
 msgid "GPU Power Draw"
@@ -1204,6 +1333,7 @@ msgid "HAProxy Traffic"
 msgstr ""
 
 #: src/components/containers-table/containers-table-columns.tsx
+#: src/components/routes/system/storage-pools-table.tsx
 msgid "Health"
 msgstr "Здоровье"
 
@@ -1293,6 +1423,12 @@ msgctxt "Docker image"
 msgid "Image"
 msgstr "Образ"
 
+#: src/components/containers-table/containers-table-columns.tsx
+#: src/components/containers-table/containers-table-columns.tsx
+msgctxt "Docker image"
+msgid "Image update available"
+msgstr "Доступно обновление образа"
+
 #: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/lvs-aggregate.tsx
@@ -1309,9 +1445,14 @@ msgstr "Неактивно"
 msgid "Individual Systems"
 msgstr ""
 
+#: src/components/network-monitors-table/network-monitors-columns.tsx
 #: src/components/routes/settings/heartbeat.tsx
 msgid "Interval"
 msgstr "Интервал"
+
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "Interval (seconds)"
+msgstr "Интервал (секунды)"
 
 #: src/components/login/auth-form.tsx
 msgid "Invalid email address."
@@ -1396,6 +1537,15 @@ msgstr "Журналы"
 msgid "Looking instead for where to create alerts? Click the bell <0/> icons in the systems table."
 msgstr "Ищете, где создать оповещения? Нажмите на значки колокольчика <0/> в таблице систем."
 
+#: src/components/routes/system/charts/monitors-charts.tsx
+msgctxt "Packet loss"
+msgid "Loss"
+msgstr "Потери"
+
+#: src/components/network-monitors-table/network-monitors-columns.tsx
+msgid "Loss 1h"
+msgstr "Потери 1 h"
+
 #: src/components/routes/system.tsx
 msgid "LVS"
 msgstr ""
@@ -1434,6 +1584,10 @@ msgstr "Инструкции по ручной установке"
 msgid "Max 1 min"
 msgstr "Макс 1 мин"
 
+#: src/components/network-monitors-table/network-monitors-columns.tsx
+msgid "Max 1h"
+msgstr "Макс. за 1 ч"
+
 #: src/components/containers-table/containers-table-columns.tsx
 #: src/components/routes/system/info-bar.tsx
 #: src/components/systemd-table/systemd-table-columns.tsx
@@ -1465,6 +1619,10 @@ msgstr "Использование памяти"
 msgid "Memory usage of containers"
 msgstr "Использование памяти контейнерами"
 
+#: src/components/network-monitors-table/network-monitors-columns.tsx
+msgid "Min 1h"
+msgstr "Мин. за 1 ч"
+
 #: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/lvs-aggregate.tsx
 msgid "Mode"
@@ -1474,6 +1632,20 @@ msgstr ""
 #: src/components/routes/system/smart-table.tsx
 msgid "Model"
 msgstr "Модель"
+
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "Monitor"
+msgstr "Монитор"
+
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "Monitors created"
+msgstr "Мониторы созданы"
+
+#: src/components/routes/system/storage-pools-table.tsx
+msgid "Mountpoint"
+msgstr "Точка монтирования"
 
 #: src/components/add-system.tsx
 #: src/components/alerts-history-columns.tsx
@@ -1487,6 +1659,29 @@ msgstr "Имя"
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Net"
 msgstr "Сеть"
+
+#: src/components/routes/system.tsx
+msgid "Network"
+msgstr "Сеть"
+
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "Network Monitor"
+msgstr "Сетевой монитор"
+
+#: src/lib/alerts.ts
+msgid "Network Monitor Loss"
+msgstr "Потери сетевого монитора"
+
+#: src/components/command-palette.tsx
+#: src/components/navbar.tsx
+#: src/components/navbar.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/network-monitors-table.tsx
+#: src/components/routes/monitors.tsx
+msgid "Network Monitors"
+msgstr "Сетевые мониторы"
 
 #: src/components/routes/system/charts/network-charts.tsx
 msgid "Network traffic of containers"
@@ -1527,6 +1722,10 @@ msgstr ""
 msgid "No data"
 msgstr ""
 
+#: src/components/routes/system/storage-pools-table.tsx
+msgid "No detail data for this pool."
+msgstr "Подробные данные для этого пула отсутствуют."
+
 #: src/components/routes/haproxy-aggregate.tsx
 msgid "No HAProxy Systems Found"
 msgstr ""
@@ -1543,6 +1742,7 @@ msgstr "Результаты не найдены."
 #: src/components/containers-table/containers-table.tsx
 #: src/components/containers-table/containers-table.tsx
 #: src/components/containers-table/containers-table.tsx
+#: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/system/smart-table.tsx
 #: src/components/systemd-table/systemd-table.tsx
@@ -1557,6 +1757,7 @@ msgstr "Для этого устройства нет доступных атр�
 msgid "No Systems"
 msgstr ""
 
+#: src/components/network-monitors-table/monitor-dialog.tsx
 #: src/components/systems-table/systems-table.tsx
 #: src/components/systems-table/systems-table.tsx
 msgid "No systems found."
@@ -1582,11 +1783,19 @@ msgstr ""
 msgid "No virtual services reported"
 msgstr ""
 
+#: src/components/routes/system/storage-pools-table.tsx
+msgid "None"
+msgstr "Нет"
+
 #: src/components/command-palette.tsx
 #: src/components/routes/settings/layout.tsx
 #: src/components/routes/settings/notifications.tsx
 msgid "Notifications"
 msgstr "Уведомления"
+
+#: src/lib/alerts.ts
+msgid "Notifications may include recent container log excerpts."
+msgstr "Уведомления могут содержать недавние фрагменты журналов контейнеров."
 
 #: src/components/login/auth-form.tsx
 msgid "OAuth 2 / OIDC support"
@@ -1599,6 +1808,19 @@ msgstr ""
 #: src/components/routes/settings/config-yaml.tsx
 msgid "On each restart, systems in the database will be updated to match the systems defined in the file."
 msgstr "При каждом перезапуске системы в базе данных будут обновлены в соответствии с системами, определенными в файле."
+
+#: src/lib/alerts.ts
+msgid "One or more containers are unhealthy"
+msgstr "Один или несколько контейнеров находятся в нездоровом состоянии"
+
+#. placeholder {0}: alert.value
+#: src/components/active-alerts.tsx
+msgid "One or more monitors exceed {0}% loss"
+msgstr "На одном или нескольких мониторах потери превышают {0}%"
+
+#: src/lib/alerts.ts
+msgid "One or more services are in a failed state"
+msgstr "Одна или несколько служб находятся в состоянии сбоя"
 
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/settings/quiet-hours.tsx
@@ -1613,10 +1835,12 @@ msgstr "Одноразовый пароль"
 msgid "online"
 msgstr ""
 
+#: src/components/network-monitors-table/network-monitors-columns.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
 #: src/components/routes/system/smart-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Open menu"
 msgstr "Открыть меню"
@@ -1639,6 +1863,11 @@ msgstr ""
 msgid "Overwrite existing alerts"
 msgstr "Перезаписать существующие оповещения"
 
+#: src/components/routes/system/charts/monitors-charts.tsx
+msgid "Packet loss (%)"
+msgstr "Потеря пакетов (%)"
+
+#: src/components/command-palette.tsx
 #: src/components/command-palette.tsx
 #: src/components/command-palette.tsx
 #: src/components/command-palette.tsx
@@ -1676,6 +1905,7 @@ msgstr "Запрос на сброс пароля получен"
 msgid "Past"
 msgstr "Прошлое"
 
+#: src/components/network-monitors-table/network-monitors-columns.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Pause"
 msgstr "Пауза"
@@ -1718,6 +1948,10 @@ msgstr "Постоянный"
 msgid "Persistence"
 msgstr "Устойчивость"
 
+#: src/components/routes/system/raw-capacity-label.tsx
+msgid "Physical device space. True usable capacity is unknown. Pool disk usage alerts are disabled."
+msgstr "Физическое пространство устройства. Реальная полезная ёмкость неизвестна. Оповещения об использовании дисков пула отключены."
+
 #: src/components/routes/settings/notifications.tsx
 msgid "Please <0>configure an SMTP server</0> to ensure alerts are delivered."
 msgstr "Пожалуйста, <0>настройте SMTP-сервер</0>, чтобы гарантировать доставку оповещений."
@@ -1751,7 +1985,16 @@ msgstr "Пожалуйста, смотрите <0>документацию</0> �
 msgid "Please sign in to your account"
 msgstr "Пожалуйста, войдите в свою учетную запись"
 
+#: src/components/routes/system/storage-pools-table.tsx
+msgid "Pool Health"
+msgstr "Состояние пула"
+
+#: src/components/routes/system/charts/storage-pool-charts.tsx
+msgid "Pool Usage"
+msgstr "Использование пула"
+
 #: src/components/add-system.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
 msgid "Port"
 msgstr "Порт"
 
@@ -1768,7 +2011,7 @@ msgstr "Включение питания"
 #: src/components/routes/system/charts/gpu-charts.tsx
 #: src/components/routes/system/charts/memory-charts.tsx
 msgid "Precise utilization at the recorded time"
-msgstr "Точное использование в записанное время"
+msgstr "Использование по времени"
 
 #: src/components/routes/settings/general.tsx
 msgid "Preferred Language"
@@ -1777,6 +2020,11 @@ msgstr "Предпочтительный язык"
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Process started"
 msgstr "Процесс запущен"
+
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/network-monitors-columns.tsx
+msgid "Protocol"
+msgstr "Протокол"
 
 #: src/components/routes/settings/tokens-fingerprints.tsx
 msgid "Public key"
@@ -1796,13 +2044,31 @@ msgstr "Глубина очереди"
 msgid "Quiet Hours"
 msgstr "Тихие часы"
 
+#: src/components/routes/system/raw-capacity-label.tsx
+#: src/components/routes/system/storage-pools-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
+msgid "Raw"
+msgstr "Сырое"
+
+#: src/components/routes/system/charts/storage-pool-charts.tsx
+msgid "Raw usage of storage pool {displayName}"
+msgstr "Сырое использование пула хранения {displayName}"
+
+#. Disk read
 #. Disk read
 #: src/components/routes/system/charts/disk-charts.tsx
+#: src/components/routes/system/charts/storage-pool-charts.tsx
+#: src/components/routes/system/disk-io-sheet.tsx
 #: src/components/routes/system/disk-io-sheet.tsx
 #: src/components/routes/system/disk-io-sheet.tsx
 #: src/components/routes/system/disk-io-sheet.tsx
 msgid "Read"
 msgstr "Чтение"
+
+#: src/components/routes/system/storage-pools-table.tsx
+msgid "Read errors"
+msgstr "Ошибки чтения"
 
 #: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/lvs-aggregate.tsx
@@ -1824,6 +2090,7 @@ msgstr ""
 #: src/components/containers-table/containers-table.tsx
 #: src/components/containers-table/containers-table.tsx
 #: src/components/routes/system/smart-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
 msgid "Refresh"
 msgstr "Обновить"
 
@@ -1862,18 +2129,30 @@ msgstr "Сбросить пароль"
 msgid "Resolved"
 msgstr "Завершено"
 
+#: src/components/network-monitors-table/network-monitors-columns.tsx
+#: src/components/routes/system/charts/monitors-charts.tsx
+msgid "Response"
+msgstr "Отклик"
+
+#: src/components/network-monitors-table/network-monitors-table.tsx
+msgid "Response time monitoring from agents."
+msgstr "Мониторинг времени отклика с агентов."
+
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Restarts"
 msgstr "Перезапуски"
 
+#: src/components/network-monitors-table/network-monitors-columns.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Resume"
 msgstr "Возобновить"
 
+#: src/components/routes/system/charts/disk-charts.tsx
+#: src/components/routes/system/charts/disk-charts.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgctxt "Root disk label"
 msgid "Root"
-msgstr "Корневой"
+msgstr "Системный"
 
 #: src/components/routes/settings/tokens-fingerprints.tsx
 msgid "Rotate token"
@@ -1896,6 +2175,7 @@ msgid "S.M.A.R.T. Self-Test"
 msgstr "Запуск теста S.M.A.R.T."
 
 #: src/components/add-system.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
 msgid "Save {foo}"
 msgstr "Сохранить {foo}"
 
@@ -1937,6 +2217,11 @@ msgstr "Поиск"
 msgid "Search for systems or settings..."
 msgstr "Поиск систем или настроек..."
 
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "Search systems"
+msgstr "Поиск систем"
+
 #: src/components/routes/settings/heartbeat.tsx
 msgid "Seconds between pings (default: 60)"
 msgstr "Секунды между пингами (по умолчанию: 60)"
@@ -1948,6 +2233,27 @@ msgstr "Смотрите <0>настройки уведомлений</0>, чт�
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Select {foo}"
 msgstr "Выбрать {foo}"
+
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "Select a system"
+msgstr "Выберите систему"
+
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/network-monitors-columns.tsx
+msgid "Select all"
+msgstr "Выбрать всё"
+
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "Select matches"
+msgstr "Выбрать совпадения"
+
+#: src/components/network-monitors-table/network-monitors-columns.tsx
+msgid "Select row"
+msgstr "Выбрать строку"
+
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "Select systems"
+msgstr "Выбрать системы"
 
 #: src/components/routes/haproxy-aggregate.tsx
 msgid "selected"
@@ -2042,6 +2348,7 @@ msgstr "Время начала"
 #. Context: alert state (active or resolved)
 #: src/components/alerts-history-columns.tsx
 #: src/components/routes/settings/quiet-hours.tsx
+#: src/components/routes/system/storage-pools-table.tsx
 #: src/components/systemd-table/systemd-table-columns.tsx
 msgid "State"
 msgstr "Состояние"
@@ -2060,7 +2367,7 @@ msgstr "Подсостояние"
 
 #: src/components/routes/system/charts/memory-charts.tsx
 msgid "Swap space used by the system"
-msgstr "Используемое системой пространство подкачки"
+msgstr "Размер файла подкачки системы"
 
 #: src/components/routes/system/charts/memory-charts.tsx
 msgid "Swap Usage"
@@ -2075,6 +2382,8 @@ msgstr "Переключить тему"
 #: src/components/alerts-history-columns.tsx
 #: src/components/containers-table/containers-table-columns.tsx
 #: src/components/navbar.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/network-monitors-columns.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/settings/quiet-hours.tsx
@@ -2092,13 +2401,15 @@ msgstr "Скорость вращения системных вентилято�
 
 #: src/components/routes/system/charts/load-average-chart.tsx
 msgid "System load averages over time"
-msgstr "Средняя загрузка системы за время"
+msgstr "Средняя загрузка системы по времени"
 
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Systemd Services"
 msgstr "Сервисы Systemd"
 
 #: src/components/navbar.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
 #: src/components/routes/haproxy-aggregate.tsx
 msgid "Systems"
 msgstr "Системы"
@@ -2115,6 +2426,11 @@ msgstr "Таблица"
 msgctxt "Tabs system layout option"
 msgid "Tabs"
 msgstr "Вкладки"
+
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/network-monitors-columns.tsx
+msgid "Target"
+msgstr "Цель"
 
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Tasks"
@@ -2137,7 +2453,7 @@ msgstr "Единицы измерения температуры"
 
 #: src/components/routes/system/charts/sensor-charts.tsx
 msgid "Temperatures of system sensors"
-msgstr "Температуры датчиков системы"
+msgstr "Температура датчиков системы"
 
 #: src/components/routes/settings/notifications.tsx
 msgid "Test <0>URL</0>"
@@ -2163,6 +2479,7 @@ msgstr "Затем войдите в бэкенд и сбросьте парол
 msgid "This action cannot be undone. This will permanently delete all current records for {name} from the database."
 msgstr "Это действие не может быть отменено. Оно навсегда удалит все текущие записи для {name} из базы данных."
 
+#: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 msgid "This will permanently delete all selected records from the database."
 msgstr "Это навсегда удалит все выбранные записи из базы данных."
@@ -2171,9 +2488,9 @@ msgstr "Это навсегда удалит все выбранные запи�
 msgid "Throughput of {extraFsName}"
 msgstr "Пропускная способность {extraFsName}"
 
-#: src/components/routes/system/charts/disk-charts.tsx
-msgid "Throughput of root filesystem"
-msgstr "Пропускная способность корневой файловой системы"
+#: src/components/routes/system/charts/storage-pool-charts.tsx
+msgid "Throughput of storage pool {displayName}"
+msgstr "Пропускная способность пула хранения {displayName}"
 
 #: src/components/routes/settings/general.tsx
 msgid "Time format"
@@ -2182,11 +2499,6 @@ msgstr "Формат времени"
 #: src/components/routes/settings/notifications.tsx
 msgid "To email(s)"
 msgstr "На электронную почту"
-
-#: src/components/mode-toggle.tsx
-#: src/components/mode-toggle.tsx
-#~ msgid "Toggle theme"
-#~ msgstr "Переключить тему"
 
 #: src/components/add-system.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
@@ -2296,8 +2608,16 @@ msgid "Triggers when 5 minute load average exceeds a threshold"
 msgstr "Срабатывает, когда средняя загрузка за 5 минут превышает порог"
 
 #: src/lib/alerts.ts
+msgid "Triggers when a container's health check reports unhealthy"
+msgstr "Срабатывает, когда проверка состояния контейнера сообщает о нездоровом состоянии"
+
+#: src/lib/alerts.ts
 msgid "Triggers when any sensor exceeds a threshold"
 msgstr "Срабатывает, когда любой датчик превышает порог"
+
+#: src/lib/alerts.ts
+msgid "Triggers when any systemd service enters the failed state"
+msgstr "Срабатывает, когда любая служба systemd переходит в состояние сбоя"
 
 #: src/lib/alerts.ts
 msgid "Triggers when battery charge drops below a threshold"
@@ -2306,6 +2626,14 @@ msgstr "Срабатывает, когда заряд батареи опуск�
 #: src/lib/alerts.ts
 msgid "Triggers when combined up/down exceeds a threshold"
 msgstr "Срабатывает, когда комбинированный вход/выход превышает порог"
+
+#: src/lib/alerts.ts
+msgid "Triggers when CPU I/O wait exceeds a threshold"
+msgstr "Срабатывает, когда доля времени ожидания CPU операций ввода-вывода превышает порог"
+
+#: src/lib/alerts.ts
+msgid "Triggers when CPU steal time exceeds a threshold"
+msgstr "Срабатывает, когда доля времени CPU, недоступного виртуальной машине из-за гипервизора, превышает порог"
 
 #: src/lib/alerts.ts
 msgid "Triggers when CPU usage exceeds a threshold"
@@ -2320,6 +2648,10 @@ msgid "Triggers when memory usage exceeds a threshold"
 msgstr "Срабатывает, когда использование памяти превышает порог"
 
 #: src/lib/alerts.ts
+msgid "Triggers when one hour loss exceeds a threshold"
+msgstr "Срабатывает, когда потери за час превышают пороговое значение"
+
+#: src/lib/alerts.ts
 msgid "Triggers when status switches between up and down"
 msgstr "Срабатывает, когда статус переключается между включено и выключено"
 
@@ -2331,6 +2663,7 @@ msgstr "Срабатывает, когда нагрузка на любой из
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/system/smart-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
 #: src/components/routes/vector-aggregate.tsx
 msgid "Type"
 msgstr "Тип"
@@ -2338,6 +2671,10 @@ msgstr "Тип"
 #: src/components/charts/vector-panel.tsx
 msgid "unhealthy"
 msgstr ""
+
+#: src/lib/alerts.ts
+msgid "Unhealthy"
+msgstr "Нездоровый"
 
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Unit file"
@@ -2354,6 +2691,7 @@ msgid "Universal token"
 msgstr "Универсальный токен"
 
 #. Context: Battery state
+#: src/components/routes/system/storage-pools-table.tsx
 #: src/lib/i18n.ts
 msgid "Unknown"
 msgstr "Неизвестно"
@@ -2378,9 +2716,11 @@ msgid "Update"
 msgstr "Обновить"
 
 #: src/components/containers-table/containers-table-columns.tsx
+#: src/components/network-monitors-table/network-monitors-columns.tsx
 #: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/lvs-aggregate.tsx
 #: src/components/routes/system/smart-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
 #: src/components/routes/vector-aggregate.tsx
 #: src/components/systemd-table/systemd-table-columns.tsx
 msgid "Updated"
@@ -2400,19 +2740,24 @@ msgid "Uptime"
 msgstr "Время работы"
 
 #: src/components/routes/system/charts/disk-charts.tsx
+#: src/components/routes/system/charts/disk-charts.tsx
 #: src/components/routes/system/charts/gpu-charts.tsx
 #: src/components/routes/system/charts/gpu-charts.tsx
 #: src/components/routes/system/charts/gpu-charts.tsx
+#: src/components/routes/system/charts/storage-pool-charts.tsx
 #: src/components/routes/system/cpu-sheet.tsx
 msgid "Usage"
 msgstr "Использование"
 
-#: src/components/routes/system/charts/disk-charts.tsx
-msgid "Usage of root partition"
-msgstr "Использование корневого раздела"
+#: src/components/routes/system/charts/storage-pool-charts.tsx
+msgid "Usage of storage pool {displayName}"
+msgstr "Использование пула хранения {displayName}"
 
 #: src/components/routes/system/charts/memory-charts.tsx
 #: src/components/routes/system/charts/memory-charts.tsx
+#: src/components/routes/system/storage-pools-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
 msgid "Used"
 msgstr "Использовано"
 
@@ -2519,12 +2864,19 @@ msgid "Windows command"
 msgstr "Команда Windows"
 
 #. Disk write
+#. Disk write
 #: src/components/routes/system/charts/disk-charts.tsx
+#: src/components/routes/system/charts/storage-pool-charts.tsx
+#: src/components/routes/system/disk-io-sheet.tsx
 #: src/components/routes/system/disk-io-sheet.tsx
 #: src/components/routes/system/disk-io-sheet.tsx
 #: src/components/routes/system/disk-io-sheet.tsx
 msgid "Write"
 msgstr "Запись"
+
+#: src/components/routes/system/storage-pools-table.tsx
+msgid "Write errors"
+msgstr "Ошибки записи"
 
 #: src/components/routes/settings/layout.tsx
 msgid "YAML Config"

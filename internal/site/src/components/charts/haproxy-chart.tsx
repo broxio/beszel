@@ -32,7 +32,7 @@ function getProxyColor(index: number): string {
 
 export default memo(function HAProxyChart({ chartData, chartType, proxyFilter }: HAProxyChartProps) {
 	const { yAxisWidth, updateYAxisWidth } = useYAxisWidth()
-	const { systemStats } = chartData
+	const systemStats = chartData.systemStats ?? []
 
 	// Get unique proxy names from latest data
 	const proxyNames = useMemo(() => {
@@ -196,7 +196,7 @@ export default memo(function HAProxyChart({ chartData, chartType, proxyFilter }:
 						tickLine={false}
 						axisLine={false}
 					/>
-					{xAxis(chartData)}
+					{xAxis(chartData.chartTime, systemStats.at(-1)?.created as number)}
 					<ChartTooltip
 						animationEasing="ease-out"
 						animationDuration={150}

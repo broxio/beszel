@@ -33,6 +33,7 @@ const Smart = lazy(() => import("@/components/routes/smart.tsx"))
 const HAProxyAggregate = lazy(() => import("@/components/routes/haproxy-aggregate.tsx"))
 const LVS = lazy(() => import("@/components/routes/lvs-aggregate.tsx"))
 const VectorAggregate = lazy(() => import("@/components/routes/vector-aggregate.tsx"))
+const Monitors = lazy(() => import("@/components/routes/monitors.tsx"))
 const SystemDetail = lazy(() => import("@/components/routes/system.tsx"))
 const CopyToClipboardDialog = lazy(() => import("@/components/copy-to-clipboard.tsx"))
 
@@ -88,6 +89,8 @@ const App = memo(() => {
 		return <LVS />
 	} else if (page.route === "vector") {
 		return <VectorAggregate />
+	} else if (page.route === "monitors") {
+		return <Monitors />
 	} else if (page.route === "settings") {
 		return <Settings />
 	}
@@ -130,6 +133,7 @@ const Layout = () => {
 
 const I18nApp = () => {
 	useEffect(() => {
+		// Activate a locale so I18nProvider can mount App and load the account settings.
 		dynamicActivate(getLocale())
 	}, [])
 

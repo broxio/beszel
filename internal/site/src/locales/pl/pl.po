@@ -8,7 +8,7 @@ msgstr ""
 "Language: pl\n"
 "Project-Id-Version: beszel\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2026-08-18 17:52\n"
+"PO-Revision-Date: 2026-09-18 19:21\n"
 "Last-Translator: \n"
 "Language-Team: Polish\n"
 "Plural-Forms: nplurals=4; plural=(n==1 ? 0 : (n%10>=2 && n%10<=4) && (n%100<12 || n%100>14) ? 1 : n!=1 && (n%10>=0 && n%10<=1) || (n%10>=5 && n%10<=9) || (n%100>=12 && n%100<=14) ? 2 : 3);\n"
@@ -52,6 +52,12 @@ msgstr ""
 msgid "{0} of {1} row(s) selected."
 msgstr "{0} z {1} wybranych wierszy."
 
+#. placeholder {0}: selectedSystemIds.size
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "{0} selected"
+msgstr "Wybrano: {0}"
+
 #. placeholder {0}: vec.sc ?? 0
 #. placeholder {1}: vec.tc ?? 0
 #. placeholder {2}: vec.sk ?? 0
@@ -89,6 +95,10 @@ msgstr "{count, plural, one {godzina} few {{countString} godziny} many {{countSt
 #: src/lib/utils.ts
 msgid "{count, plural, one {{countString} minute} few {{countString} minutes} many {{countString} minutes} other {{countString} minutes}}"
 msgstr "{count, plural, one {{countString} minuta} few {{countString} minuty} many {{countString} minut} other {{countString} minut}}"
+
+#: src/components/routes/system/charts/disk-charts.tsx
+msgid "{diskName} I/O"
+msgstr "I/O {diskName}"
 
 #: src/components/charts/ipvs-panel.tsx
 msgid "{drainedTotal} drained real server(s)"
@@ -151,6 +161,7 @@ msgstr "5 min"
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
 #: src/components/routes/system/smart-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Actions"
 msgstr "Akcje"
@@ -192,6 +203,10 @@ msgstr "Status aktywny"
 #: src/components/add-system.tsx
 #: src/components/navbar.tsx
 #: src/components/navbar.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Add {foo}"
@@ -259,6 +274,7 @@ msgstr "Wszystkie systemy"
 msgid "Are you sure you want to delete {name}?"
 msgstr "Czy na pewno chcesz usunąć {name}?"
 
+#: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 msgid "Are you sure?"
 msgstr "Czy jesteś pewien?"
@@ -266,6 +282,11 @@ msgstr "Czy jesteś pewien?"
 #: src/components/copy-to-clipboard.tsx
 msgid "Automatic copy requires a secure context."
 msgstr "Automatyczne kopiowanie wymaga bezpiecznego kontekstu."
+
+#: src/components/routes/system/storage-pools-table.tsx
+msgctxt "Disk space available"
+msgid "Available"
+msgstr "Dostępne"
 
 #: src/components/routes/system/chart-card.tsx
 msgid "Average"
@@ -315,6 +336,14 @@ msgstr "Średnie użycie {0}"
 #: src/components/routes/system/charts/gpu-charts.tsx
 msgid "Average utilization of GPU engines"
 msgstr "Średnie wykorzystanie silników GPU"
+
+#: src/components/routes/system/charts/monitors-charts.tsx
+msgid "Average, minimum, and maximum response time"
+msgstr "Średni, minimalny i maksymalny czas odpowiedzi"
+
+#: src/components/network-monitors-table/network-monitors-columns.tsx
+msgid "Avg 1h"
+msgstr "Śr. 1 godz."
 
 #: src/components/routes/haproxy-aggregate.tsx
 msgid "Avg Response"
@@ -385,6 +414,19 @@ msgstr "Bity (Kbps, Mbps, Gbps)"
 msgid "Boot state"
 msgstr "Stan rozruchu"
 
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "Bulk Add"
+msgstr "Dodaj zbiorczo"
+
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "Bulk Add {foo}"
+msgstr "Dodaj zbiorczo {foo}"
+
+#: src/components/network-monitors-table/network-monitors-columns.tsx
+msgid "Bulk copy"
+msgstr "Kopiuj zbiorczo"
+
 #: src/components/routes/settings/general.tsx
 #: src/components/routes/settings/general.tsx
 msgid "Bytes (KB/s, MB/s, GB/s)"
@@ -426,6 +468,7 @@ msgstr "Może uruchomić"
 msgid "Can stop"
 msgstr "Może zatrzymać"
 
+#: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/systems-table/systems-table-columns.tsx
@@ -437,6 +480,7 @@ msgid "Capabilities"
 msgstr "Możliwości"
 
 #: src/components/routes/system/smart-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
 msgid "Capacity"
 msgstr "Pojemność"
 
@@ -489,16 +533,31 @@ msgstr "Sprawdź usługę monitorowania"
 msgid "Check your notification service"
 msgstr "Sprawdź swój serwis powiadomień"
 
+#: src/components/routes/system/storage-pools-table.tsx
+msgid "Checksum errors"
+msgstr "Błędy sumy kontrolnej"
+
 #: src/components/containers-table/containers-table.tsx
+#: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/routes/system/smart-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
 #: src/components/systems-table/systems-table.tsx
 msgid "Clear"
 msgstr "Wyczyść"
+
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "Clear all"
+msgstr "Wyczyść wszystko"
 
 #: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/lvs-aggregate.tsx
 msgid "Clear All"
 msgstr ""
+
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "Clear matches"
+msgstr "Wyczyść dopasowania"
 
 #: src/components/containers-table/containers-table.tsx
 msgid "Click on a container to view more information."
@@ -507,6 +566,10 @@ msgstr "Wybierz kontener, aby wyświetlić więcej informacji."
 #: src/components/routes/system/smart-table.tsx
 msgid "Click on a device to view more information."
 msgstr "Wybierz urządzenie, aby wyświetlić więcej informacji."
+
+#: src/components/routes/system/storage-pools-table.tsx
+msgid "Click on a pool to view vdev and dataset details."
+msgstr "Kliknij pulę, aby wyświetlić szczegóły vdevów i zestawów danych."
 
 #: src/components/systems-table/systems-table.tsx
 msgid "Click on a system to view more information."
@@ -544,6 +607,10 @@ msgstr ""
 #: src/components/routes/settings/notifications.tsx
 msgid "Configure how you receive alert notifications."
 msgstr "Skonfiguruj sposób otrzymywania powiadomień."
+
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "Configure response monitoring from this agent."
+msgstr "Skonfiguruj monitorowanie czasu odpowiedzi z tego agenta."
 
 #: src/components/login/auth-form.tsx
 #: src/components/login/auth-form.tsx
@@ -585,10 +652,19 @@ msgstr ""
 msgid "Conntrack Utilization"
 msgstr ""
 
+#: src/lib/alerts.ts
+msgid "Container"
+msgstr "Kontener"
+
+#: src/lib/alerts.ts
+msgid "Container Health"
+msgstr "Kondycja kontenera"
+
 #: src/components/routes/system.tsx
 msgid "Containers"
 msgstr "Kontenery"
 
+#: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Continue"
@@ -635,7 +711,7 @@ msgstr "Kopiuj nazwę"
 
 #: src/components/routes/settings/tokens-fingerprints.tsx
 msgid "Copy public key"
-msgstr ""
+msgstr "Kopiuj klucz publiczny"
 
 #: src/components/copy-to-clipboard.tsx
 msgid "Copy text"
@@ -648,6 +724,10 @@ msgstr "Skopiuj poniżej polecenie instalacji agenta albo zarejestruj agentów a
 #: src/components/add-system.tsx
 msgid "Copy the<0>docker-compose.yml</0> content for the agent below, or register agents automatically with a <1>universal token</1>."
 msgstr "Skopiuj poniżej zawartość pliku <0>docker-compose.yml</0> dla agenta lub zarejestruj agentów automatycznie przy użyciu <1>uniwersalnego tokenu</1>."
+
+#: src/components/network-monitors-table/network-monitors-columns.tsx
+msgid "Copy to system"
+msgstr "Kopiuj do systemu"
 
 #: src/components/routes/settings/tokens-fingerprints.tsx
 msgid "Copy YAML"
@@ -673,9 +753,17 @@ msgstr "Procesor"
 msgid "CPU Cores"
 msgstr "Rdzenie CPU"
 
+#: src/lib/alerts.ts
+msgid "CPU I/O Wait"
+msgstr "Czas oczekiwania CPU na I/O (IOWait)"
+
 #: src/components/systemd-table/systemd-table-columns.tsx
 msgid "CPU Peak"
 msgstr "Szczyt CPU"
+
+#: src/lib/alerts.ts
+msgid "CPU Steal Time"
+msgstr "Czas CPU odebrany przez hiperwizor (Steal)"
 
 #: src/components/systemd-table/systemd-table.tsx
 msgid "CPU time"
@@ -709,9 +797,21 @@ msgstr "Utworzono"
 msgid "Critical (%)"
 msgstr "Krytyczny (%)"
 
+#: src/components/routes/system/disk-io-sheet.tsx
+msgid "Cumulative data read since boot"
+msgstr "Łączna ilość danych odczytanych od uruchomienia"
+
+#: src/components/routes/system/disk-io-sheet.tsx
+msgid "Cumulative data written since boot"
+msgstr "Łączna ilość danych zapisanych od uruchomienia"
+
 #: src/components/routes/system/network-sheet.tsx
 msgid "Cumulative Download"
 msgstr "Pobieranie łącznie"
+
+#: src/components/routes/system/disk-io-sheet.tsx
+msgid "Cumulative Read"
+msgstr "Odczyt łączny"
 
 #: src/components/routes/haproxy-aggregate.tsx
 msgid "Cumulative Totals"
@@ -720,6 +820,10 @@ msgstr ""
 #: src/components/routes/system/network-sheet.tsx
 msgid "Cumulative Upload"
 msgstr "Wysyłanie łącznie"
+
+#: src/components/routes/system/disk-io-sheet.tsx
+msgid "Cumulative Write"
+msgstr "Zapis łączny"
 
 #: src/components/routes/system.tsx
 #: src/components/routes/system.tsx
@@ -757,6 +861,7 @@ msgstr "Domyślne"
 msgid "Default time period"
 msgstr "Domyślny przedział czasu"
 
+#: src/components/network-monitors-table/network-monitors-columns.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/system/smart-table.tsx
@@ -795,15 +900,10 @@ msgstr "Rozładowuje się"
 msgid "Disk"
 msgstr "Dysk"
 
-#: src/components/routes/system/charts/disk-charts.tsx
-msgid "Disk I/O"
-msgstr "Dysk I/O"
-
 #: src/components/routes/settings/general.tsx
 msgid "Disk unit"
 msgstr "Jednostka dysku"
 
-#: src/components/routes/system/charts/disk-charts.tsx
 #: src/components/routes/system/charts/disk-charts.tsx
 #: src/lib/alerts.ts
 msgid "Disk Usage"
@@ -855,12 +955,14 @@ msgstr "Pobieranie"
 msgid "Duration"
 msgstr "Czas trwania"
 
+#: src/components/network-monitors-table/network-monitors-columns.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Edit"
 msgstr "Edytuj"
 
 #: src/components/add-system.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Edit {foo}"
 msgstr "Edytuj {foo}"
@@ -909,6 +1011,11 @@ msgstr "Wprowadź swoje jednorazowe hasło."
 msgid "Ephemeral"
 msgstr "Tymczasowy"
 
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/network-monitors-table.tsx
+#: src/components/network-monitors-table/network-monitors-table.tsx
+#: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/settings/config-yaml.tsx
 #: src/components/routes/settings/heartbeat.tsx
@@ -1008,9 +1115,18 @@ msgstr "Nieudane"
 msgid "Failed Attributes:"
 msgstr "Nieudane atrybuty:"
 
+#: src/lib/alerts.ts
+msgid "Failed Services"
+msgstr "Usługi zakończone niepowodzeniem"
+
 #: src/lib/api.ts
 msgid "Failed to authenticate"
 msgstr "Błąd autoryzacji"
+
+#: src/components/network-monitors-table/network-monitors-table.tsx
+#: src/components/network-monitors-table/network-monitors-table.tsx
+msgid "Failed to delete monitors."
+msgstr "Nie udało się usunąć monitorów."
 
 #: src/components/routes/settings/layout.tsx
 #: src/components/routes/settings/notifications.tsx
@@ -1030,6 +1146,10 @@ msgstr "Nie udało się wysłać powiadomienia testowego"
 msgid "Failed to update alert"
 msgstr "Nie udało się zaktualizować powiadomienia"
 
+#: src/components/network-monitors-table/network-monitors-table.tsx
+msgid "Failed to update monitors."
+msgstr "Nie udało się zaktualizować monitorów."
+
 #. placeholder {0}: statusTotals[ServiceStatus.Failed]
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Failed: {0}"
@@ -1037,7 +1157,7 @@ msgstr "Nieudane: {0}"
 
 #: src/components/routes/system/charts/sensor-charts.tsx
 msgid "Fans"
-msgstr ""
+msgstr "Wentylatory"
 
 #: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/lvs-aggregate.tsx
@@ -1050,9 +1170,12 @@ msgid "Filter groups:"
 msgstr ""
 
 #: src/components/containers-table/containers-table.tsx
+#: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/system/chart-card.tsx
 #: src/components/routes/system/smart-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
 #: src/components/systemd-table/systemd-table.tsx
 #: src/components/systems-table/systems-table.tsx
 msgid "Filter..."
@@ -1073,6 +1196,12 @@ msgstr "Na <0>{min}</0> {min, plural, one {minutę} other {minut}}"
 #: src/components/login/auth-form.tsx
 msgid "Forgot password?"
 msgstr "Zapomniałeś hasła?"
+
+#: src/components/routes/system/storage-pools-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
+msgctxt "Free space"
+msgid "Free"
+msgstr "Wolne"
 
 #: src/components/add-system.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
@@ -1204,6 +1333,7 @@ msgid "HAProxy Traffic"
 msgstr ""
 
 #: src/components/containers-table/containers-table-columns.tsx
+#: src/components/routes/system/storage-pools-table.tsx
 msgid "Health"
 msgstr "Kondycja"
 
@@ -1293,6 +1423,12 @@ msgctxt "Docker image"
 msgid "Image"
 msgstr "Obraz"
 
+#: src/components/containers-table/containers-table-columns.tsx
+#: src/components/containers-table/containers-table-columns.tsx
+msgctxt "Docker image"
+msgid "Image update available"
+msgstr "Dostępna aktualizacja obrazu"
+
 #: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/lvs-aggregate.tsx
@@ -1309,9 +1445,14 @@ msgstr "Nieaktywny"
 msgid "Individual Systems"
 msgstr ""
 
+#: src/components/network-monitors-table/network-monitors-columns.tsx
 #: src/components/routes/settings/heartbeat.tsx
 msgid "Interval"
 msgstr "Interwał"
+
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "Interval (seconds)"
+msgstr "Interwał (sekundy)"
 
 #: src/components/login/auth-form.tsx
 msgid "Invalid email address."
@@ -1396,6 +1537,15 @@ msgstr "Logi"
 msgid "Looking instead for where to create alerts? Click the bell <0/> icons in the systems table."
 msgstr "Szukasz, gdzie utworzyć powiadomienia? Kliknij ikonę dzwonka <0/> w tabeli systemów."
 
+#: src/components/routes/system/charts/monitors-charts.tsx
+msgctxt "Packet loss"
+msgid "Loss"
+msgstr "Strata"
+
+#: src/components/network-monitors-table/network-monitors-columns.tsx
+msgid "Loss 1h"
+msgstr "Strata 1 h"
+
 #: src/components/routes/system.tsx
 msgid "LVS"
 msgstr ""
@@ -1434,6 +1584,10 @@ msgstr "Instrukcja ręcznej konfiguracji"
 msgid "Max 1 min"
 msgstr "Maks. 1 min"
 
+#: src/components/network-monitors-table/network-monitors-columns.tsx
+msgid "Max 1h"
+msgstr "Maks. 1 godz."
+
 #: src/components/containers-table/containers-table-columns.tsx
 #: src/components/routes/system/info-bar.tsx
 #: src/components/systemd-table/systemd-table-columns.tsx
@@ -1465,6 +1619,10 @@ msgstr "Użycie pamięci"
 msgid "Memory usage of containers"
 msgstr "Zużycie pamięci przez kontenery"
 
+#: src/components/network-monitors-table/network-monitors-columns.tsx
+msgid "Min 1h"
+msgstr "Min. 1 godz."
+
 #: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/lvs-aggregate.tsx
 msgid "Mode"
@@ -1474,6 +1632,20 @@ msgstr ""
 #: src/components/routes/system/smart-table.tsx
 msgid "Model"
 msgstr "Model"
+
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "Monitor"
+msgstr "Monitor"
+
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "Monitors created"
+msgstr "Utworzono monitory"
+
+#: src/components/routes/system/storage-pools-table.tsx
+msgid "Mountpoint"
+msgstr "Punkt montowania"
 
 #: src/components/add-system.tsx
 #: src/components/alerts-history-columns.tsx
@@ -1487,6 +1659,29 @@ msgstr "Nazwa"
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Net"
 msgstr "Sieć"
+
+#: src/components/routes/system.tsx
+msgid "Network"
+msgstr "Sieć"
+
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "Network Monitor"
+msgstr "Monitor sieci"
+
+#: src/lib/alerts.ts
+msgid "Network Monitor Loss"
+msgstr "Utrata pakietów monitora sieciowego"
+
+#: src/components/command-palette.tsx
+#: src/components/navbar.tsx
+#: src/components/navbar.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/network-monitors-table.tsx
+#: src/components/routes/monitors.tsx
+msgid "Network Monitors"
+msgstr "Monitory sieci"
 
 #: src/components/routes/system/charts/network-charts.tsx
 msgid "Network traffic of containers"
@@ -1527,6 +1722,10 @@ msgstr ""
 msgid "No data"
 msgstr ""
 
+#: src/components/routes/system/storage-pools-table.tsx
+msgid "No detail data for this pool."
+msgstr "Brak szczegółowych danych dla tej puli."
+
 #: src/components/routes/haproxy-aggregate.tsx
 msgid "No HAProxy Systems Found"
 msgstr ""
@@ -1543,6 +1742,7 @@ msgstr "Nie znaleziono wyników."
 #: src/components/containers-table/containers-table.tsx
 #: src/components/containers-table/containers-table.tsx
 #: src/components/containers-table/containers-table.tsx
+#: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/system/smart-table.tsx
 #: src/components/systemd-table/systemd-table.tsx
@@ -1557,6 +1757,7 @@ msgstr "Brak dostępnych atrybutów S.M.A.R.T. dla tego urządzenia."
 msgid "No Systems"
 msgstr ""
 
+#: src/components/network-monitors-table/monitor-dialog.tsx
 #: src/components/systems-table/systems-table.tsx
 #: src/components/systems-table/systems-table.tsx
 msgid "No systems found."
@@ -1582,11 +1783,19 @@ msgstr ""
 msgid "No virtual services reported"
 msgstr ""
 
+#: src/components/routes/system/storage-pools-table.tsx
+msgid "None"
+msgstr "Brak"
+
 #: src/components/command-palette.tsx
 #: src/components/routes/settings/layout.tsx
 #: src/components/routes/settings/notifications.tsx
 msgid "Notifications"
 msgstr "Powiadomienia"
+
+#: src/lib/alerts.ts
+msgid "Notifications may include recent container log excerpts."
+msgstr "Powiadomienia mogą zawierać fragmenty ostatnich logów kontenera."
 
 #: src/components/login/auth-form.tsx
 msgid "OAuth 2 / OIDC support"
@@ -1599,6 +1808,19 @@ msgstr ""
 #: src/components/routes/settings/config-yaml.tsx
 msgid "On each restart, systems in the database will be updated to match the systems defined in the file."
 msgstr "Przy każdym ponownym uruchomieniu systemy w bazie danych będą aktualizowane, aby odpowiadały systemom zdefiniowanym w pliku."
+
+#: src/lib/alerts.ts
+msgid "One or more containers are unhealthy"
+msgstr "Co najmniej jeden kontener jest w złym stanie"
+
+#. placeholder {0}: alert.value
+#: src/components/active-alerts.tsx
+msgid "One or more monitors exceed {0}% loss"
+msgstr "Co najmniej jeden monitor przekracza {0}% utraty pakietów"
+
+#: src/lib/alerts.ts
+msgid "One or more services are in a failed state"
+msgstr "Co najmniej jedna usługa jest w stanie awarii"
 
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/settings/quiet-hours.tsx
@@ -1613,10 +1835,12 @@ msgstr "Hasło jednorazowe"
 msgid "online"
 msgstr ""
 
+#: src/components/network-monitors-table/network-monitors-columns.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
 #: src/components/routes/system/smart-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Open menu"
 msgstr "Otwórz menu"
@@ -1639,6 +1863,11 @@ msgstr ""
 msgid "Overwrite existing alerts"
 msgstr "Nadpisz istniejące alerty"
 
+#: src/components/routes/system/charts/monitors-charts.tsx
+msgid "Packet loss (%)"
+msgstr "Utrata pakietów (%)"
+
+#: src/components/command-palette.tsx
 #: src/components/command-palette.tsx
 #: src/components/command-palette.tsx
 #: src/components/command-palette.tsx
@@ -1676,6 +1905,7 @@ msgstr "Otrzymano żądanie resetowania hasła"
 msgid "Past"
 msgstr "Poprzednie"
 
+#: src/components/network-monitors-table/network-monitors-columns.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Pause"
 msgstr "Pauza"
@@ -1718,6 +1948,10 @@ msgstr "Stały"
 msgid "Persistence"
 msgstr "Trwałość"
 
+#: src/components/routes/system/raw-capacity-label.tsx
+msgid "Physical device space. True usable capacity is unknown. Pool disk usage alerts are disabled."
+msgstr "Fizyczne miejsce na urządzeniu. Rzeczywista pojemność użytkowa jest nieznana. Alerty użycia dysków puli są wyłączone."
+
 #: src/components/routes/settings/notifications.tsx
 msgid "Please <0>configure an SMTP server</0> to ensure alerts are delivered."
 msgstr "Proszę <0>skonfigurować serwer SMTP</0>, aby zapewnić dostarczanie powiadomień."
@@ -1751,7 +1985,16 @@ msgstr "Proszę zapoznać się z <0>dokumentacją</0>."
 msgid "Please sign in to your account"
 msgstr "Zaloguj się na swoje konto"
 
+#: src/components/routes/system/storage-pools-table.tsx
+msgid "Pool Health"
+msgstr "Stan puli"
+
+#: src/components/routes/system/charts/storage-pool-charts.tsx
+msgid "Pool Usage"
+msgstr "Użycie puli"
+
 #: src/components/add-system.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
 msgid "Port"
 msgstr "Port"
 
@@ -1778,9 +2021,14 @@ msgstr "Preferowany język"
 msgid "Process started"
 msgstr "Proces uruchomiony"
 
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/network-monitors-columns.tsx
+msgid "Protocol"
+msgstr "Protokół"
+
 #: src/components/routes/settings/tokens-fingerprints.tsx
 msgid "Public key"
-msgstr ""
+msgstr "Klucz publiczny"
 
 #. Use 'Key' if your language requires many more characters
 #: src/components/add-system.tsx
@@ -1796,13 +2044,31 @@ msgstr "Głębokość kolejki"
 msgid "Quiet Hours"
 msgstr "Godziny ciszy"
 
+#: src/components/routes/system/raw-capacity-label.tsx
+#: src/components/routes/system/storage-pools-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
+msgid "Raw"
+msgstr "Surowe"
+
+#: src/components/routes/system/charts/storage-pool-charts.tsx
+msgid "Raw usage of storage pool {displayName}"
+msgstr "Surowe użycie puli magazynu {displayName}"
+
+#. Disk read
 #. Disk read
 #: src/components/routes/system/charts/disk-charts.tsx
+#: src/components/routes/system/charts/storage-pool-charts.tsx
+#: src/components/routes/system/disk-io-sheet.tsx
 #: src/components/routes/system/disk-io-sheet.tsx
 #: src/components/routes/system/disk-io-sheet.tsx
 #: src/components/routes/system/disk-io-sheet.tsx
 msgid "Read"
 msgstr "Odczyt"
+
+#: src/components/routes/system/storage-pools-table.tsx
+msgid "Read errors"
+msgstr "Błędy odczytu"
 
 #: src/components/charts/ipvs-panel.tsx
 #: src/components/routes/lvs-aggregate.tsx
@@ -1824,6 +2090,7 @@ msgstr ""
 #: src/components/containers-table/containers-table.tsx
 #: src/components/containers-table/containers-table.tsx
 #: src/components/routes/system/smart-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
 msgid "Refresh"
 msgstr "Odśwież"
 
@@ -1862,14 +2129,26 @@ msgstr "Resetuj hasło"
 msgid "Resolved"
 msgstr "Rozwiązany"
 
+#: src/components/network-monitors-table/network-monitors-columns.tsx
+#: src/components/routes/system/charts/monitors-charts.tsx
+msgid "Response"
+msgstr "Odpowiedź"
+
+#: src/components/network-monitors-table/network-monitors-table.tsx
+msgid "Response time monitoring from agents."
+msgstr "Monitorowanie czasu odpowiedzi przez agentów."
+
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Restarts"
 msgstr "Uruchamia ponownie"
 
+#: src/components/network-monitors-table/network-monitors-columns.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Resume"
 msgstr "Wznów"
 
+#: src/components/routes/system/charts/disk-charts.tsx
+#: src/components/routes/system/charts/disk-charts.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgctxt "Root disk label"
 msgid "Root"
@@ -1896,6 +2175,7 @@ msgid "S.M.A.R.T. Self-Test"
 msgstr "Samodiagnostyka S.M.A.R.T."
 
 #: src/components/add-system.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
 msgid "Save {foo}"
 msgstr "Zapisz {foo}"
 
@@ -1937,6 +2217,11 @@ msgstr "Szukaj"
 msgid "Search for systems or settings..."
 msgstr "Szukaj systemów lub ustawień..."
 
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "Search systems"
+msgstr "Szukaj systemów"
+
 #: src/components/routes/settings/heartbeat.tsx
 msgid "Seconds between pings (default: 60)"
 msgstr "Sekundy między pingami (domyślnie: 60)"
@@ -1948,6 +2233,27 @@ msgstr "Zobacz <0>ustawienia powiadomień</0>, aby skonfigurować sposób, w jak
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Select {foo}"
 msgstr "Wybierz {foo}"
+
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "Select a system"
+msgstr "Wybierz system"
+
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/network-monitors-columns.tsx
+msgid "Select all"
+msgstr "Zaznacz wszystko"
+
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "Select matches"
+msgstr "Zaznacz dopasowania"
+
+#: src/components/network-monitors-table/network-monitors-columns.tsx
+msgid "Select row"
+msgstr "Zaznacz wiersz"
+
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "Select systems"
+msgstr "Zaznacz systemy"
 
 #: src/components/routes/haproxy-aggregate.tsx
 msgid "selected"
@@ -2042,6 +2348,7 @@ msgstr "Czas rozpoczęcia"
 #. Context: alert state (active or resolved)
 #: src/components/alerts-history-columns.tsx
 #: src/components/routes/settings/quiet-hours.tsx
+#: src/components/routes/system/storage-pools-table.tsx
 #: src/components/systemd-table/systemd-table-columns.tsx
 msgid "State"
 msgstr "Stan"
@@ -2069,12 +2376,14 @@ msgstr "Użycie pamięci wymiany"
 #: src/components/mode-toggle.tsx
 #: src/components/mode-toggle.tsx
 msgid "Switch theme"
-msgstr ""
+msgstr "Zmień motyw"
 
 #: src/components/add-system.tsx
 #: src/components/alerts-history-columns.tsx
 #: src/components/containers-table/containers-table-columns.tsx
 #: src/components/navbar.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/network-monitors-columns.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/settings/quiet-hours.tsx
@@ -2088,7 +2397,7 @@ msgstr "System"
 
 #: src/components/routes/system/charts/sensor-charts.tsx
 msgid "System fan speeds (RPM)"
-msgstr ""
+msgstr "Prędkości wentylatorów systemu (RPM)"
 
 #: src/components/routes/system/charts/load-average-chart.tsx
 msgid "System load averages over time"
@@ -2099,6 +2408,8 @@ msgid "Systemd Services"
 msgstr "Usługi systemd"
 
 #: src/components/navbar.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
 #: src/components/routes/haproxy-aggregate.tsx
 msgid "Systems"
 msgstr "Systemy"
@@ -2115,6 +2426,11 @@ msgstr "Tabela"
 msgctxt "Tabs system layout option"
 msgid "Tabs"
 msgstr "Karty"
+
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/network-monitors-columns.tsx
+msgid "Target"
+msgstr "Cel"
 
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Tasks"
@@ -2163,6 +2479,7 @@ msgstr "Następnie zaloguj się do panelu administracyjnego i  zresetuj hasło d
 msgid "This action cannot be undone. This will permanently delete all current records for {name} from the database."
 msgstr "Tej akcji nie można cofnąć. Spowoduje to trwałe usunięcie wszystkich bieżących rekordów dla {name} z bazy danych."
 
+#: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 msgid "This will permanently delete all selected records from the database."
 msgstr "Spowoduje to trwałe usunięcie wszystkich zaznaczonych rekordów z bazy danych."
@@ -2171,9 +2488,9 @@ msgstr "Spowoduje to trwałe usunięcie wszystkich zaznaczonych rekordów z bazy
 msgid "Throughput of {extraFsName}"
 msgstr "Przepustowość {extraFsName}"
 
-#: src/components/routes/system/charts/disk-charts.tsx
-msgid "Throughput of root filesystem"
-msgstr "Przepustowość głównego systemu plików"
+#: src/components/routes/system/charts/storage-pool-charts.tsx
+msgid "Throughput of storage pool {displayName}"
+msgstr "Przepustowość puli magazynu {displayName}"
 
 #: src/components/routes/settings/general.tsx
 msgid "Time format"
@@ -2182,11 +2499,6 @@ msgstr "Format czasu"
 #: src/components/routes/settings/notifications.tsx
 msgid "To email(s)"
 msgstr "Do e-mail(ów)"
-
-#: src/components/mode-toggle.tsx
-#: src/components/mode-toggle.tsx
-#~ msgid "Toggle theme"
-#~ msgstr "Zmień motyw"
 
 #: src/components/add-system.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
@@ -2296,8 +2608,16 @@ msgid "Triggers when 5 minute load average exceeds a threshold"
 msgstr "Uruchamia się, gdy 5-minutowe średnie obciążenie systemu przekroczy ustawiony próg"
 
 #: src/lib/alerts.ts
+msgid "Triggers when a container's health check reports unhealthy"
+msgstr "Wyzwala alert, gdy kontrola stanu kontenera zgłosi nieprawidłowy stan"
+
+#: src/lib/alerts.ts
 msgid "Triggers when any sensor exceeds a threshold"
 msgstr "Wyzwalane, gdy jakikolwiek czujnik przekroczy ustalony próg."
+
+#: src/lib/alerts.ts
+msgid "Triggers when any systemd service enters the failed state"
+msgstr "Wyzwala alert, gdy dowolna usługa systemd przejdzie w stan awarii"
 
 #: src/lib/alerts.ts
 msgid "Triggers when battery charge drops below a threshold"
@@ -2306,6 +2626,14 @@ msgstr "Uruchamia się, gdy poziom baterii spadnie poniżej wybranej wartości"
 #: src/lib/alerts.ts
 msgid "Triggers when combined up/down exceeds a threshold"
 msgstr "Wyzwalane, gdy łączna wartość w górę/w dół przekroczy próg"
+
+#: src/lib/alerts.ts
+msgid "Triggers when CPU I/O wait exceeds a threshold"
+msgstr "Wyzwala się, gdy czas oczekiwania CPU na I/O przekroczy próg"
+
+#: src/lib/alerts.ts
+msgid "Triggers when CPU steal time exceeds a threshold"
+msgstr "Wyzwala się, gdy czas skradziony CPU przekroczy próg"
 
 #: src/lib/alerts.ts
 msgid "Triggers when CPU usage exceeds a threshold"
@@ -2320,6 +2648,10 @@ msgid "Triggers when memory usage exceeds a threshold"
 msgstr "Wyzwalane, wykorzystanie pamięci przekroczy ustalony próg"
 
 #: src/lib/alerts.ts
+msgid "Triggers when one hour loss exceeds a threshold"
+msgstr "Wyzwalany, gdy utrata pakietów w ciągu godziny przekroczy próg"
+
+#: src/lib/alerts.ts
 msgid "Triggers when status switches between up and down"
 msgstr "Wyzwalane, gdy status przełącza się między stanem aktywnym a nieaktywnym"
 
@@ -2331,6 +2663,7 @@ msgstr "Wyzwalane, gdy wykorzystanie któregokolwiek dysku przekroczy ustalony p
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/system/smart-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
 #: src/components/routes/vector-aggregate.tsx
 msgid "Type"
 msgstr "Typ"
@@ -2338,6 +2671,10 @@ msgstr "Typ"
 #: src/components/charts/vector-panel.tsx
 msgid "unhealthy"
 msgstr ""
+
+#: src/lib/alerts.ts
+msgid "Unhealthy"
+msgstr "Niesprawny"
 
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Unit file"
@@ -2354,6 +2691,7 @@ msgid "Universal token"
 msgstr "Uniwersalny token"
 
 #. Context: Battery state
+#: src/components/routes/system/storage-pools-table.tsx
 #: src/lib/i18n.ts
 msgid "Unknown"
 msgstr "Nieznana"
@@ -2378,9 +2716,11 @@ msgid "Update"
 msgstr "Aktualizuj"
 
 #: src/components/containers-table/containers-table-columns.tsx
+#: src/components/network-monitors-table/network-monitors-columns.tsx
 #: src/components/routes/haproxy-aggregate.tsx
 #: src/components/routes/lvs-aggregate.tsx
 #: src/components/routes/system/smart-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
 #: src/components/routes/vector-aggregate.tsx
 #: src/components/systemd-table/systemd-table-columns.tsx
 msgid "Updated"
@@ -2400,19 +2740,24 @@ msgid "Uptime"
 msgstr "Czas pracy"
 
 #: src/components/routes/system/charts/disk-charts.tsx
+#: src/components/routes/system/charts/disk-charts.tsx
 #: src/components/routes/system/charts/gpu-charts.tsx
 #: src/components/routes/system/charts/gpu-charts.tsx
 #: src/components/routes/system/charts/gpu-charts.tsx
+#: src/components/routes/system/charts/storage-pool-charts.tsx
 #: src/components/routes/system/cpu-sheet.tsx
 msgid "Usage"
 msgstr "Wykorzystanie"
 
-#: src/components/routes/system/charts/disk-charts.tsx
-msgid "Usage of root partition"
-msgstr "Użycie partycji głównej"
+#: src/components/routes/system/charts/storage-pool-charts.tsx
+msgid "Usage of storage pool {displayName}"
+msgstr "Użycie puli magazynu {displayName}"
 
 #: src/components/routes/system/charts/memory-charts.tsx
 #: src/components/routes/system/charts/memory-charts.tsx
+#: src/components/routes/system/storage-pools-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
 msgid "Used"
 msgstr "Używane"
 
@@ -2519,12 +2864,19 @@ msgid "Windows command"
 msgstr "Polecenie Windows"
 
 #. Disk write
+#. Disk write
 #: src/components/routes/system/charts/disk-charts.tsx
+#: src/components/routes/system/charts/storage-pool-charts.tsx
+#: src/components/routes/system/disk-io-sheet.tsx
 #: src/components/routes/system/disk-io-sheet.tsx
 #: src/components/routes/system/disk-io-sheet.tsx
 #: src/components/routes/system/disk-io-sheet.tsx
 msgid "Write"
 msgstr "Zapis"
+
+#: src/components/routes/system/storage-pools-table.tsx
+msgid "Write errors"
+msgstr "Błędy zapisu"
 
 #: src/components/routes/settings/layout.tsx
 msgid "YAML Config"

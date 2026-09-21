@@ -119,6 +119,13 @@ export default function Navbar() {
 								<Trans>Vector Aggregate</Trans>
 							</DropdownMenuItem>
 							<DropdownMenuItem
+								onClick={() => navigate(getPagePath($router, "monitors"))}
+								className="flex items-center"
+							>
+								<NetworkIcon className="h-4 w-4 me-2.5" strokeWidth={1.5} />
+								<Trans>Network Monitors</Trans>
+							</DropdownMenuItem>
+							<DropdownMenuItem
 								onClick={() => navigate(getPagePath($router, "settings", { name: "general" }))}
 								className="flex items-center"
 							>
@@ -188,6 +195,21 @@ export default function Navbar() {
 						</Link>
 					</TooltipTrigger>
 					<TooltipContent>S.M.A.R.T.</TooltipContent>
+				</Tooltip>
+				<Tooltip>
+					<TooltipTrigger asChild>
+						<Link
+							href={getPagePath($router, "monitors")}
+							className={cn("hidden md:grid", buttonVariants({ variant: "ghost", size: "icon" }))}
+							aria-label="Network Monitors"
+							onMouseEnter={() => import("@/components/routes/monitors")}
+						>
+							<NetworkIcon className="h-[1.2rem] w-[1.2rem]" strokeWidth={1.5} />
+						</Link>
+					</TooltipTrigger>
+					<TooltipContent>
+						<Trans>Network Monitors</Trans>
+					</TooltipContent>
 				</Tooltip>
 				<Tooltip>
 					<TooltipTrigger asChild>
