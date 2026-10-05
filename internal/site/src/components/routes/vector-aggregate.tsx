@@ -152,9 +152,9 @@ export default memo(function VectorAggregatePage() {
 	// (based on which systems have a `vec` field), so we hold *all* systems
 	// here and filter inside `fetchStats`.
 	useEffect(() => {
-		const update = (all: SystemRecord[]) => {
-			setAllSystems(all)
-			systemsRef.current = all
+		const update = (all: readonly SystemRecord[]) => {
+			setAllSystems([...all])
+			systemsRef.current = [...all]
 		}
 		update($systems.get())
 		return $systems.subscribe(update)

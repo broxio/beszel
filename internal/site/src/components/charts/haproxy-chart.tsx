@@ -1,6 +1,6 @@
 import { memo, useMemo } from "react"
 import { Area, AreaChart, CartesianGrid, YAxis } from "recharts"
-import { ChartContainer, ChartTooltip, ChartTooltipContent, pinnedAxisDomain, xAxis } from "@/components/ui/chart"
+import { ChartContainer, ChartTooltip, ChartTooltipContent, xAxis } from "@/components/ui/chart"
 import { chartMargin, cn, decimalString, formatShortDate, toFixedFloat } from "@/lib/utils"
 import type { ChartData, HAProxyStats } from "@/types"
 import { useYAxisWidth } from "./hooks"
@@ -188,7 +188,7 @@ export default memo(function HAProxyChart({ chartData, chartType, proxyFilter }:
 					<CartesianGrid vertical={false} />
 					<YAxis
 						direction="ltr"
-						domain={pinnedAxisDomain()}
+						domain={[0, "auto"]}
 						orientation={chartData.orientation}
 						className="tracking-tighter"
 						width={yAxisWidth}
@@ -200,9 +200,8 @@ export default memo(function HAProxyChart({ chartData, chartType, proxyFilter }:
 					<ChartTooltip
 						animationEasing="ease-out"
 						animationDuration={150}
-						truncate={true}
 						labelFormatter={(_, data) => formatShortDate(data[0].payload.created)}
-						content={<ChartTooltipContent contentFormatter={tooltipFormatter} showTotal={chartType === "sessions"} />}
+						content={<ChartTooltipContent contentFormatter={tooltipFormatter} showTotal={chartType === "sessions"} truncate={true} />}
 					/>
 					{proxyNames.map((name) => {
 						const filtered = filteredKeys.has(name)

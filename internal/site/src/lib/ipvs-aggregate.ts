@@ -37,7 +37,7 @@ export function extractGroupName(hostname: string): string | null {
 	return m ? m[1] : hostname
 }
 
-export function filterLVSSystems(systems: SystemRecord[]): SystemRecord[] {
+export function filterLVSSystems(systems: readonly SystemRecord[]): SystemRecord[] {
 	return systems.filter((s) => s.name.startsWith("lvs-"))
 }
 

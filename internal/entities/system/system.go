@@ -11,6 +11,14 @@ import (
 	"github.com/henrygd/beszel/internal/entities/systemd"
 )
 
+// WiFi describes a currently connected station interface. Keys in WiFi maps are
+// OS interface identities, not SSIDs. Signal is native dBm only; nil means the
+// OS confirmed association but could not supply RSSI (never convert quality %).
+type WiFi struct {
+	SSID   string   `json:"s,omitempty" cbor:"0,keyasint,omitempty"`
+	Signal *float64 `json:"r,omitempty" cbor:"1,keyasint,omitempty"`
+}
+
 type Stats struct {
 	Cpu            float64             `json:"cpu" cbor:"0,keyasint"`
 	MaxCpu         float64             `json:"cpum,omitempty" cbor:"-"`
@@ -55,6 +63,7 @@ type Stats struct {
 	Batteries          map[string]uint8     `json:"bats,omitempty" cbor:"37,keyasint,omitempty"`
 	ZfsPools           map[string]*ZfsPool  `json:"z,omitempty" cbor:"39,keyasint,omitempty"`    // ZFS pool metrics, keyed by pool name
 	DiskIOTotal        [2]uint64            `json:"diot,omitzero" cbor:"38,keyasint,omitzero"`   // [total read bytes, total write bytes] cumulative device counters
+	WiFi               map[string]int8      `json:"wf,omitempty" cbor:"40,keyasint,omitempty"`   // RSSI dBm keyed by interface; unavailable readings omitted
 	HAProxy            []HAProxyStats       `json:"hap,omitempty" cbor:"50,keyasint,omitempty"`  // hap: HAProxy frontend/backend stats (from "show stat")
 	HAProxyInfo        *HAProxyInfo         `json:"hapi,omitempty" cbor:"51,keyasint,omitempty"` // hapi: HAProxy process info (from "show info")
 	HAProxyPools       []HAProxyPool        `json:"hpp,omitempty" cbor:"52,keyasint,omitempty"`  // hpp: HAProxy memory pools (from "show pools")
@@ -64,6 +73,7 @@ type Stats struct {
 	IPVS               *IPVSStats           `json:"ipvs,omitempty" cbor:"60,keyasint,omitempty"` // IPVS / LVS stats (Linux only)
 	Vector             *VectorStats         `json:"vec,omitempty" cbor:"80,keyasint,omitempty"`  // Vector aggregator GraphQL stats (opt-in via VECTOR_API_URL)
 	Conntrack          *ConntrackStats      `json:"ct,omitempty" cbor:"100,keyasint,omitempty"`  // ct: netfilter conntrack table usage + drop counters (Linux only)
+
 }
 
 // ZfsPool holds per-pool ZFS metrics for a single collection interval.
@@ -222,18 +232,17 @@ type GPUData struct {
 }
 
 type FsStats struct {
-	Time           time.Time `json:"-"`
-	Root           bool      `json:"-"`
-	Mountpoint     string    `json:"-"`
-	Name           string    `json:"-"`
-	DiskTotal      float64   `json:"d" cbor:"0,keyasint"`
-	DiskUsed       float64   `json:"du" cbor:"1,keyasint"`
-	TotalRead      uint64    `json:"tr,omitzero" cbor:"9,keyasint,omitzero"`  // cumulative device read bytes
-	TotalWrite     uint64    `json:"tw,omitzero" cbor:"10,keyasint,omitzero"` // cumulative device write bytes
-	DiskReadPs     float64   `json:"r" cbor:"2,keyasint"`
-	DiskWritePs    float64   `json:"w" cbor:"3,keyasint"`
-	MaxDiskReadPS  float64   `json:"rm,omitempty" cbor:"-"`
-	MaxDiskWritePS float64   `json:"wm,omitempty" cbor:"-"`
+	Root           bool    `json:"-"`
+	Mountpoint     string  `json:"-"`
+	Name           string  `json:"-"`
+	DiskTotal      float64 `json:"d" cbor:"0,keyasint"`
+	DiskUsed       float64 `json:"du" cbor:"1,keyasint"`
+	TotalRead      uint64  `json:"tr,omitzero" cbor:"9,keyasint,omitzero"`  // cumulative device read bytes
+	TotalWrite     uint64  `json:"tw,omitzero" cbor:"10,keyasint,omitzero"` // cumulative device write bytes
+	DiskReadPs     float64 `json:"r" cbor:"2,keyasint"`
+	DiskWritePs    float64 `json:"w" cbor:"3,keyasint"`
+	MaxDiskReadPS  float64 `json:"rm,omitempty" cbor:"-"`
+	MaxDiskWritePS float64 `json:"wm,omitempty" cbor:"-"`
 	// TODO: remove DiskReadPs and DiskWritePs in future release in favor of DiskReadBytes and DiskWriteBytes
 	DiskReadBytes     uint64     `json:"rb" cbor:"6,keyasint,omitempty"`
 	DiskWriteBytes    uint64     `json:"wb" cbor:"7,keyasint,omitempty"`
@@ -402,6 +411,9 @@ type Info struct {
 	Services       []uint16           `json:"sv,omitempty" cbor:"22,keyasint,omitempty"`  // [totalServices, numFailedServices]
 	Battery        Battery            `json:"bat,omitzero" cbor:"23,keyasint,omitzero"`   // [percent, charge state]
 	RootDiskName   string             `json:"rdn,omitempty" cbor:"24,keyasint,omitempty"` // custom name for root disk (set via FILESYSTEM=device__name)
+	PackageUpdates []uint16           `json:"pu,omitempty" cbor:"25,keyasint,omitempty"`  // [totalUpdates, securityUpdates] (security omitted if unknown)
+	WiFi           map[string]WiFi    `json:"wf,omitempty" cbor:"26,keyasint,omitempty"`  // connected Wi-Fi interfaces
+	SystemdLogs    bool               `json:"jl,omitempty" cbor:"27,keyasint,omitempty"`  // agent can read the system journal
 }
 
 // Data that does not change during process lifetime and is not needed in All Systems table

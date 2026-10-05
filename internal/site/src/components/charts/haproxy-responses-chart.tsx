@@ -6,7 +6,6 @@ import {
 	ChartLegendContent,
 	ChartTooltip,
 	ChartTooltipContent,
-	pinnedAxisDomain,
 	xAxis,
 } from "@/components/ui/chart"
 import { chartMargin, cn, decimalString, formatShortDate, toFixedFloat } from "@/lib/utils"
@@ -124,7 +123,7 @@ export default memo(function HAProxyResponsesChart({ chartData, proxyFilter }: H
 					<CartesianGrid vertical={false} />
 					<YAxis
 						direction="ltr"
-						domain={pinnedAxisDomain()}
+						domain={[0, "auto"]}
 						orientation={chartData.orientation}
 						className="tracking-tighter"
 						width={yAxisWidth}

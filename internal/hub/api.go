@@ -16,7 +16,7 @@ import (
 	"github.com/blang/semver"
 	"github.com/henrygd/beszel"
 	"github.com/henrygd/beszel/internal/alerts"
-	"github.com/henrygd/beszel/internal/entities/system"
+	systementity "github.com/henrygd/beszel/internal/entities/system"
 	"github.com/henrygd/beszel/internal/ghupdate"
 	"github.com/henrygd/beszel/internal/hub/config"
 	"github.com/henrygd/beszel/internal/hub/systems"
@@ -204,6 +204,10 @@ func (h *Hub) registerApiRoutes(se *core.ServeEvent) error {
 	apiAuth.POST("/zfs/refresh", h.refreshZfsData).BindFunc(excludeReadOnlyRole)
 	// get systemd service details
 	apiAuth.GET("/systemd/info", h.getSystemdInfo)
+	// get recent logs for a systemd service
+	apiAuth.GET("/systemd/logs", h.getSystemdLogs)
+	// get pending package updates
+	apiAuth.GET("/package-updates", h.getPackageUpdates)
 	// HAProxy aggregate: lightweight endpoint returning only HAProxy fields from latest stats
 	apiAuth.GET("/haproxy/stats", h.getHAProxyStats)
 	// IPVS / LVS aggregate: lightweight endpoint returning only the IPVS field from latest stats
@@ -449,8 +453,64 @@ func (h *Hub) getSystemdInfo(e *core.RequestEvent) error {
 	if err != nil {
 		return e.InternalServerError("", err)
 	}
-	e.Response.Header().Set("Cache-Control", "public, max-age=60")
+	e.Response.Header().Set("Cache-Control", "private, max-age=60")
+	e.Response.Header().Add("Vary", "Authorization")
 	return e.JSON(http.StatusOK, map[string]any{"details": details})
+}
+
+// getSystemdLogs handles GET /api/beszel/systemd/logs requests.
+func (h *Hub) getSystemdLogs(e *core.RequestEvent) error {
+	query := e.Request.URL.Query()
+	systemID := query.Get("system")
+	serviceName := query.Get("service")
+
+	if systemID == "" || serviceName == "" {
+		return e.BadRequestError("Invalid system or service parameter", nil)
+	}
+	system, err := h.sm.GetSystem(systemID)
+	if err != nil || !system.HasUser(e.App, e.Auth) {
+		return e.NotFoundError("", nil)
+	}
+	// Only fetch logs for services that are currently monitored on this system.
+	_, err = e.App.FindFirstRecordByFilter("systemd_services", "system = {:system} && name = {:name}", dbx.Params{
+		"system": systemID,
+		"name":   serviceName,
+	})
+	if err != nil {
+		return e.NotFoundError("", err)
+	}
+	// Old agents and agents without journal access do not advertise this capability.
+	systemRecord, err := e.App.FindRecordById("systems", systemID)
+	if err != nil {
+		return e.NotFoundError("", err)
+	}
+	var info systementity.Info
+	if err := systemRecord.UnmarshalJSONField("info", &info); err != nil || !info.SystemdLogs {
+		return e.JSON(http.StatusOK, map[string]string{"logs": ""})
+	}
+
+	logs, err := system.FetchSystemdLogsFromAgent(serviceName)
+	if err != nil {
+		return e.InternalServerError("", err)
+	}
+	return e.JSON(http.StatusOK, map[string]string{"logs": logs})
+}
+
+// getPackageUpdates handles GET /api/beszel/package-updates requests
+func (h *Hub) getPackageUpdates(e *core.RequestEvent) error {
+	systemID := e.Request.URL.Query().Get("system")
+	if systemID == "" {
+		return e.BadRequestError("Invalid system parameter", nil)
+	}
+	system, err := h.sm.GetSystem(systemID)
+	if err != nil || !system.HasUser(e.App, e.Auth) {
+		return e.NotFoundError("", nil)
+	}
+	updates, err := system.FetchPackageUpdatesFromAgent()
+	if err != nil {
+		return e.InternalServerError("", err)
+	}
+	return e.JSON(http.StatusOK, updates)
 }
 
 // refreshSmartData handles POST /api/beszel/smart/refresh requests
@@ -475,9 +535,9 @@ func (h *Hub) refreshSmartData(e *core.RequestEvent) error {
 
 // haproxyStatsResponse is a lightweight response containing only HAProxy fields
 type haproxyStatsResponse struct {
-	System string                `json:"system"`
-	HAP    []system.HAProxyStats `json:"hap,omitempty"`
-	HAPI   *system.HAProxyInfo   `json:"hapi,omitempty"`
+	System string                      `json:"system"`
+	HAP    []systementity.HAProxyStats `json:"hap,omitempty"`
+	HAPI   *systementity.HAProxyInfo   `json:"hapi,omitempty"`
 }
 
 // getHAProxyStats returns only HAProxy fields from the latest system_stats for
@@ -521,7 +581,7 @@ func (h *Hub) getHAProxyStats(e *core.RequestEvent) error {
 			continue
 		}
 
-		var stats system.Stats
+		var stats systementity.Stats
 		if err := json.Unmarshal([]byte(statsRaw), &stats); err != nil {
 			continue
 		}
@@ -542,8 +602,8 @@ func (h *Hub) getHAProxyStats(e *core.RequestEvent) error {
 
 // ipvsStatsResponse is a lightweight response containing only the IPVS field.
 type ipvsStatsResponse struct {
-	System string            `json:"system"`
-	IPVS   *system.IPVSStats `json:"ipvs,omitempty"`
+	System string                  `json:"system"`
+	IPVS   *systementity.IPVSStats `json:"ipvs,omitempty"`
 }
 
 // getIPVSStats returns only the IPVS field from the latest system_stats record
@@ -581,7 +641,7 @@ func (h *Hub) getIPVSStats(e *core.RequestEvent) error {
 		if statsRaw == "" {
 			continue
 		}
-		var stats system.Stats
+		var stats systementity.Stats
 		if err := json.Unmarshal([]byte(statsRaw), &stats); err != nil {
 			continue
 		}
@@ -595,8 +655,8 @@ func (h *Hub) getIPVSStats(e *core.RequestEvent) error {
 
 // vectorStatsResponse is a lightweight response containing only the Vector field.
 type vectorStatsResponse struct {
-	System string              `json:"system"`
-	Vector *system.VectorStats `json:"vector,omitempty"`
+	System string                    `json:"system"`
+	Vector *systementity.VectorStats `json:"vector,omitempty"`
 }
 
 // getVectorStats returns only the Vector field from the latest system_stats record
@@ -634,7 +694,7 @@ func (h *Hub) getVectorStats(e *core.RequestEvent) error {
 		if statsRaw == "" {
 			continue
 		}
-		var stats system.Stats
+		var stats systementity.Stats
 		if err := json.Unmarshal([]byte(statsRaw), &stats); err != nil {
 			continue
 		}

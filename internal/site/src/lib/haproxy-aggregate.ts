@@ -71,7 +71,7 @@ export function extractGroupName(hostname: string): string | null {
 /**
  * Filter systems to only those matching ha-* or spnk-* pattern
  */
-export function filterHAProxySystems(systems: SystemRecord[]): SystemRecord[] {
+export function filterHAProxySystems(systems: readonly SystemRecord[]): SystemRecord[] {
 	return systems.filter((s) => s.name.startsWith("ha-") || s.name.startsWith("spnk-"))
 }
 

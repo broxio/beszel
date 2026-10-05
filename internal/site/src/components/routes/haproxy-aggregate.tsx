@@ -76,7 +76,7 @@ export default memo(function HAProxyAggregatePage() {
 
 	// Initialize systems — subscribe to store so we pick up async loads (e.g. full page refresh)
 	useEffect(() => {
-		const update = (allSystems: SystemRecord[]) => {
+		const update = (allSystems: readonly SystemRecord[]) => {
 			const filtered = filterHAProxySystems(allSystems)
 			if (filtered.length > 0 || systemsRef.current.length === 0) {
 				setHaproxySystems(filtered)

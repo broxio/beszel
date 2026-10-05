@@ -1,6 +1,6 @@
 import { memo } from "react"
 import { Area, AreaChart, CartesianGrid, YAxis } from "recharts"
-import { ChartContainer, ChartTooltip, ChartTooltipContent, pinnedAxisDomain, xAxis } from "@/components/ui/chart"
+import { ChartContainer, ChartTooltip, ChartTooltipContent, xAxis } from "@/components/ui/chart"
 import { chartMargin, cn, decimalString, formatShortDate, toFixedFloat } from "@/lib/utils"
 import type { ChartData, ConntrackStats } from "@/types"
 import { useYAxisWidth } from "./hooks"
@@ -63,7 +63,7 @@ export default memo(function ConntrackChart({ chartData, chartType }: ConntrackC
 						direction="ltr"
 						// utilization is a 0-100% gauge: pin the axis so fill level reads absolutely.
 						// connections is an open-ended count: let it auto-scale to the data.
-						domain={chartType === "utilization" ? [0, 100] : pinnedAxisDomain()}
+						domain={chartType === "utilization" ? [0, 100] : [0, "auto"]}
 						orientation={chartData.orientation}
 						className="tracking-tighter"
 						width={yAxisWidth}

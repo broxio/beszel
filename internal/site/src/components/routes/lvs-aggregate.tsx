@@ -70,7 +70,7 @@ export default memo(function LVSAggregatePage() {
 
 	// Subscribe to systems store so we pick up async loads / refresh.
 	useEffect(() => {
-		const update = (all: SystemRecord[]) => {
+		const update = (all: readonly SystemRecord[]) => {
 			const filtered = filterLVSSystems(all)
 			if (filtered.length > 0 || systemsRef.current.length === 0) {
 				setLvsSystems(filtered)
